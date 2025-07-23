@@ -1,0 +1,41 @@
+{
+  "sp_main_report": {
+    "params": ["@report_id INT"],
+    "calls": ["sp_aggregate_sales", "sp_fetch_metadata"],
+    "tables": ["report", "sales", "metadata"]
+  },
+  "sp_aggregate_sales": {
+    "params": ["@region VARCHAR(50)"],
+    "calls": [],
+    "tables": ["sales", "regions"]
+  },
+  "sp_fetch_metadata": {
+    "params": ["@table_name VARCHAR(100)"],
+    "calls": ["sp_log_access"],
+    "tables": ["metadata", "audit_log"]
+  },
+  "sp_log_access": {
+    "params": ["@user_id INT", "@timestamp DATETIME"],
+    "calls": [],
+    "tables": ["audit_log"]
+  },
+  "sp_get_customer": {
+    "params": ["@cust_id INT"],
+    "calls": ["sp_get_address"],
+    "tables": ["customer"]
+  },
+  "sp_get_address": {
+    "params": ["@addr_id INT"],
+    "calls": [],
+    "tables": ["address"]
+  },
+  "sp_nested_query": {
+    "params": ["@order_id INT"],
+    "calls": [],
+    "tables": ["orders", "order_items", "products"]
+  },
+  "sp_update_inventory": {
+    "tables": ["products", "inventory"],
+    "calls": []
+  }
+}

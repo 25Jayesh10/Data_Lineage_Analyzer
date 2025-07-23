@@ -1,0 +1,86 @@
+{
+  "sp_main_report": {
+    "procedure": "sp_main_report",
+    "params": ["@report_id INT"],
+    "statements": [
+      "DECLARE @region VARCHAR(50)",
+      "EXEC sp_aggregate_sales @region",
+      "SELECT * FROM report WHERE report_id = @report_id",
+      "EXEC sp_fetch_metadata 'sales'"
+    ],
+    "variables": ["@region"],
+    "cursors": []
+  },
+  "sp_aggregate_sales": {
+    "procedure": "sp_aggregate_sales",
+    "params": ["@region VARCHAR(50)"],
+    "statements": [
+      "SELECT region_id FROM regions WHERE name = @region",
+      "SELECT SUM(amount) FROM sales WHERE region_id IN (SELECT id FROM regions WHERE name = @region)"
+    ],
+    "variables": [],
+    "cursors": []
+  },
+  "sp_fetch_metadata": {
+    "procedure": "sp_fetch_metadata",
+    "params": ["@table_name VARCHAR(100)"],
+    "statements": [
+      "SELECT * FROM metadata WHERE table_name = @table_name",
+      "EXEC sp_log_access 123, GETDATE()"
+    ],
+    "variables": [],
+    "cursors": []
+  },
+  "sp_log_access": {
+    "procedure": "sp_log_access",
+    "params": ["@user_id INT", "@timestamp DATETIME"],
+    "statements": [
+      "INSERT INTO audit_log (user_id, access_time) VALUES (@user_id, @timestamp)"
+    ],
+    "variables": [],
+    "cursors": []
+  },
+  "sp_get_customer": {
+    "procedure": "sp_get_customer",
+    "params": ["@cust_id INT"],
+    "statements": [
+      "SELECT * FROM customer WHERE cust_id = @cust_id",
+      "EXEC sp_get_address 456"
+    ],
+    "variables": [],
+    "cursors": []
+  },
+  "sp_get_address": {
+    "procedure": "sp_get_address",
+    "params": ["@addr_id INT"],
+    "statements": [
+      "SELECT * FROM address WHERE addr_id = @addr_id"
+    ],
+    "variables": [],
+    "cursors": []
+  },
+  "sp_nested_query": {
+    "procedure": "sp_nested_query",
+    "params": ["@order_id INT"],
+    "statements": [
+      "SELECT * FROM orders o WHERE o.order_id = @order_id AND EXISTS (SELECT 1 FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = o.order_id)"
+    ],
+    "variables": [],
+    "cursors": []
+  },
+  "sp_update_inventory": {
+    "statements": [
+      "DECLARE @product_id INT, @quantity INT;",
+      "DECLARE inventory_cursor CURSOR FOR SELECT product_id FROM products WHERE discontinued = 0;",
+      "OPEN inventory_cursor;",
+      "FETCH NEXT FROM inventory_cursor INTO @product_id;",
+      "WHILE @@FETCH_STATUS = 0 BEGIN",
+      "SELECT @quantity = SUM(quantity) FROM inventory WHERE product_id = @product_id;",
+      "IF @quantity < 10 BEGIN UPDATE products SET restock = 1 WHERE product_id = @product_id; END",
+      "FETCH NEXT FROM inventory_cursor INTO @product_id;",
+      "END",
+      "CLOSE inventory_cursor;",
+      "DEALLOCATE inventory_cursor;"
+    ]
+  }
+}
