@@ -35,10 +35,10 @@ def analyze_lineage(index_file, ast_file, output_file):
             all_procedures.add(called_proc)
 
     # -------------------------------
-# Use Tool 2 data (AST-based detection)
-# -------------------------------
+    # Use Tool 2 data (AST-based detection)
+    # -------------------------------
 
-# Ensure all procedures from AST are included
+    # Ensure all procedures from AST are included
     for proc in ast_data:
         lineage.setdefault(proc, set())
 
@@ -62,8 +62,6 @@ def analyze_lineage(index_file, ast_file, output_file):
                     # Skip variables (e.g., @product_id)
                     if not next_token.startswith("@"):
                         lineage[next_token].add(proc)
-
-
 
     # Ensure all known procedures are included as keys (even if empty)
     for proc in all_procedures:

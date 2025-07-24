@@ -85,7 +85,6 @@ These outputs provide both machine-readable data and visual representations to a
 | ------------ | ------------------------------------------- |
 | `os`, `sys`  | File path and directory handling            |
 | `json`       | Read/write structured data from tools       |
-| `re`         | Regex parsing of stored procedures          |
 | `unittest`   | Write and run test cases                    |
 | `mermaid.js` | Visualize procedure and table relationships |
 
@@ -146,9 +145,9 @@ Mermaid diagrams help in:
 
   |       Error Type 	      |             	  Description                      |
   |-------------------------|--------------------------------------------------|
-  | FileNotFoundError       | Input or output file paths are incorrect         |
-  | KeyError	              | Missing or malformed data in lineage.json        |
-  | Invalid Syntax	        | Mermaid syntax generated incorrectly             |
+  | `FileNotFoundError`     | Input or output file paths are incorrect         |
+  | `KeyError`              | Missing or malformed data in lineage.json        |
+  | `Invalid Syntax`        | Mermaid syntax generated incorrectly             |
   | Node Collision          |	Nodes with same name but different types         |
   | Styling Ignored	        | Mermaid ignores classDef if nodes aren't defined |
 
