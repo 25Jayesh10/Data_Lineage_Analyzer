@@ -144,21 +144,23 @@ Mermaid diagrams help in:
 ---
 ## ⚠️ Possible Errors
 
-Error Type	Description
-FileNotFoundError	Input or output file paths are incorrect
-KeyError	Missing or malformed data in lineage.json
-Invalid Syntax	Mermaid syntax generated incorrectly
-Node Collision	Nodes with same name but different types
-Styling Ignored	Mermaid ignores classDef if nodes aren't defined
+  |       Error Type 	      |             	  Description                      |
+  |-------------------------|--------------------------------------------------|
+  | FileNotFoundError       | Input or output file paths are incorrect         |
+  | KeyError	              | Missing or malformed data in lineage.json        |
+  | Invalid Syntax	        | Mermaid syntax generated incorrectly             |
+  | Node Collision          |	Nodes with same name but different types         |
+  | Styling Ignored	        | Mermaid ignores classDef if nodes aren't defined |
 
 ---
 ## 🛠️ How We Handled It
-Problem	Solution
-Missing files	Added default path logic and validation
-Broken Mermaid syntax	Ensured all nodes are explicitly defined using [Label]
-Styling ignored	Applied class only after defining node labels
-Node type identification	Used naming conventions like table_ and proc_
-Readability of nodes	Stripped prefixes in label rendering
+  |       Problem  	        |             Solution                                  |
+  |-------------------------|-------------------------------------------------------|
+  | Missing files	          | Added default path logic and validation               |
+  | Broken Mermaid syntax	  | Ensured all nodes are explicitly defined using [Label]|
+  | Styling ignored	        | Applied class only after defining node labels         |
+  | Node type identification|	Used naming conventions like table_ and proc_         |
+  | Readability of nodes	  | Stripped prefixes in label rendering                  |
 
 ---
 ## ✅ Summary
@@ -167,4 +169,4 @@ Tool 4 takes structured metadata from previous tools and produces an easy-to-und
 
 ---
 
-> For contributions, enhancements, or bug fixes, please refer to the `README.md` or contact the internal tool engineering team.
+> For contributions, enhancements, or bug fixes, please refer to the `README.md` or contact the internal tool engineering team(interns).
