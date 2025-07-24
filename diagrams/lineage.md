@@ -1,5 +1,8 @@
 ```mermaid
 graph TD
+    %% Node styles
+    classDef table fill:#f96,stroke:#333,stroke-width:2px;
+    classDef stored_proc fill:#9cf,stroke:#333,stroke-width:2px;
     report --> sp_main_report
     sales --> sp_aggregate_sales
     sales --> sp_main_report
@@ -20,3 +23,5 @@ graph TD
     products --> sp_update_inventory
     inventory --> sp_update_inventory
     inventory_cursor --> sp_update_inventory
+    class inventory_cursor,customer,audit_log,address,sales,order_items,products,regions,metadata,report,inventory,orders table;
+    class sp_get_customer,sp_main_report,sp_aggregate_sales,sp_nested_query,sp_update_inventory,sp_fetch_metadata,sp_get_address,sp_log_access stored_proc;

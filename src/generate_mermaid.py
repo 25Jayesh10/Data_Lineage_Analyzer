@@ -16,6 +16,10 @@ def generate_mermaid(lineage_path, output_path):
     # Start building Mermaid diagram inside a Markdown code block
     lines = ["graph TD\n"]
 
+    lines.append("    %% Node styles\n")
+    lines.append("    classDef table fill:#f96,stroke:#333,stroke-width:2px;\n")
+    lines.append("    classDef stored_proc fill:#9cf,stroke:#333,stroke-width:2px;\n")
+
     all_nodes = set()
     edges = []
 
@@ -24,7 +28,18 @@ def generate_mermaid(lineage_path, output_path):
         for target in targets:
             # For each relationship, create a Mermaid edge
             lines.append(f"    {source} --> {target}\n")
+            all_nodes.add(source)
+            all_nodes.add(target)
 
+    # Apply styles to nodes
+    tables = [node for node in all_nodes if not node.startswith('sp_')]
+    stored_procs = [node for node in all_nodes if node.startswith('sp_')]
+    
+    if tables:
+        lines.append(f"    class {','.join(tables)} table;\n")
+    if stored_procs:
+        lines.append(f"    class {','.join(stored_procs)} stored_proc;\n")
+        
     # Write the lines into the .mmd output file
     with open(output_path, "w") as f:
         f.writelines(lines)
