@@ -53,8 +53,5 @@
   "sp_update_inventory": [],
   "inventory_cursor": [
     "sp_update_inventory"
-  ],
-  "@product_id": [
-    "sp_update_inventory"
   ]
 }

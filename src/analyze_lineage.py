@@ -58,8 +58,11 @@ def analyze_lineage(index_file, ast_file, output_file):
             keywords = {"FROM", "JOIN", "INTO", "UPDATE", "DELETE"}
             for i, token in enumerate(tokens):
                 if token.upper() in keywords and i + 1 < len(tokens):
-                    table = tokens[i + 1].strip(';')
-                    lineage[table].add(proc)
+                    next_token = tokens[i + 1].strip(';')
+                    # Skip variables (e.g., @product_id)
+                    if not next_token.startswith("@"):
+                        lineage[next_token].add(proc)
+
 
 
     # Ensure all known procedures are included as keys (even if empty)
