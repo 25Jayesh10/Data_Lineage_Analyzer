@@ -7,9 +7,9 @@ import logging
 logging.basicConfig(level=logging.INFO)
 import json
 from antlr4 import *
-from TSqlLexer import TSqlLexer
-from TSqlParser import TSqlParser
-from TSqlParserListener import TSqlParserListener
+from tool1.TSqlLexer import TSqlLexer
+from tool1.TSqlParser import TSqlParser
+from tool1.TSqlParserListener import TSqlParserListener
 import os
 
 class ProcedureIndexer(TSqlParserListener):
@@ -113,7 +113,7 @@ class ProcedureIndexer(TSqlParserListener):
 
 
 def main():
-    input_file = "test.sql"
+    input_file = "../test.sql"
     input_stream = FileStream(input_file, encoding='utf-8')
     lexer = TSqlLexer(input_stream)
     tokens = CommonTokenStream(lexer)

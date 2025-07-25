@@ -3,12 +3,36 @@ from src.generate_mermaid import generate_mermaid
 from src.convert_mmd_to_md import convert_mmd_to_md
 import json
 import os
+from antlr4 import *
+from tool1.proc_indexer import ProcedureIndexer
+from tool1.TSqlLexer import TSqlLexer
+from tool1.TSqlParser import TSqlParser
+
+
 
 def main():
     # Define file paths
     input_dir = "data"
     output_dir = "data"
     diagram_dir = "diagrams"
+    #tool 1 working starts
+    input_file = "./test.sql"
+    input_stream = FileStream(input_file, encoding='utf-8')
+    lexer = TSqlLexer(input_stream)
+    tokens = CommonTokenStream(lexer)
+    parser = TSqlParser(tokens)
+    tree = parser.tsql_file()
+    print(tree.toStringTree(recog=parser))
+
+
+    walker = ParseTreeWalker()
+    listener = ProcedureIndexer()
+    walker.walk(listener, tree)
+
+    with open("./data/index.json", "w") as f:
+        json.dump(listener.get_index(), f, indent=2)
+    #tool 1 working ends
+
     
     index_path = os.path.join(input_dir, "index.json")   # Tool 1 output
     ast_path = os.path.join(input_dir, "ast.json")       # Tool 2 output
