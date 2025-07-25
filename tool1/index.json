@@ -1,0 +1,123 @@
+{
+  "sp_get_customer_by_id": {
+    "params": [
+      {
+        "name": "@cust_id",
+        "type": "INT"
+      }
+    ],
+    "calls": [],
+    "tables": [
+      "customers"
+    ]
+  },
+  "sp_create_order": {
+    "params": [
+      {
+        "name": "@cust_id",
+        "type": "INT"
+      },
+      {
+        "name": "@amount",
+        "type": "DECIMAL(10,2)"
+      }
+    ],
+    "calls": [],
+    "tables": [
+      "orders"
+    ]
+  },
+  "sp_update_customer_email": {
+    "params": [
+      {
+        "name": "@cust_id",
+        "type": "INT"
+      },
+      {
+        "name": "@new_email",
+        "type": "VARCHAR(100)"
+      }
+    ],
+    "calls": [],
+    "tables": [
+      "customers"
+    ]
+  },
+  "sp_get_order_details": {
+    "params": [
+      {
+        "name": "@order_id",
+        "type": "INT"
+      }
+    ],
+    "calls": [],
+    "tables": [
+      "orders"
+    ]
+  },
+  "sp_get_customer_full_details": {
+    "params": [
+      {
+        "name": "@cust_id",
+        "type": "INT"
+      }
+    ],
+    "calls": [
+      "sp_get_customer_by_id",
+      "sp_get_customer_orders"
+    ],
+    "tables": []
+  },
+  "sp_get_customer_orders": {
+    "params": [
+      {
+        "name": "@cust_id",
+        "type": "INT"
+      }
+    ],
+    "calls": [],
+    "tables": [
+      "orders"
+    ]
+  },
+  "sp_register_or_update_customer": {
+    "params": [
+      {
+        "name": "@cust_id",
+        "type": "INT"
+      },
+      {
+        "name": "@name",
+        "type": "VARCHAR(100)"
+      },
+      {
+        "name": "@email",
+        "type": "VARCHAR(100)"
+      }
+    ],
+    "calls": [],
+    "tables": [
+      "customers"
+    ]
+  },
+  "sp_transfer_funds": {
+    "params": [
+      {
+        "name": "@from_cust_id",
+        "type": "INT"
+      },
+      {
+        "name": "@to_cust_id",
+        "type": "INT"
+      },
+      {
+        "name": "@amount",
+        "type": "DECIMAL(10,2)"
+      }
+    ],
+    "calls": [],
+    "tables": [
+      "customers"
+    ]
+  }
+}

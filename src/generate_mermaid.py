@@ -17,8 +17,8 @@ def generate_mermaid(lineage_path, output_path):
     lines = ["graph TD\n"]
 
     lines.append("    %% Node styles\n")
-    lines.append("    classDef table fill:#f96,stroke:#333,stroke-width:2px;\n")
-    lines.append("    classDef stored_proc fill:#9cf,stroke:#333,stroke-width:2px;\n")
+    lines.append("    classDef table fill:#f96,stroke:#333,stroke-width:2px,color:#000;\n")
+    lines.append("    classDef stored_proc fill:#9cf,stroke:#333,stroke-width:2px,color:#000;\n")
 
     all_nodes = set()
     edges = []

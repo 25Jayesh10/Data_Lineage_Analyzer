@@ -1,41 +1,123 @@
 {
-  "sp_main_report": {
-    "params": ["@report_id INT"],
-    "calls": ["sp_aggregate_sales", "sp_fetch_metadata"],
-    "tables": ["report", "sales", "metadata"]
-  },
-  "sp_aggregate_sales": {
-    "params": ["@region VARCHAR(50)"],
+  "sp_get_customer_by_id": {
+    "params": [
+      {
+        "name": "@cust_id",
+        "type": "INT"
+      }
+    ],
     "calls": [],
-    "tables": ["sales", "regions"]
+    "tables": [
+      "customers"
+    ]
   },
-  "sp_fetch_metadata": {
-    "params": ["@table_name VARCHAR(100)"],
-    "calls": ["sp_log_access"],
-    "tables": ["metadata", "audit_log"]
-  },
-  "sp_log_access": {
-    "params": ["@user_id INT", "@timestamp DATETIME"],
+  "sp_create_order": {
+    "params": [
+      {
+        "name": "@cust_id",
+        "type": "INT"
+      },
+      {
+        "name": "@amount",
+        "type": "DECIMAL(10,2)"
+      }
+    ],
     "calls": [],
-    "tables": ["audit_log"]
+    "tables": [
+      "orders"
+    ]
   },
-  "sp_get_customer": {
-    "params": ["@cust_id INT"],
-    "calls": ["sp_get_address"],
-    "tables": ["customer"]
-  },
-  "sp_get_address": {
-    "params": ["@addr_id INT"],
+  "sp_update_customer_email": {
+    "params": [
+      {
+        "name": "@cust_id",
+        "type": "INT"
+      },
+      {
+        "name": "@new_email",
+        "type": "VARCHAR(100)"
+      }
+    ],
     "calls": [],
-    "tables": ["address"]
+    "tables": [
+      "customers"
+    ]
   },
-  "sp_nested_query": {
-    "params": ["@order_id INT"],
+  "sp_get_order_details": {
+    "params": [
+      {
+        "name": "@order_id",
+        "type": "INT"
+      }
+    ],
     "calls": [],
-    "tables": ["orders", "order_items", "products"]
+    "tables": [
+      "orders"
+    ]
   },
-  "sp_update_inventory": {
-    "tables": ["products", "inventory"],
-    "calls": []
+  "sp_get_customer_full_details": {
+    "params": [
+      {
+        "name": "@cust_id",
+        "type": "INT"
+      }
+    ],
+    "calls": [
+      "sp_get_customer_orders",
+      "sp_get_customer_by_id"
+    ],
+    "tables": []
+  },
+  "sp_get_customer_orders": {
+    "params": [
+      {
+        "name": "@cust_id",
+        "type": "INT"
+      }
+    ],
+    "calls": [],
+    "tables": [
+      "orders"
+    ]
+  },
+  "sp_register_or_update_customer": {
+    "params": [
+      {
+        "name": "@cust_id",
+        "type": "INT"
+      },
+      {
+        "name": "@name",
+        "type": "VARCHAR(100)"
+      },
+      {
+        "name": "@email",
+        "type": "VARCHAR(100)"
+      }
+    ],
+    "calls": [],
+    "tables": [
+      "customers"
+    ]
+  },
+  "sp_transfer_funds": {
+    "params": [
+      {
+        "name": "@from_cust_id",
+        "type": "INT"
+      },
+      {
+        "name": "@to_cust_id",
+        "type": "INT"
+      },
+      {
+        "name": "@amount",
+        "type": "DECIMAL(10,2)"
+      }
+    ],
+    "calls": [],
+    "tables": [
+      "customers"
+    ]
   }
 }

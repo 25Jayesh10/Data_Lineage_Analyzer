@@ -16,16 +16,16 @@ def main():
     mermaid_path = os.path.join(diagram_dir, "lineage.mmd") # Mermaid diagram output
     markdown_path = os.path.join(diagram_dir, "lineage.md")    # Mermaid .md file
     
-    print("🔍 Starting Data Lineage Analysis...")
+    print("Starting Data Lineage Analysis...")
     analyze_lineage(index_path, ast_path, output_path)
-    print("✅ Data Lineage Analysis complete.")
+    print("Data Lineage Analysis complete.")
     with open(output_path, 'r') as f:
         lineage_data = json.load(f)
 
     # Pretty print to terminal
     print(json.dumps(lineage_data, indent=2))
 
-    print("🖼️ Generating Mermaid diagram...")
+    print("Generating Mermaid diagram...")
     generate_mermaid(output_path, mermaid_path)
     convert_mmd_to_md(mermaid_path, markdown_path)
 
