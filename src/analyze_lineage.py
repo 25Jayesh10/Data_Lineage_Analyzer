@@ -18,29 +18,32 @@ def analyze_lineage(index_file, ast_file, output_file):
     with open(ast_file) as f:
         ast_data = json.load(f)
 
-    # Store lineage relationships
-    lineage = defaultdict(set)
+    # Store lineage relationships with metadata
+    lineage = defaultdict(lambda: {"type": "", "calls": set()})
 
-    # Track all known procedures (from both index and AST)
+    # Track all known procedures and tables
     all_procedures = set(index_data.keys()) | set(ast_data.keys())
+    all_tables = set()
 
     # -------------------------------
     # Use Tool 1 data
     # -------------------------------
     for proc, meta in index_data.items():
+        lineage[proc]["type"] = "procedure"
         for table in meta.get("tables", []):
-            lineage[table].add(proc)  # Table -> Procedures
+            all_tables.add(table)
+            lineage[table]["type"] = "table"
+            lineage[table]["calls"].add(proc)
         for called_proc in meta.get("calls", []):
-            lineage[proc].add(called_proc)
+            lineage[proc]["calls"].add(called_proc)
+            lineage[called_proc]["type"] = "procedure"
             all_procedures.add(called_proc)
 
     # -------------------------------
     # Use Tool 2 data (AST-based detection)
     # -------------------------------
-
-    # Ensure all procedures from AST are included
     for proc in ast_data:
-        lineage.setdefault(proc, set())
+        lineage[proc]["type"] = "procedure"
 
     for proc, ast in ast_data.items():
         for stmt in ast.get("statements", []):
@@ -50,8 +53,9 @@ def analyze_lineage(index_file, ast_file, output_file):
             if stmt_upper.startswith("EXEC") or stmt_upper.startswith("EXECUTE"):
                 parts = stmt.split()
                 if len(parts) >= 2:
-                        called_proc = parts[1].strip(';')
-                        lineage[proc].add(called_proc)
+                    called_proc = parts[1].strip(';')
+                    lineage[proc]["calls"].add(called_proc)
+                    lineage[called_proc]["type"] = "procedure"
 
             # Detect tables in SQL
             tokens = stmt.replace(",", " ").split()
@@ -61,17 +65,19 @@ def analyze_lineage(index_file, ast_file, output_file):
                     next_token = tokens[i + 1].strip(';')
                     # Skip variables (e.g., @product_id)
                     if not next_token.startswith("@"):
-                        lineage[next_token].add(proc)
-
-    # Ensure all known procedures are included as keys (even if empty)
-    for proc in all_procedures:
-        lineage.setdefault(proc, set())
+                        lineage[next_token]["type"] = "table"
+                        lineage[next_token]["calls"].add(proc)
 
     # Convert sets to sorted lists for output
-    lineage = {k: sorted(v) for k, v in lineage.items()}
+    formatted_lineage = {}
+    for key, value in lineage.items():
+        formatted_lineage[key] = {
+            "type": value["type"],
+            "calls": sorted(value["calls"])
+        }
 
     # Save output
     with open(output_file, "w") as f:
-        json.dump(lineage, f, indent=2)
+        json.dump(formatted_lineage, f, indent=2)
 
     print(f"✅ Lineage written to {output_file}")
