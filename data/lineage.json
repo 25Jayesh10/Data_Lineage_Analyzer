@@ -9,19 +9,35 @@
     "type": "table",
     "calls": [
       "sp_process_order"
-    ]
+    ],
+    "usage": {
+      "sp_process_order": [
+        "write"
+      ]
+    }
   },
   "inventory": {
     "type": "table",
     "calls": [
       "sp_process_order"
-    ]
+    ],
+    "usage": {
+      "sp_process_order": [
+        "read",
+        "write"
+      ]
+    }
   },
   "order_items": {
     "type": "table",
     "calls": [
       "sp_process_order"
-    ]
+    ],
+    "usage": {
+      "sp_process_order": [
+        "write"
+      ]
+    }
   },
   "sp_log_order": {
     "type": "procedure",

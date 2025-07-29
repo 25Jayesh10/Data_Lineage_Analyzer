@@ -7,5 +7,5 @@ graph BT
     sp_process_order --> orders
     sp_process_order --> inventory
     sp_process_order --> order_items
-    class orders,order_items,inventory table;
+    class orders,inventory,order_items table;
     class sp_log_order,sp_process_order stored_proc;
