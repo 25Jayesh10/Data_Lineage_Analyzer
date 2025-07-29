@@ -8,6 +8,7 @@ from tool1.proc_indexer import ProcedureIndexer
 from tool1.TSqlLexer import TSqlLexer
 from tool1.TSqlParser import TSqlParser
 from logging_styles import Colours
+from validation_script import validate
 
 
 
@@ -40,30 +41,35 @@ def main():
     except Exception as e:
         print(f"json file could not be opened with exeption {e}")
     
+    #validate all inputs using Naive validation
+    if validate():
+
 
     
-    index_path = os.path.join(input_dir, "index.json")   # Tool 1 output
-    ast_path = os.path.join(input_dir, "ast.json")       # Tool 2 output
-    output_path = os.path.join(output_dir, "lineage.json")  # Tool 4 output
-    mermaid_path = os.path.join(diagram_dir, "lineage.mmd") # Mermaid diagram output
-    markdown_path = os.path.join(diagram_dir, "lineage.md")    # Mermaid .md file
-    
-    print(Colours.GREEN+"Starting Data Lineage Analysis..."+Colours.RESET)
-    analyze_lineage(index_path, ast_path, output_path)
-    print(Colours.GREEN+"Data Lineage Analysis complete."+Colours.RESET)
-    try:
-        with open(output_path, 'r') as f:
-            lineage_data = json.load(f)
-    except Exception as e :
-        print(f"Error while writing the file to json {e}")
-
+        index_path = os.path.join(input_dir, "index.json")   # Tool 1 output
+        ast_path = os.path.join(input_dir, "ast.json")       # Tool 2 output
+        output_path = os.path.join(output_dir, "lineage.json")  # Tool 4 output
+        mermaid_path = os.path.join(diagram_dir, "lineage.mmd") # Mermaid diagram output
+        markdown_path = os.path.join(diagram_dir, "lineage.md")    # Mermaid .md file
+        
+        print(Colours.GREEN+"Starting Data Lineage Analysis..."+Colours.RESET)
+        analyze_lineage(index_path, ast_path, output_path)
+        print(Colours.GREEN+"Data Lineage Analysis complete."+Colours.RESET)
+        try:
+            with open(output_path, 'r') as f:
+                lineage_data = json.load(f)
+        except Exception as e :
+            print(f"Error while writing the file to json {e}")
 
     # Pretty print to terminal
-    print(json.dumps(lineage_data, indent=2))
+        print(json.dumps(lineage_data, indent=2))
 
-    print("Generating Mermaid diagram...")
-    generate_mermaid(output_path, mermaid_path)
-    convert_mmd_to_md(mermaid_path, markdown_path)
+        print("Generating Mermaid diagram...")
+        generate_mermaid(output_path, mermaid_path)
+        convert_mmd_to_md(mermaid_path, markdown_path)
+    else:
+        return
+
 
 if __name__ == "__main__":
     main()
