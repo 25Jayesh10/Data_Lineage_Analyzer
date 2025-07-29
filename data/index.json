@@ -27,8 +27,8 @@
     ],
     "tables": [
       "orders",
-      "order_items",
-      "inventory"
+      "inventory",
+      "order_items"
     ]
   }
 }

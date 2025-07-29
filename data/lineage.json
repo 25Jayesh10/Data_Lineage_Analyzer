@@ -11,13 +11,13 @@
       "sp_process_order"
     ]
   },
-  "order_items": {
+  "inventory": {
     "type": "table",
     "calls": [
       "sp_process_order"
     ]
   },
-  "inventory": {
+  "order_items": {
     "type": "table",
     "calls": [
       "sp_process_order"

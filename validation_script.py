@@ -19,6 +19,7 @@ def validate():
         ast_proc_set.add(item.get("proc_name","not_defined"))
     if "not_defined" in index_proc_set or "not_defined" in ast_proc_set:
         print('\033[91m'+ "Inconsistency between AST and Index file detected! Please Check your Inputs\n Error Type- one of the procedure names has not been defined in either of the files"+'\033[0m')
+        return False
     
     if index_proc_set == ast_proc_set:
         print('\033[92m'+"Naive Validation Done"+'\033[0m')
