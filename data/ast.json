@@ -1,35 +1,90 @@
-{ "sp_process_order":
+[
   {
-  "procedure": "sp_process_order",
-  "params": [
-    "@customer_id INT",
-    "@order_date DATETIME",
-    "@item_id INT",
-    "@quantity INT",
-    "@order_status VARCHAR(20) OUTPUT"
-  ],
-  "statements": [
-    "declare @order_id int",
-    "declare @available_qty int",
-    "begin transaction",
-    "select @available_qty = quantity from inventory where item_id = @item_id",
-    "if @available_qty < @quantity begin",
-    "set @order_status = 'FAILED - OUT OF STOCK'",
-    "rollback transaction",
-    "return",
-    "end",
-    "insert into orders (customer_id, order_date) values (@customer_id, @order_date)",
-    "select @order_id = @@identity",
-    "insert into order_items (order_id, item_id, quantity) values (@order_id, @item_id, @quantity)",
-    "update inventory set quantity = quantity - @quantity where item_id = @item_id",
-    "exec sp_log_order @order_id, @customer_id, @order_date",
-    "commit transaction",
-    "set @order_status = 'SUCCESS'"
-  ],
-  "variables": [
-    "@order_id",
-    "@available_qty"
-  ],
-  "cursors": []
-}
-}
+    "proc_name": "sp_process_order",
+    "params": [
+      { "name": "@customer_id", "type": "INT", "mode": "IN" },
+      { "name": "@order_date", "type": "DATETIME", "mode": "IN" },
+      { "name": "@item_id", "type": "INT", "mode": "IN" },
+      { "name": "@quantity", "type": "INT", "mode": "IN" },
+      { "name": "@order_status", "type": "VARCHAR(20)", "mode": "OUT" }
+    ],
+    "return_type": "VOID",
+    "variables": [
+      { "name": "@order_id", "type": "INT" },
+      { "name": "@available_qty", "type": "INT" }
+    ],
+    "statements": [
+      {
+        "type": "SET",
+        "name": "@order_status",
+        "value": "NULL"
+      },
+      {
+        "type": "SELECT_INTO",
+        "query": "SELECT @available_qty = quantity FROM inventory WHERE item_id = @item_id"
+      },
+      {
+        "type": "IF",
+        "condition": "@available_qty < @quantity",
+        "then": [
+          {
+            "type": "SET",
+            "name": "@order_status",
+            "value": "'FAILED - OUT OF STOCK'"
+          },
+          {
+            "type": "EXECUTE_PROCEDURE",
+            "procedure": "ROLLBACK TRANSACTION",
+            "args": []
+          },
+          {
+            "type": "RETURN",
+            "expression": ""
+          }
+        ]
+      },
+      {
+        "type": "EXECUTE_PROCEDURE",
+        "procedure": "INSERT INTO orders (customer_id, order_date) VALUES (@customer_id, @order_date)",
+        "args": []
+      },
+      {
+        "type": "SET",
+        "name": "@order_id",
+        "value": "@@identity"
+      },
+      {
+        "type": "EXECUTE_PROCEDURE",
+        "procedure": "INSERT INTO order_items (order_id, item_id, quantity) VALUES (@order_id, @item_id, @quantity)",
+        "args": []
+      },
+      {
+        "type": "UPDATE",
+        "table": "inventory",
+        "set": {
+          "quantity": "quantity - @quantity"
+        },
+        "where": "item_id = @item_id"
+      },
+      {
+        "type": "EXECUTE_PROCEDURE",
+        "procedure": "sp_log_order",
+        "args": [
+          "@order_id",
+          "@customer_id",
+          "@order_date"
+        ]
+      },
+      {
+        "type": "EXECUTE_PROCEDURE",
+        "procedure": "COMMIT TRANSACTION",
+        "args": []
+      },
+      {
+        "type": "SET",
+        "name": "@order_status",
+        "value": "'SUCCESS'"
+      }
+    ]
+  }
+]
