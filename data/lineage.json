@@ -1,15 +1,66 @@
 {
-  "orders": [
-    "sp_process_order"
-  ],
-  "inventory": [
-    "sp_process_order"
-  ],
-  "order_items": [
-    "sp_process_order"
-  ],
-  "sp_process_order": [
-    "sp_log_order"
-  ],
-  "sp_log_order": []
+  "sp_get_customer_by_id": {
+    "type": "procedure",
+    "calls": []
+  },
+  "customers": {
+    "type": "table",
+    "calls": [
+      "sp_get_customer_by_id",
+      "sp_register_or_update_customer",
+      "sp_transfer_funds",
+      "sp_update_customer_email"
+    ]
+  },
+  "sp_create_order": {
+    "type": "procedure",
+    "calls": []
+  },
+  "orders": {
+    "type": "table",
+    "calls": [
+      "sp_create_order",
+      "sp_get_customer_orders",
+      "sp_get_order_details"
+    ]
+  },
+  "sp_update_customer_email": {
+    "type": "procedure",
+    "calls": []
+  },
+  "sp_get_order_details": {
+    "type": "procedure",
+    "calls": []
+  },
+  "sp_get_customer_full_details": {
+    "type": "procedure",
+    "calls": [
+      "sp_get_customer_by_id",
+      "sp_get_customer_orders"
+    ]
+  },
+  "sp_get_customer_orders": {
+    "type": "procedure",
+    "calls": []
+  },
+  "sp_register_or_update_customer": {
+    "type": "procedure",
+    "calls": []
+  },
+  "sp_transfer_funds": {
+    "type": "procedure",
+    "calls": []
+  },
+  "order_items": {
+    "type": "table",
+    "calls": [
+      "sp_get_order_details"
+    ]
+  },
+  "products": {
+    "type": "table",
+    "calls": [
+      "sp_get_order_details"
+    ]
+  }
 }

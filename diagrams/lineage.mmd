@@ -1,10 +1,17 @@
-graph TD
+graph BT
     %% Node styles
     classDef table fill:#f96,stroke:#333,stroke-width:2px,color:#000;
     classDef stored_proc fill:#9cf,stroke:#333,stroke-width:2px ,color:#000;
-    orders --> sp_process_order
-    inventory --> sp_process_order
-    order_items --> sp_process_order
-    sp_process_order --> sp_log_order
-    class inventory,orders,order_items table;
-    class sp_process_order,sp_log_order stored_proc;
+    customers --> sp_get_customer_by_id
+    customers --> sp_register_or_update_customer
+    customers --> sp_transfer_funds
+    customers --> sp_update_customer_email
+    orders --> sp_create_order
+    orders --> sp_get_customer_orders
+    orders --> sp_get_order_details
+    sp_get_customer_full_details --> sp_get_customer_by_id
+    sp_get_customer_full_details --> sp_get_customer_orders
+    order_items --> sp_get_order_details
+    products --> sp_get_order_details
+    class customers,orders,order_items,products table;
+    class sp_get_customer_orders,sp_update_customer_email,sp_transfer_funds,sp_get_order_details,sp_get_customer_full_details,sp_register_or_update_customer,sp_create_order,sp_get_customer_by_id stored_proc;

@@ -14,26 +14,30 @@ def generate_mermaid(lineage_path, output_path):
         lineage = json.load(f)
 
     # Start building Mermaid diagram inside a Markdown code block
-    lines = ["graph TD\n"]
+    lines = ["graph BT\n"]
 
     lines.append("    %% Node styles\n")
     lines.append("    classDef table fill:#f96,stroke:#333,stroke-width:2px,color:#000;\n")
     lines.append("    classDef stored_proc fill:#9cf,stroke:#333,stroke-width:2px ,color:#000;\n")
 
     all_nodes = set()
-    edges = []
+    # edges = []
 
     # Iterate over each source node and its target nodes
-    for source, targets in lineage.items():
+    for source, metadata in lineage.items():
+        # Get the list of calls from the metadata
+        targets = metadata.get("calls", [])
         for target in targets:
             # For each relationship, create a Mermaid edge
-            lines.append(f"    {source} --> {target}\n")
+            # lines.append(f"    {source} --> {target}\n")
+            lines.append(f"    {target} --> {source}\n")
+
             all_nodes.add(source)
             all_nodes.add(target)
 
     # Apply styles to nodes
-    tables = [node for node in all_nodes if not node.startswith('sp_')]
-    stored_procs = [node for node in all_nodes if node.startswith('sp_')]
+    tables = [node for node in all_nodes if lineage.get(node, {}).get("type") == "table"]
+    stored_procs = [node for node in all_nodes if lineage.get(node, {}).get("type") == "procedure"]
     
     if tables:
         lines.append(f"    class {','.join(tables)} table;\n")
