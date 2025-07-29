@@ -1,30 +1,15 @@
 {
-  "customers": [
-    "sp_get_customer_by_id",
-    "sp_register_or_update_customer",
-    "sp_transfer_funds",
-    "sp_update_customer_email"
-  ],
   "orders": [
-    "sp_create_order",
-    "sp_get_customer_orders",
-    "sp_get_order_details"
+    "sp_process_order"
   ],
-  "sp_get_customer_full_details": [
-    "sp_get_customer_by_id",
-    "sp_get_customer_orders"
+  "inventory": [
+    "sp_process_order"
   ],
-  "sp_get_customer_by_id": [],
-  "sp_create_order": [],
-  "sp_update_customer_email": [],
-  "sp_get_order_details": [],
-  "sp_get_customer_orders": [],
-  "sp_register_or_update_customer": [],
-  "sp_transfer_funds": [],
   "order_items": [
-    "sp_get_order_details"
+    "sp_process_order"
   ],
-  "products": [
-    "sp_get_order_details"
-  ]
+  "sp_process_order": [
+    "sp_log_order"
+  ],
+  "sp_log_order": []
 }

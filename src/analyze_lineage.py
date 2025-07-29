@@ -10,13 +10,16 @@ def analyze_lineage(index_file, ast_file, output_file):
       "procedure_name": [procedures it calls]
     }
     """
+    try:
     # Load Tool 1 (index.json)
-    with open(index_file) as f:
-        index_data = json.load(f)
+        with open(index_file) as f:
+            index_data = json.load(f)
 
-    # Load Tool 2 (ast.json)
-    with open(ast_file) as f:
-        ast_data = json.load(f)
+        # Load Tool 2 (ast.json)
+        with open(ast_file) as f:
+            ast_data = json.load(f)
+    except Exception as e:
+        print(f"Exception occured while opening the files {e}\n")
 
     # Store lineage relationships
     lineage = defaultdict(set)
