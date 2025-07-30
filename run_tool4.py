@@ -7,6 +7,8 @@ from antlr4 import *
 from tool1.proc_indexer import ProcedureIndexer
 from tool1.TSqlLexer import TSqlLexer
 from tool1.TSqlParser import TSqlParser
+from logging_styles import Colours
+from validation_script import validate
 
 
 
@@ -17,41 +19,57 @@ def main():
     diagram_dir = "diagrams"
     #tool 1 working starts
     input_file = "./test.sql"
-    input_stream = FileStream(input_file, encoding='utf-8')
+    try:
+        input_stream = FileStream(input_file, encoding='utf-8')
+    except Exception as e:
+        print(f"Error Detected While Opening the input file {e} ")
     lexer = TSqlLexer(input_stream)
     tokens = CommonTokenStream(lexer)
     parser = TSqlParser(tokens)
     tree = parser.tsql_file()
-    print(tree.toStringTree(recog=parser))
+    #print(tree.toStringTree(recog=parser))
 
 
     walker = ParseTreeWalker()
     listener = ProcedureIndexer()
     walker.walk(listener, tree)
 
-    with open("./data/index.json", "w") as f:
-        json.dump(listener.get_index(), f, indent=2)
-    #tool 1 working ends
+    try :
+        with open("./data/index.json", "w") as f:
+            json.dump(listener.get_index(), f, indent=2)
+        #tool 1 working ends
+    except Exception as e:
+        print(f"json file could not be opened with exeption {e}")
+    
+    #validate all inputs using Naive validation
+    if validate():
+
 
     
-    index_path = os.path.join(input_dir, "index.json")   # Tool 1 output
-    ast_path = os.path.join(input_dir, "ast.json")       # Tool 2 output
-    output_path = os.path.join(output_dir, "lineage.json")  # Tool 4 output
-    mermaid_path = os.path.join(diagram_dir, "lineage.mmd") # Mermaid diagram output
-    markdown_path = os.path.join(diagram_dir, "lineage.md")    # Mermaid .md file
-    
-    print("Starting Data Lineage Analysis...")
-    analyze_lineage(index_path, ast_path, output_path)
-    print("Data Lineage Analysis complete.")
-    with open(output_path, 'r') as f:
-        lineage_data = json.load(f)
+        index_path = os.path.join(input_dir, "index.json")   # Tool 1 output
+        ast_path = os.path.join(input_dir, "ast.json")       # Tool 2 output
+        output_path = os.path.join(output_dir, "lineage.json")  # Tool 4 output
+        mermaid_path = os.path.join(diagram_dir, "lineage.mmd") # Mermaid diagram output
+        markdown_path = os.path.join(diagram_dir, "lineage.md")    # Mermaid .md file
+        
+        print(Colours.GREEN+"Starting Data Lineage Analysis..."+Colours.RESET)
+        analyze_lineage(index_path, ast_path, output_path)
+        print(Colours.GREEN+"Data Lineage Analysis complete."+Colours.RESET)
+        try:
+            with open(output_path, 'r') as f:
+                lineage_data = json.load(f)
+        except Exception as e :
+            print(f"Error while writing the file to json {e}")
 
     # Pretty print to terminal
-    print(json.dumps(lineage_data, indent=2))
+        print(json.dumps(lineage_data, indent=2))
 
-    print("Generating Mermaid diagram...")
-    generate_mermaid(output_path, mermaid_path)
-    convert_mmd_to_md(mermaid_path, markdown_path)
+        print("Generating Mermaid diagram...")
+        generate_mermaid(output_path, mermaid_path)
+        convert_mmd_to_md(mermaid_path, markdown_path)
+    else:
+        return
+
 
 if __name__ == "__main__":
     main()

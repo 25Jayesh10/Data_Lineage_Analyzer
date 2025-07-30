@@ -1,110 +1,47 @@
--- Procedure 1: Simple SELECT with WHERE
-CREATE PROCEDURE sp_get_customer_by_id
-    @cust_id INT
+CREATE PROCEDURE sp_process_order
+    @customer_id INT,
+    @order_date DATETIME,
+    @item_id INT,
+    @quantity INT,
+    @order_status VARCHAR(20) OUTPUT
 AS
 BEGIN
-    SELECT customer_id, customer_name, email
-    FROM customers
-    WHERE customer_id = @cust_id;
-END;
-GO
+    DECLARE @order_id INT
+    DECLARE @available_qty INT
 
--- Procedure 2: INSERT a new order
-CREATE PROCEDURE sp_create_order
-    @cust_id INT,
-    @amount DECIMAL(10,2)
-AS
-BEGIN
-    INSERT INTO orders (customer_id, order_date, amount)
-    VALUES (@cust_id, GETDATE(), @amount);
-END;
-GO
+    BEGIN TRANSACTION
 
--- Procedure 3: UPDATE customer email
-CREATE PROCEDURE sp_update_customer_email
-    @cust_id INT,
-    @new_email VARCHAR(100)
-AS
-BEGIN
-    UPDATE customers
-    SET email = @new_email
-    WHERE customer_id = @cust_id;
-END;
-GO
+    -- Check inventory
+    SELECT @available_qty = quantity
+    FROM inventory
+    WHERE item_id = @item_id
 
--- Procedure 4: SELECT with JOIN
-CREATE PROCEDURE sp_get_order_details
-    @order_id INT
-AS
-BEGIN
-    SELECT o.order_id, o.order_date, o.amount,
-           p.product_name, p.price
-    FROM orders o
-    JOIN order_items oi ON o.order_id = oi.order_id
-    JOIN products p ON oi.product_id = p.product_id
-    WHERE o.order_id = @order_id;
-END;
-GO
-
--- Procedure 5: Nested procedure call
-CREATE PROCEDURE sp_get_customer_full_details
-    @cust_id INT
-AS
-BEGIN
-    EXEC sp_get_customer_by_id @cust_id;
-    EXEC sp_get_customer_orders @cust_id;
-END;
-GO
-
--- Procedure 6: Procedure that is called above
-CREATE PROCEDURE sp_get_customer_orders
-    @cust_id INT
-AS
-BEGIN
-    SELECT order_id, order_date, amount
-    FROM orders
-    WHERE customer_id = @cust_id;
-END;
-GO
-
--- Procedure 7: Insert with conditional logic
-CREATE PROCEDURE sp_register_or_update_customer
-    @cust_id INT,
-    @name VARCHAR(100),
-    @email VARCHAR(100)
-AS
-BEGIN
-    IF EXISTS (SELECT 1 FROM customers WHERE customer_id = @cust_id)
+    IF @available_qty < @quantity
     BEGIN
-        UPDATE customers
-        SET customer_name = @name, email = @email
-        WHERE customer_id = @cust_id;
+        SET @order_status = 'FAILED - OUT OF STOCK'
+        ROLLBACK TRANSACTION
+        RETURN
     END
-    ELSE
-    BEGIN
-        INSERT INTO customers (customer_id, customer_name, email)
-        VALUES (@cust_id, @name, @email);
-    END
-END;
-GO
 
--- Procedure 8: Transaction example
-CREATE PROCEDURE sp_transfer_funds
-    @from_cust_id INT,
-    @to_cust_id INT,
-    @amount DECIMAL(10,2)
-AS
-BEGIN
-    BEGIN TRANSACTION;
+    -- Insert into orders
+    INSERT INTO orders (customer_id, order_date)
+    VALUES (@customer_id, @order_date)
 
-    UPDATE customers
-    SET balance = balance - @amount
-    WHERE customer_id = @from_cust_id;
+    SELECT @order_id = @@identity  -- Get the generated order ID
 
-    UPDATE customers
-    SET balance = balance + @amount
-    WHERE customer_id = @to_cust_id;
+    -- Insert into order_items
+    INSERT INTO order_items (order_id, item_id, quantity)
+    VALUES (@order_id, @item_id, @quantity)
 
-    COMMIT TRANSACTION;
-END;
+    -- Update inventory
+    UPDATE inventory
+    SET quantity = quantity - @quantity
+    WHERE item_id = @item_id
+
+    -- Call a logging procedure
+    EXEC sp_log_order @order_id, @customer_id, @order_date
+
+    COMMIT TRANSACTION
+    SET @order_status = 'SUCCESS'
+END
 GO

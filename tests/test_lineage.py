@@ -5,9 +5,9 @@ from src.analyze_lineage import analyze_lineage
 
 class TestDataLineageAnalyzer(unittest.TestCase):
     def setUp(self):
-        self.index_path = "data/index.json"
-        self.ast_path = "data/ast.json"
-        self.output_path = "data/lineage.json"
+        self.index_path = "./data/index.json"
+        self.ast_path = "./data/ast.json"
+        self.output_path = "./data/lineage.json"
         os.makedirs("data", exist_ok=True)
         analyze_lineage(self.index_path, self.ast_path, self.output_path)
 

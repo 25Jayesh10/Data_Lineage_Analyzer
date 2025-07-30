@@ -1,79 +1,90 @@
-{
-  "sp_get_customer_by_id": {
-    "procedure": "sp_get_customer_by_id",
-    "params": ["@cust_id INT"],
-    "statements": [
-      "SELECT customer_id, customer_name, email FROM customers WHERE customer_id = @cust_id"
+[
+  {
+    "proc_name": "sp_process_order",
+    "params": [
+      { "name": "@customer_id", "type": "INT", "mode": "IN" },
+      { "name": "@order_date", "type": "DATETIME", "mode": "IN" },
+      { "name": "@item_id", "type": "INT", "mode": "IN" },
+      { "name": "@quantity", "type": "INT", "mode": "IN" },
+      { "name": "@order_status", "type": "VARCHAR(20)", "mode": "OUT" }
     ],
-    "variables": [],
-    "cursors": []
-  },
-  "sp_create_order": {
-    "procedure": "sp_create_order",
-    "params": ["@cust_id INT", "@amount DECIMAL(10,2)"],
-    "statements": [
-      "INSERT INTO orders (customer_id, order_date, amount) VALUES (@cust_id, GETDATE(), @amount)"
+    "return_type": "VOID",
+    "variables": [
+      { "name": "@order_id", "type": "INT" },
+      { "name": "@available_qty", "type": "INT" }
     ],
-    "variables": [],
-    "cursors": []
-  },
-  "sp_update_customer_email": {
-    "procedure": "sp_update_customer_email",
-    "params": ["@cust_id INT", "@new_email VARCHAR(100)"],
     "statements": [
-      "UPDATE customers SET email = @new_email WHERE customer_id = @cust_id"
-    ],
-    "variables": [],
-    "cursors": []
-  },
-  "sp_get_order_details": {
-    "procedure": "sp_get_order_details",
-    "params": ["@order_id INT"],
-    "statements": [
-      "SELECT o.order_id, o.order_date, o.amount, p.product_name, p.price FROM orders o JOIN order_items oi ON o.order_id = oi.order_id JOIN products p ON oi.product_id = p.product_id WHERE o.order_id = @order_id"
-    ],
-    "variables": [],
-    "cursors": []
-  },
-  "sp_get_customer_full_details": {
-    "procedure": "sp_get_customer_full_details",
-    "params": ["@cust_id INT"],
-    "statements": [
-      "EXEC sp_get_customer_by_id @cust_id",
-      "EXEC sp_get_customer_orders @cust_id"
-    ],
-    "variables": [],
-    "cursors": []
-  },
-  "sp_get_customer_orders": {
-    "procedure": "sp_get_customer_orders",
-    "params": ["@cust_id INT"],
-    "statements": [
-      "SELECT order_id, order_date, amount FROM orders WHERE customer_id = @cust_id"
-    ],
-    "variables": [],
-    "cursors": []
-  },
-  "sp_register_or_update_customer": {
-    "procedure": "sp_register_or_update_customer",
-    "params": ["@cust_id INT", "@name VARCHAR(100)", "@email VARCHAR(100)"],
-    "statements": [
-      "IF EXISTS (SELECT 1 FROM customers WHERE customer_id = @cust_id) BEGIN UPDATE customers SET customer_name = @name, email = @email WHERE customer_id = @cust_id END",
-      "ELSE BEGIN INSERT INTO customers (customer_id, customer_name, email) VALUES (@cust_id, @name, @email) END"
-    ],
-    "variables": [],
-    "cursors": []
-  },
-  "sp_transfer_funds": {
-    "procedure": "sp_transfer_funds",
-    "params": ["@from_cust_id INT", "@to_cust_id INT", "@amount DECIMAL(10,2)"],
-    "statements": [
-      "BEGIN TRANSACTION",
-      "UPDATE customers SET balance = balance - @amount WHERE customer_id = @from_cust_id",
-      "UPDATE customers SET balance = balance + @amount WHERE customer_id = @to_cust_id",
-      "COMMIT TRANSACTION"
-    ],
-    "variables": [],
-    "cursors": []
+      {
+        "type": "SET",
+        "name": "@order_status",
+        "value": "NULL"
+      },
+      {
+        "type": "SELECT_INTO",
+        "query": "SELECT @available_qty = quantity FROM inventory WHERE item_id = @item_id"
+      },
+      {
+        "type": "IF",
+        "condition": "@available_qty < @quantity",
+        "then": [
+          {
+            "type": "SET",
+            "name": "@order_status",
+            "value": "'FAILED - OUT OF STOCK'"
+          },
+          {
+            "type": "EXECUTE_PROCEDURE",
+            "procedure": "ROLLBACK TRANSACTION",
+            "args": []
+          },
+          {
+            "type": "RETURN",
+            "expression": ""
+          }
+        ]
+      },
+      {
+        "type": "EXECUTE_PROCEDURE",
+        "procedure": "INSERT INTO orders (customer_id, order_date) VALUES (@customer_id, @order_date)",
+        "args": []
+      },
+      {
+        "type": "SET",
+        "name": "@order_id",
+        "value": "@@identity"
+      },
+      {
+        "type": "EXECUTE_PROCEDURE",
+        "procedure": "INSERT INTO order_items (order_id, item_id, quantity) VALUES (@order_id, @item_id, @quantity)",
+        "args": []
+      },
+      {
+        "type": "UPDATE",
+        "table": "inventory",
+        "set": {
+          "quantity": "quantity - @quantity"
+        },
+        "where": "item_id = @item_id"
+      },
+      {
+        "type": "EXECUTE_PROCEDURE",
+        "procedure": "sp_log_order",
+        "args": [
+          "@order_id",
+          "@customer_id",
+          "@order_date"
+        ]
+      },
+      {
+        "type": "EXECUTE_PROCEDURE",
+        "procedure": "COMMIT TRANSACTION",
+        "args": []
+      },
+      {
+        "type": "SET",
+        "name": "@order_status",
+        "value": "'SUCCESS'"
+      }
+    ]
   }
-}
+]
