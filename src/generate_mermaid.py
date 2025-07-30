@@ -48,7 +48,7 @@ def generate_mermaid(lineage_path, output_path):
     with open(output_path, "w") as f:
         f.writelines(lines)
 
-    print(f"✅ Mermaid diagram saved to {output_path}")
+    print(f"Mermaid diagram saved to {output_path}")
 
 if __name__ == "__main__":
     # Define default paths assuming the tool runs from project root

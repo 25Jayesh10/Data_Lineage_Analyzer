@@ -15,4 +15,4 @@ graph BT
     sp_get_order_details --> order_items
     sp_get_order_details --> products
     class products,orders,order_items,customers table;
-    class sp_update_customer_email,sp_register_or_update_customer,sp_transfer_funds,sp_get_customer_by_id,sp_get_customer_orders,sp_get_order_details,sp_create_order,sp_get_customer_full_details stored_proc;
+    class sp_get_customer_by_id,sp_create_order,sp_get_order_details,sp_update_customer_email,sp_transfer_funds,sp_get_customer_orders,sp_register_or_update_customer,sp_get_customer_full_details stored_proc;

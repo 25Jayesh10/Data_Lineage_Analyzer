@@ -13,4 +13,4 @@ def convert_mmd_to_md(mmd_file, md_file):
         md.write("```mermaid\n")
         md.write(mmd_content)
 
-    print(f"✅ Converted {mmd_file} ➜ {md_file} (Markdown format)")
+    print(f"Converted {mmd_file} ➜ {md_file} (Markdown format)")
