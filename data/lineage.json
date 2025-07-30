@@ -5,17 +5,31 @@
       "sp_log_order"
     ]
   },
+<<<<<<< Updated upstream
   "orders": {
     "type": "table",
     "calls": [
       "sp_process_order"
     ]
   },
+=======
+>>>>>>> Stashed changes
   "inventory": {
     "type": "table",
     "calls": [
       "sp_process_order"
     ]
+  },
+  "orders": {
+    "type": "table",
+    "calls": [
+      "sp_process_order"
+    ],
+    "usage": {
+      "sp_process_order": [
+        "write"
+      ]
+    }
   },
   "order_items": {
     "type": "table",

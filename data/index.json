@@ -26,8 +26,8 @@
       "sp_log_order"
     ],
     "tables": [
-      "orders",
       "inventory",
+      "orders",
       "order_items"
     ]
   }
