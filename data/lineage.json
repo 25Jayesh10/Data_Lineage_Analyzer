@@ -11,7 +11,12 @@
     "type": "table",
     "calls": [
       "sp_process_order"
-    ]
+    ],
+    "usage": {
+      "sp_process_order": [
+        "write"
+      ]
+    }
   },
 =======
 >>>>>>> Stashed changes
@@ -19,7 +24,13 @@
     "type": "table",
     "calls": [
       "sp_process_order"
-    ]
+    ],
+    "usage": {
+      "sp_process_order": [
+        "read",
+        "write"
+      ]
+    }
   },
   "orders": {
     "type": "table",
@@ -36,7 +47,12 @@
     "type": "table",
     "calls": [
       "sp_process_order"
-    ]
+    ],
+    "usage": {
+      "sp_process_order": [
+        "write"
+      ]
+    }
   },
   "sp_log_order": {
 =======
