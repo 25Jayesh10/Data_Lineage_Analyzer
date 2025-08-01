@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Tool 4 - Data Lineage Input Schema",
+  "type": "object",
+  "additionalProperties": {
+    "type": "object",
+    "properties": {
+      "params": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            }
+          },
+          "required": ["name", "type"],
+          "additionalProperties": false
+        }
+      },
+      "calls": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "tables": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "required": ["params", "calls", "tables"],
+    "additionalProperties": false
+  }
+}

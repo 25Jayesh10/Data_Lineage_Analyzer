@@ -1,70 +1,23 @@
 {
-<<<<<<< Updated upstream
-  "sp_process_order": {
-    "type": "procedure",
-    "calls": [
-      "sp_log_order"
-    ]
-  },
-<<<<<<< Updated upstream
-  "orders": {
-    "type": "table",
-    "calls": [
-      "sp_process_order"
-    ],
-    "usage": {
-      "sp_process_order": [
-        "write"
-      ]
-    }
-  },
-=======
->>>>>>> Stashed changes
-  "inventory": {
-    "type": "table",
-    "calls": [
-      "sp_process_order"
-    ],
-    "usage": {
-      "sp_process_order": [
-        "read",
-        "write"
-      ]
-    }
-  },
-  "orders": {
-    "type": "table",
-    "calls": [
-      "sp_process_order"
-    ],
-    "usage": {
-      "sp_process_order": [
-        "write"
-      ]
-    }
-  },
-  "order_items": {
-    "type": "table",
-    "calls": [
-      "sp_process_order"
-    ],
-    "usage": {
-      "sp_process_order": [
-        "write"
-      ]
-    }
-  },
-  "sp_log_order": {
-=======
-  "sp_sum_client_orders": {
->>>>>>> Stashed changes
+  "archive_inactive_users": {
     "type": "procedure",
     "calls": []
   },
-  "client_orders": {
+  "archived_users": {
     "type": "table",
     "calls": [
-      "sp_sum_client_orders"
+      "archive_inactive_users"
     ]
+  },
+  "users": {
+    "type": "table",
+    "calls": [
+      "archive_inactive_users"
+    ],
+    "usage": {
+      "archive_inactive_users": [
+        "read"
+      ]
+    }
   }
 }

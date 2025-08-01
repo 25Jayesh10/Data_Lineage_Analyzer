@@ -1,101 +1,28 @@
 [
   {
-    "proc_name": "sp_sum_client_orders",
-    "params": [
-      {
-        "name": "@client_id",
-        "type": "INTEGER"
-      },
-      {
-        "name": "@from_date",
-        "type": "DATE"
-      },
-      {
-        "name": "@to_date",
-        "type": "DATE"
-      }
-    ],
-    "return_type": "NUMERIC(10,2)",
+    "proc_name": "archive_inactive_users",
+    "params": [],
+    "return_type": "VOID",
     "variables": [
       {
-        "name": "@grand_total",
-        "type": "NUMERIC(10,2)"
-      },
-      {
-        "name": "@order_total",
-        "type": "NUMERIC(10,2)"
+        "name": "@user_id",
+        "type": "INT"
       }
     ],
     "statements": [
       {
-        "type": "DECLARE_CURSOR",
-        "cursor_name": "cur_orders",
-        "query": "SELECT total_price FROM client_orders WHERE client_id = @client_id AND order_date BETWEEN @from_date AND @to_date"
-      },
-      {
-        "type": "SET",
-        "name": "@grand_total",
-        "value": "0.00"
-      },
-      {
-        "type": "OPEN_CURSOR",
-        "cursor_name": "cur_orders"
-      },
-      {
-        "type": "FETCH_CURSOR",
-        "cursor_name": "cur_orders",
-        "fetch_into": ["@order_total"]
-      },
-      {
-        "type": "WHILE",
-        "condition": "@@sqlstatus = 0",
-        "body": [
-          {
-            "type": "IF",
-            "condition": "@order_total > 750",
-            "then": [
-              {
-                "type": "SET",
-                "name": "@grand_total",
-                "value": "@grand_total + (@order_total * 0.95)"
-              }
-            ],
-            "else": [
-              {
-                "type": "SET",
-                "name": "@grand_total",
-                "value": "@grand_total + @order_total"
-              }
-            ]
-          },
-          {
-            "type": "FETCH_CURSOR",
-            "cursor_name": "cur_orders",
-            "fetch_into": ["@order_total"]
-          }
-        ]
-      },
-      {
-        "type": "CLOSE_CURSOR",
-        "cursor_name": "cur_orders"
-      },
-      {
-        "type": "DEALLOCATE_CURSOR",
-        "cursor_name": "cur_orders"
+        "type": "SELECT_INTO",
+        "query": "SELECT TOP 1 @user_id = user_id FROM users WHERE active = 0"
       },
       {
         "type": "IF",
-        "condition": "@grand_total > 10000",
+        "condition": "@user_id IS NOT NULL",
         "then": [
           {
-            "type": "RAISE",
-            "message": "High-value threshold exceeded for client"
+            "type": "SELECT_INTO",
+            "query": "INSERT INTO archived_users (user_id, archived_at) VALUES (@user_id, GETDATE())"
           }
         ]
-      },
-      {
-        "type": "RETURN",
-        "expression": "@grand_total"
       }
     ]
   }
