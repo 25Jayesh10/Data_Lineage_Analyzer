@@ -1,89 +1,101 @@
 [
   {
-    "proc_name": "sp_process_order",
+    "proc_name": "sp_sum_client_orders",
     "params": [
-      { "name": "@customer_id", "type": "INT", "mode": "IN" },
-      { "name": "@order_date", "type": "DATETIME", "mode": "IN" },
-      { "name": "@item_id", "type": "INT", "mode": "IN" },
-      { "name": "@quantity", "type": "INT", "mode": "IN" },
-      { "name": "@order_status", "type": "VARCHAR(20)", "mode": "OUT" }
+      {
+        "name": "@client_id",
+        "type": "INTEGER"
+      },
+      {
+        "name": "@from_date",
+        "type": "DATE"
+      },
+      {
+        "name": "@to_date",
+        "type": "DATE"
+      }
     ],
-    "return_type": "VOID",
+    "return_type": "NUMERIC(10,2)",
     "variables": [
-      { "name": "@order_id", "type": "INT" },
-      { "name": "@available_qty", "type": "INT" }
+      {
+        "name": "@grand_total",
+        "type": "NUMERIC(10,2)"
+      },
+      {
+        "name": "@order_total",
+        "type": "NUMERIC(10,2)"
+      }
     ],
     "statements": [
       {
+        "type": "DECLARE_CURSOR",
+        "cursor_name": "cur_orders",
+        "query": "SELECT total_price FROM client_orders WHERE client_id = @client_id AND order_date BETWEEN @from_date AND @to_date"
+      },
+      {
         "type": "SET",
-        "name": "@order_status",
-        "value": "NULL"
+        "name": "@grand_total",
+        "value": "0.00"
       },
       {
-        "type": "SELECT_INTO",
-        "query": "SELECT @available_qty = quantity FROM inventory WHERE item_id = @item_id"
+        "type": "OPEN_CURSOR",
+        "cursor_name": "cur_orders"
       },
       {
-        "type": "IF",
-        "condition": "@available_qty < @quantity",
-        "then": [
+        "type": "FETCH_CURSOR",
+        "cursor_name": "cur_orders",
+        "fetch_into": ["@order_total"]
+      },
+      {
+        "type": "WHILE",
+        "condition": "@@sqlstatus = 0",
+        "body": [
           {
-            "type": "SET",
-            "name": "@order_status",
-            "value": "'FAILED - OUT OF STOCK'"
+            "type": "IF",
+            "condition": "@order_total > 750",
+            "then": [
+              {
+                "type": "SET",
+                "name": "@grand_total",
+                "value": "@grand_total + (@order_total * 0.95)"
+              }
+            ],
+            "else": [
+              {
+                "type": "SET",
+                "name": "@grand_total",
+                "value": "@grand_total + @order_total"
+              }
+            ]
           },
           {
-            "type": "EXECUTE_PROCEDURE",
-            "procedure": "ROLLBACK TRANSACTION",
-            "args": []
-          },
-          {
-            "type": "RETURN",
-            "expression": ""
+            "type": "FETCH_CURSOR",
+            "cursor_name": "cur_orders",
+            "fetch_into": ["@order_total"]
           }
         ]
       },
       {
-        "type": "EXECUTE_PROCEDURE",
-        "procedure": "INSERT INTO orders (customer_id, order_date) VALUES (@customer_id, @order_date)",
-        "args": []
+        "type": "CLOSE_CURSOR",
+        "cursor_name": "cur_orders"
       },
       {
-        "type": "SET",
-        "name": "@order_id",
-        "value": "@@identity"
+        "type": "DEALLOCATE_CURSOR",
+        "cursor_name": "cur_orders"
       },
       {
-        "type": "EXECUTE_PROCEDURE",
-        "procedure": "INSERT INTO order_items (order_id, item_id, quantity) VALUES (@order_id, @item_id, @quantity)",
-        "args": []
-      },
-      {
-        "type": "UPDATE",
-        "table": "inventory",
-        "set": {
-          "quantity": "quantity - @quantity"
-        },
-        "where": "item_id = @item_id"
-      },
-      {
-        "type": "EXECUTE_PROCEDURE",
-        "procedure": "sp_log_order",
-        "args": [
-          "@order_id",
-          "@customer_id",
-          "@order_date"
+        "type": "IF",
+        "condition": "@grand_total > 10000",
+        "then": [
+          {
+            "type": "RAISE",
+            "message": "High-value threshold exceeded for client"
+          }
         ]
       },
       {
-        "type": "EXECUTE_PROCEDURE",
-        "procedure": "COMMIT TRANSACTION",
-        "args": []
-      },
-      {
-        "type": "SET",
-        "name": "@order_status",
-        "value": "'SUCCESS'"
+        "type": "RETURN",
+        "expression": "@grand_total"
       }
     ]
   }

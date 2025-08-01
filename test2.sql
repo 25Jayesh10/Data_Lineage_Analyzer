@@ -1,47 +1,43 @@
-CREATE PROCEDURE sp_process_order
-    @customer_id INT,
-    @order_date DATETIME,
-    @item_id INT,
-    @quantity INT,
-    @order_status VARCHAR(20) OUTPUT
+CREATE PROCEDURE sp_sum_client_orders
+    @client_id INTEGER,
+    @from_date DATE,
+    @to_date DATE
 AS
 BEGIN
-    DECLARE @order_id INT
-    DECLARE @available_qty INT
+    DECLARE @grand_total NUMERIC(10,2)
+    DECLARE @order_total NUMERIC(10,2)
+    DECLARE cur_orders CURSOR FOR
+        SELECT total_price FROM client_orders
+        WHERE client_id = @client_id
+          AND order_date BETWEEN @from_date AND @to_date
 
-    BEGIN TRANSACTION
+    SET @grand_total = 0.00
 
-    -- Check inventory
-    SELECT @available_qty = quantity
-    FROM inventory
-    WHERE item_id = @item_id
+    OPEN cur_orders
+    FETCH cur_orders INTO @order_total
 
-    IF @available_qty < @quantity
+    WHILE @@sqlstatus = 0
     BEGIN
-        SET @order_status = 'FAILED - OUT OF STOCK'
-        ROLLBACK TRANSACTION
-        RETURN
+        IF @order_total > 750
+        BEGIN
+            SET @grand_total = @grand_total + (@order_total * 0.95)
+        END
+        ELSE
+        BEGIN
+            SET @grand_total = @grand_total + @order_total
+        END
+
+        FETCH cur_orders INTO @order_total
     END
 
-    -- Insert into orders
-    INSERT INTO orders (customer_id, order_date)
-    VALUES (@customer_id, @order_date)
+    CLOSE cur_orders
+    DEALLOCATE cur_orders
 
-    SELECT @order_id = @@identity  -- Get the generated order ID
+    IF @grand_total > 10000
+    BEGIN
+        RAISERROR 'High-value threshold exceeded for client'
+    END
 
-    -- Insert into order_items
-    INSERT INTO order_items (order_id, item_id, quantity)
-    VALUES (@order_id, @item_id, @quantity)
-
-    -- Update inventory
-    UPDATE inventory
-    SET quantity = quantity - @quantity
-    WHERE item_id = @item_id
-
-    -- Call a logging procedure
-    EXEC sp_log_order @order_id, @customer_id, @order_date
-
-    COMMIT TRANSACTION
-    SET @order_status = 'SUCCESS'
+    RETURN @grand_total
 END
 GO

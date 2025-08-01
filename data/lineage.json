@@ -1,4 +1,5 @@
 {
+<<<<<<< Updated upstream
   "sp_process_order": {
     "type": "procedure",
     "calls": [
@@ -38,7 +39,16 @@
     ]
   },
   "sp_log_order": {
+=======
+  "sp_sum_client_orders": {
+>>>>>>> Stashed changes
     "type": "procedure",
     "calls": []
+  },
+  "client_orders": {
+    "type": "table",
+    "calls": [
+      "sp_sum_client_orders"
+    ]
   }
 }

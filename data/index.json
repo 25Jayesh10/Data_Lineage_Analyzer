@@ -1,34 +1,28 @@
 {
-  "sp_process_order": {
+  "sp_sum_client_orders": {
     "params": [
       {
-        "name": "@customer_id",
-        "type": "INT"
+        "name": "@client_id",
+        "type": "INTEGER"
       },
       {
-        "name": "@order_date",
-        "type": "DATETIME"
+        "name": "@from_date",
+        "type": "DATE"
       },
       {
-        "name": "@item_id",
-        "type": "INT"
-      },
-      {
-        "name": "@quantity",
-        "type": "INT"
-      },
-      {
-        "name": "@order_status",
-        "type": "VARCHAR(20)"
+        "name": "@to_date",
+        "type": "DATE"
       }
     ],
-    "calls": [
-      "sp_log_order"
-    ],
+    "calls": [],
     "tables": [
+<<<<<<< Updated upstream
       "inventory",
       "orders",
       "order_items"
+=======
+      "client_orders"
+>>>>>>> Stashed changes
     ]
   }
 }
