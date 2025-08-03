@@ -1,23 +1,54 @@
 {
-  "archive_inactive_users": {
+  "log_hr_employees": {
     "type": "procedure",
     "calls": []
   },
-  "archived_users": {
+  "employees": {
     "type": "table",
     "calls": [
-      "archive_inactive_users"
+      "log_hr_employees"
     ]
   },
-  "users": {
+  "employee_log": {
     "type": "table",
     "calls": [
-      "archive_inactive_users"
+      "log_hr_employees"
     ],
     "usage": {
-      "archive_inactive_users": [
-        "read"
+      "log_hr_employees": [
+        "write"
       ]
     }
+  },
+  "sp_sum_client_orders": {
+    "type": "procedure",
+    "calls": []
+  },
+  "client_orders": {
+    "type": "table",
+    "calls": [
+      "sp_sum_client_orders",
+      "test1"
+    ]
+  },
+  "test1": {
+    "type": "procedure",
+    "calls": []
+  },
+  "sp_update_inventory": {
+    "type": "procedure",
+    "calls": []
+  },
+  "inventory": {
+    "type": "table",
+    "calls": [
+      "sp_update_inventory"
+    ]
+  },
+  "products": {
+    "type": "table",
+    "calls": [
+      "sp_update_inventory"
+    ]
   }
 }

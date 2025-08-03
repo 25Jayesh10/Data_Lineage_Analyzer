@@ -1,28 +1,50 @@
 [
   {
-    "proc_name": "archive_inactive_users",
+    "proc_name": "log_hr_employees",
     "params": [],
     "return_type": "VOID",
     "variables": [
-      {
-        "name": "@user_id",
-        "type": "INT"
-      }
+      { "name": "@emp_id", "type": "INT" },
+      { "name": "@emp_name", "type": "VARCHAR(100)" }
     ],
     "statements": [
       {
-        "type": "SELECT_INTO",
-        "query": "SELECT TOP 1 @user_id = user_id FROM users WHERE active = 0"
+        "type": "DECLARE_CURSOR",
+        "cursor_name": "emp_cursor",
+        "query": "SELECT emp_id, emp_name FROM employees WHERE department = 'HR'"
       },
       {
-        "type": "IF",
-        "condition": "@user_id IS NOT NULL",
-        "then": [
+        "type": "OPEN_CURSOR",
+        "cursor_name": "emp_cursor"
+      },
+      {
+        "type": "FETCH_CURSOR",
+        "cursor_name": "emp_cursor",
+        "fetch_into": ["@emp_id", "@emp_name"]
+      },
+      {
+        "type": "WHILE",
+        "condition": "@@sqlstatus = 0",
+        "body": [
           {
-            "type": "SELECT_INTO",
-            "query": "INSERT INTO archived_users (user_id, archived_at) VALUES (@user_id, GETDATE())"
+            "type": "EXECUTE_PROCEDURE",
+            "procedure": "INSERT INTO employee_log (emp_id, emp_name, log_time) VALUES (@emp_id, @emp_name, GETDATE())",
+            "args": []
+          },
+          {
+            "type": "FETCH_CURSOR",
+            "cursor_name": "emp_cursor",
+            "fetch_into": ["@emp_id", "@emp_name"]
           }
         ]
+      },
+      {
+        "type": "CLOSE_CURSOR",
+        "cursor_name": "emp_cursor"
+      },
+      {
+        "type": "DEALLOCATE_CURSOR",
+        "cursor_name": "emp_cursor"
       }
     ]
   }

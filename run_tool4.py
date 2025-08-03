@@ -8,13 +8,15 @@ from tool1.proc_indexer import ProcedureIndexer
 from tool1.TSqlLexer import TSqlLexer
 from tool1.TSqlParser import TSqlParser
 from logging_styles import Colours
-from validation_script import validate
+from src.validation_script import validate
 from tool1.index_validator import validate
+from src.lineage_to_index import generate_index
+
 
 
 def main():
     # Define file paths
-    input_dir = "data"
+    input_dir = "data"    
     output_dir = "data"
     diagram_dir = "diagrams"
 
@@ -69,6 +71,15 @@ def main():
         print("Generating Mermaid diagram...")
         generate_mermaid(output_path, mermaid_path)
         convert_mmd_to_md(mermaid_path, markdown_path)
+
+        # ✅ Tool 4 Extension: Generate generated_index.json from lineage + Mermaid
+        generated_index_path = os.path.join(input_dir, "generated_index.json")
+        success = generate_index(output_path, mermaid_path, generated_index_path)
+        if success:
+            print(Colours.GREEN + "Generated index.json successfully." + Colours.RESET)
+        else:
+            print(Colours.RED + "Failed to generate index.json from lineage." + Colours.RESET)
+
     else:
         print(Colours.RED + "Validation failed. Exiting tool." + Colours.RESET)
         return
