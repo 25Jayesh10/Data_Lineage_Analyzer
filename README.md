@@ -189,7 +189,7 @@ Data_Lineage_Analyzer/
     *   Generate the parser using the following commands:
 
     ```bash
-    antlr4 -Dlanguage=Python3 -
+    antlr4 -Dlanguage=Python3 -visitor tool1/TSqlLexer.g4 tool1/TSqlParser.g4
     ```
 
 ---
