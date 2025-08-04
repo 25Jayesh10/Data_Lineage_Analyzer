@@ -98,17 +98,6 @@ Mermaid diagrams help in:
 
 ---
 
-## ⚠️ Possible Errors and Handling
-
-| Error               | Cause                               | Handling Strategy                    |
-| ------------------- | ----------------------------------- | ------------------------------------ |
-| `KeyError`          | Missing key in input JSON           | Use `.get()` with default values     |
-| `FileNotFoundError` | File paths are incorrect or missing | Add path validation and user prompts |
-| `SyntaxError`       | Malformed SQL in procedure          | Improve regex or parsing logic       |
-| Circular Reference  | Recursive procedure calls           | Track visited nodes while traversing |
-
----
-
 ## 🧰 Libraries Used
 
 | Library      | Purpose                                     |
@@ -239,13 +228,22 @@ The tool generates the following output files:
 
   |       Error Type 	      |             	  Description                      |
   |-------------------------|--------------------------------------------------|
-  | `FileNotFoundError`     | Input or output file paths are incorrect         |
-  | `KeyError`              | Missing or malformed data in lineage.json        |
-  | `Invalid Syntax`        | Mermaid syntax generated incorrectly             |
   | Node Collision          |	Nodes with same name but different types         |
   | Styling Ignored	        | Mermaid ignores classDef if nodes aren't defined |
 
 ---
+
+## ⚠️ Possible Errors and Handling
+
+| Error               | Cause                               | Handling Strategy                    |
+| ------------------- | ----------------------------------- | ------------------------------------ |
+| `KeyError`          | Missing key in input JSON           | Use `.get()` with default values     |
+| `FileNotFoundError` | File paths are incorrect or missing | Add path validation and user prompts |
+| `SyntaxError`       | Malformed SQL in procedure          | Improve regex or parsing logic       |
+| Circular Reference  | Recursive procedure calls           | Track visited nodes while traversing |
+
+---
+
 ## 🛠️ How We Handled It
   |       Problem  	        |             Solution                                  |
   |-------------------------|-------------------------------------------------------|
@@ -256,6 +254,7 @@ The tool generates the following output files:
   | Readability of nodes	  | Stripped prefixes in label rendering                  |
 
 ---
+
 ## ✅ Summary
 
 Tool 4 takes structured metadata from previous tools and produces an easy-to-understand, exportable view of how data flows through a Sybase-based system. It also automates the generation of visual lineage diagrams using Mermaid.js from structured lineage data. It's an essential component in large-scale enterprise database modernization and auditing. It's a critical aid in understanding, debugging, and documenting stored procedure dependencies in complex Sybase-based systems.
