@@ -68,6 +68,36 @@ These outputs provide both machine-readable data and visual representations to a
 
 ---
 
+
+## ❓ What is a Mermaid Diagram?
+Mermaid.js is a JavaScript-based diagramming and charting tool that uses a simple text syntax to define graphs. It allows users to write diagrams directly in Markdown and render them as flowcharts, sequence diagrams, Gantt charts, and more.
+
+In this project, Mermaid diagrams are used to visualize data lineage, showing how data flows between tables and stored procedures in a Sybase database.
+
+---
+## 🤔 Why Do We Need Mermaid Diagrams?
+Mermaid diagrams help in:
+
+✅ Visualizing Data Flow: Clearly display relationships between procedures and tables.
+✅ Debugging: Spot missing or unexpected relationships quickly.
+✅ Documentation: Provide non-technical stakeholders with easy-to-read visuals.
+✅ Impact Analysis: Understand what changes affect which procedures or tables.
+✅ Auditing & Compliance: Trace sensitive data usage paths visually.
+
+---
+
+## ⚙️ Functionality
+
+1.  **SQL Parsing:** Parses SQL scripts to identify stored procedures, table references, and relationships.
+2.  **Data Extraction:** Extracts metadata, including procedure names, parameters, called procedures, and table usage.
+3.  **Lineage Analysis:** Analyzes the extracted metadata to determine the data lineage, i.e., how data flows between procedures and tables.
+4.  **Diagram Generation:** Generates Mermaid.js diagrams to visualize the data lineage.
+5.  **Index Generation:** Creates a `generated_index.json` file that indexes procedures, calls, and tables.
+6.  **Markdown Conversion:** Converts the Mermaid.js diagram to a Markdown file for easy integration into documentation.
+7.  **Validation:** Validates the consistency between the AST and Index file.
+
+---
+
 ## ⚠️ Possible Errors and Handling
 
 | Error               | Cause                               | Handling Strategy                    |
@@ -111,34 +141,98 @@ These outputs provide both machine-readable data and visual representations to a
 
 ---
 
-## 📁 Project Structure
+## 🗂️ File Structure
 
 ```
-DATA_LINEAGE_ANALYZER/
-├── data/           → Raw or intermediate data files
-├── diagrams/       → Output lineage diagrams (Mermaid or PNG)
-├── src/            → Core Python code for parsing and lineage tracing
-├── tests/          → Unit tests for each module
-├── run_tool4.py    → Entrypoint script for running Tool 4
-├── README.md       → This documentation
+Data_Lineage_Analyzer/
+├── data/
+│   ├── ast.json                  # Output from Tool 2 (AST data)
+│   ├── index.json                # Output from Tool 1 (Procedure index)
+│   ├── lineage.json              # Output from Tool 4 (Data lineage)
+│   └── generated_index.json      # Generated index from lineage + Mermaid
+├── diagrams/
+│   ├── lineage.mmd               # Mermaid diagram file
+│   └── lineage.md                # Markdown file with Mermaid diagram
+├── src/
+│   ├── analyze_lineage.py        # Analyzes data lineage
+│   ├── convert_mmd_to_md.py    # Converts Mermaid to Markdown
+│   ├── generate_mermaid.py       # Generates Mermaid diagram
+│   ├── lineage_to_index.py       # Generates index from lineage
+│   ├── validation_script.py      # Validates AST and index.json
+├── tool1/
+│   ├── proc_indexer.py           # Indexes procedures in SQL scripts
+│   ├── TSqlLexer.py              # Lexer for T-SQL
+│   ├── TSqlParser.py             # Parser for T-SQL
+├── run_tool4.py                # Main script to run the tool
+├── test.sql                      # Sample SQL input file
+├── logging_styles.py         # Styles for terminal output
+└── README.md                   # Documentation
 ```
 
 ---
 
-## ❓ What is a Mermaid Diagram?
-Mermaid.js is a JavaScript-based diagramming and charting tool that uses a simple text syntax to define graphs. It allows users to write diagrams directly in Markdown and render them as flowcharts, sequence diagrams, Gantt charts, and more.
+## 🚀 Usage
 
-In this project, Mermaid diagrams are used to visualize data lineage, showing how data flows between tables and stored procedures in a Sybase database.
+### Prerequisites
+
+*   Python 3.x
+*   ANTLR4 (for Tool 1)
+
+### Installation
+
+1.  Clone the repository:
+
+    ```bash
+    git clone <repository_url>
+    cd Data_Lineage_Analyzer
+    ```
+
+2.  Install the required Python packages (if any, specify in `requirements.txt`):
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+3.  Install ANTLR4 and generate the parser for Tool 1:
+
+    *   Download ANTLR: [https://www.antlr.org/download.html](https://www.antlr.org/download.html)
+    *   Set up ANTLR environment variables.
+    *   Generate the parser using the following commands:
+
+    ```bash
+    antlr4 -Dlanguage=Python3 tool1/TSqlLexer.g4
+    antlr4 -Dlanguage=Python3 tool1/TSqlParser.g4
+    ```
 
 ---
-## 🤔 Why Do We Need Mermaid Diagrams?
-Mermaid diagrams help in:
 
-✅ Visualizing Data Flow: Clearly display relationships between procedures and tables.
-✅ Debugging: Spot missing or unexpected relationships quickly.
-✅ Documentation: Provide non-technical stakeholders with easy-to-read visuals.
-✅ Impact Analysis: Understand what changes affect which procedures or tables.
-✅ Auditing & Compliance: Trace sensitive data usage paths visually.
+### Running the Tool
+
+1.  Prepare the input files:
+    *   Ensure that `index.json` and `ast.json` are present in the `data/` directory. These files are outputs from Tool 1 and Tool 2, respectively.
+    *   Create or modify the `test.sql` file with the SQL script you want to analyze.
+
+2.  Run the `run_tool4.py` script:
+
+    ```bash
+    python run_tool4.py
+    ```
+
+3.  The script will:
+
+    *   Validate `index.json` against `ast.json`.
+    *   Analyze the data lineage and generate `lineage.json` using `analyze_lineage.py`.
+    *   Generate a Mermaid diagram (`lineage.mmd`) and convert it to Markdown (`lineage.md`).
+    *   It then runs `lineage_to_index.py` which generates `generated_index.json` file according to `indexSchema.json` which can be used for validation against the existing `index.json` .
+
+### Output
+
+The tool generates the following output files:
+
+*   `data/lineage.json`: Contains the data lineage information in JSON format.
+*   `diagrams/lineage.mmd`: Contains the Mermaid.js diagram code.
+*   `diagrams/lineage.md`: Contains the Markdown file with the Mermaid.js diagram.
+*   `data/generated_index.json`: Contains the generated index of procedures, calls, and tables.
 
 ---
 ## ⚠️ Possible Errors
