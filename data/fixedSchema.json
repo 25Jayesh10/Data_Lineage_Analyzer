@@ -68,7 +68,12 @@
             "RAISE",
             "TRY",
             "EXCEPTION_HANDLER",
-            "EXECUTE_PROCEDURE"
+            "EXECUTE_PROCEDURE",
+            "INSERT",
+            "INSERT_INTO",
+            "SELECT"
+             
+            
           ]
         },
         "name": { "type": "string" },
@@ -202,6 +207,18 @@
         {
           "if": { "properties": { "type": { "const": "EXECUTE_PROCEDURE" } } },
           "then": { "required": ["procedure", "args"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "INSERT" } } },
+          "then": { "required": ["table", "columns", "values"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "INSERT_INTO" } } },
+          "then": { "required": ["table", "columns", "values"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "SELECT" } } },
+          "then": { "required": ["query"] }
         }
       ]
     }

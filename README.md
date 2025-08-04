@@ -2,7 +2,7 @@
 
 ## 🔍 What is Tool 4?
 
-**Tool 4: Data Lineage Analyzer** is a Python-based utility designed to analyze and visualize data lineage in **Sybase** stored procedures. It identifies how data flows across procedures and tables, helping developers understand complex interdependencies within the database.
+**Tool 4: Data Lineage ** is a Python-based utility designed to analyze and visualize data lineage in **Sybase** stored procedures. It identifies how data flows across procedures and tables, helping developers understand complex interdependencies within the database.
 
 ---
 

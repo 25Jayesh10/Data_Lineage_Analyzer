@@ -20,6 +20,7 @@ def analyze_lineage(index_file, ast_file, output_file):
             if not table.startswith("@"):
                 return table
         return None
+    # what if there is something like select into (lets try to find out)
 
     def process_statements(proc, stmts, table_usage, lineage):
         for stmt in stmts:
@@ -52,6 +53,14 @@ def analyze_lineage(index_file, ast_file, output_file):
                 table = stmt.get("table")
                 if table:
                     lineage[table]["type"] = "table"
+                    lineage[table]["calls"].add(proc)
+                    table_usage[table][proc].append("write")
+            
+            #Detect Insert (write)
+            if stmt_type=="INSERT":
+                table=stmt.get("table")
+                if table :
+                    lineage[table]["type"]="table"
                     lineage[table]["calls"].add(proc)
                     table_usage[table][proc].append("write")
 
@@ -116,3 +125,4 @@ def analyze_lineage(index_file, ast_file, output_file):
         json.dump(formatted_lineage, f, indent=2)
 
     print(f"✅ Lineage written to {output_file}")
+#as of now we are doing crude extraction it can be made better in the future if the ast tool has table as a required field for SELECT and SELECT INTO statements
