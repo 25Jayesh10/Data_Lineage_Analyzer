@@ -63,6 +63,13 @@ def analyze_lineage(index_file, ast_file, output_file):
                     lineage[table]["type"]="table"
                     lineage[table]["calls"].add(proc)
                     table_usage[table][proc].append("write")
+            #Detect Insert Into (write)
+            if stmt_type=="INSERT_INTO":
+                table=stmt.get("table")
+                if table :
+                    lineage[table]["type"]="table"
+                    lineage[table]["calls"].add(proc)
+                    table_usage[table][proc].append("write")
 
             # Detect DELETE (write)
             if stmt_type == "DELETE":

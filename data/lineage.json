@@ -1,28 +1,23 @@
 {
-  "archive_inactive_users": {
+  "log_high_salary_employees": {
     "type": "procedure",
     "calls": []
   },
-  "archived_users": {
+  "high_salary_log": {
     "type": "table",
     "calls": [
-      "archive_inactive_users"
+      "log_high_salary_employees"
     ],
     "usage": {
-      "archive_inactive_users": [
+      "log_high_salary_employees": [
         "write"
       ]
     }
   },
-  "users": {
+  "employees": {
     "type": "table",
     "calls": [
-      "archive_inactive_users"
-    ],
-    "usage": {
-      "archive_inactive_users": [
-        "read"
-      ]
-    }
+      "log_high_salary_employees"
+    ]
   }
 }

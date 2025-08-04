@@ -1,88 +1,58 @@
 [
   {
-    "proc_name": "log_hr_employees",
-    "params": [],
-    "return_type": "VOID",
-    "variables": [
+    "proc_name": "log_high_salary_employees",
+    "params": [
       {
-        "name": "@grand_total",
-        "type": "NUMERIC(10,2)"
-      },
-      {
-        "name": "@order_total",
-        "type": "NUMERIC(10,2)"
+        "name": "@threshold_salary",
+        "type": "INT",
+        "mode": "IN"
       }
+    ],
+    "return_type": "void",
+    "variables": [
+      { "name": "@emp_id", "type": "INT" },
+      { "name": "@emp_name", "type": "VARCHAR(100)" },
+      { "name": "@emp_salary", "type": "INT" }
     ],
     "statements": [
       {
         "type": "DECLARE_CURSOR",
-        "cursor_name": "cur_orders",
-        "query": "SELECT total_price FROM client_orders WHERE client_id = @client_id AND order_date BETWEEN @from_date AND @to_date"
-      },
-      {
-        "type": "SET",
-        "name": "@grand_total",
-        "value": "0.00"
+        "cursor_name": "emp_cursor",
+        "query": "SELECT emp_id, emp_name, salary FROM employees WHERE salary > @threshold_salary"
       },
       {
         "type": "OPEN_CURSOR",
-        "cursor_name": "cur_orders"
+        "cursor_name": "emp_cursor"
       },
       {
         "type": "FETCH_CURSOR",
-        "cursor_name": "cur_orders",
-        "fetch_into": ["@order_total"]
+        "cursor_name": "emp_cursor",
+        "fetch_into": ["@emp_id", "@emp_name", "@emp_salary"]
       },
       {
         "type": "WHILE",
-        "condition": "@@sqlstatus = 0",
+        "condition": "@@SQLSTATUS = 0",
         "body": [
           {
-            "type": "IF",
-            "condition": "@order_total > 750",
-            "then": [
-              {
-                "type": "SET",
-                "name": "@grand_total",
-                "value": "@grand_total + (@order_total * 0.95)"
-              }
-            ],
-            "else": [
-              {
-                "type": "SET",
-                "name": "@grand_total",
-                "value": "@grand_total + @order_total"
-              }
-            ]
+            "type": "INSERT_INTO",
+            "table": "high_salary_log",
+            "columns": ["emp_id", "emp_name", "salary", "log_date"],
+            "values": ["@emp_id", "@emp_name", "@emp_salary", "GETDATE()"]
           },
           {
             "type": "FETCH_CURSOR",
-            "cursor_name": "cur_orders",
-            "fetch_into": ["@order_total"]
+            "cursor_name": "emp_cursor",
+            "fetch_into": ["@emp_id", "@emp_name", "@emp_salary"]
           }
         ]
       },
       {
         "type": "CLOSE_CURSOR",
-        "cursor_name": "cur_orders"
+        "cursor_name": "emp_cursor"
       },
       {
         "type": "DEALLOCATE_CURSOR",
-        "cursor_name": "cur_orders"
-      },
-      {
-        "type": "IF",
-        "condition": "@grand_total > 10000",
-        "then": [
-          {
-            "type": "RAISE",
-            "message": "High-value threshold exceeded for client"
-          }
-        ]
-      },
-      {
-        "type": "RETURN",
-        "expression": "@grand_total"
+        "cursor_name": "emp_cursor"
       }
     ]
   }
