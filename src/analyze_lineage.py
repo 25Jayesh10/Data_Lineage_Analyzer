@@ -1,7 +1,7 @@
 import json
 from collections import defaultdict
 
-def analyze_lineage(index_file, ast_file, output_file):
+def analyze_lineage(index_file :str, ast_file :str, output_file :str):
     def extract_table_from_query(query):
         # crude extraction: look for FROM <table>
         tokens = query.replace(",", " ").split()

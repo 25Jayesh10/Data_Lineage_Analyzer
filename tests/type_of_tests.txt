@@ -1,0 +1,7 @@
+1) update usage - passed
+2) delete usage - passed
+3) multiple proc access same table  - passed
+4) proc reads and writes same table - passed
+5) proc calls another - passed
+6) test read and write - passed
+7) multiple proc in sql file
