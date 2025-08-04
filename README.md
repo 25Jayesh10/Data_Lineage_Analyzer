@@ -176,10 +176,10 @@ Data_Lineage_Analyzer/
     cd Data_Lineage_Analyzer
     ```
 
-2.  Install the required Python packages (if any, specify in `requirements.txt`):
+2.  Install the required Python packages:
 
     ```bash
-    pip install -r requirements.txt
+    pip install -r <required packages>
     ```
 
 3.  Install ANTLR4 and generate the parser for Tool 1:
@@ -189,8 +189,7 @@ Data_Lineage_Analyzer/
     *   Generate the parser using the following commands:
 
     ```bash
-    antlr4 -Dlanguage=Python3 tool1/TSqlLexer.g4
-    antlr4 -Dlanguage=Python3 tool1/TSqlParser.g4
+    antlr4 -Dlanguage=Python3 -
     ```
 
 ---
