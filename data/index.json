@@ -1,10 +1,58 @@
 {
-  "archive_inactive_users": {
+  "log_hr_employees": {
     "params": [],
     "calls": [],
     "tables": [
-      "archived_users",
-      "users"
+      "employees",
+      "employee_log"
+    ]
+  },
+  "sp_sum_client_orders": {
+    "params": [
+      {
+        "name": "@client_id",
+        "type": "INTEGER"
+      },
+      {
+        "name": "@from_date",
+        "type": "DATE"
+      },
+      {
+        "name": "@to_date",
+        "type": "DATE"
+      }
+    ],
+    "calls": [],
+    "tables": [
+      "client_orders"
+    ]
+  },
+  "test1": {
+    "params": [
+      {
+        "name": "@client_id",
+        "type": "INT"
+      },
+      {
+        "name": "@from_date",
+        "type": "DATE"
+      },
+      {
+        "name": "@to_date",
+        "type": "DATE"
+      }
+    ],
+    "calls": [],
+    "tables": [
+      "client_orders"
+    ]
+  },
+  "sp_update_inventory": {
+    "params": [],
+    "calls": [],
+    "tables": [
+      "inventory",
+      "products"
     ]
   }
 }

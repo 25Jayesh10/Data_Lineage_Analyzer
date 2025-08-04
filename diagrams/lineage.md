@@ -3,8 +3,12 @@ graph BT
     %% Node styles
     classDef table fill:#f96,stroke:#333,stroke-width:2px,color:#000;
     classDef stored_proc fill:#9cf,stroke:#333,stroke-width:2px ,color:#000;
-    archive_inactive_users --> archived_users
-    archive_inactive_users --> users
-    class archived_users,users table;
-    class archive_inactive_users stored_proc;
+    log_hr_employees --> employees
+    log_hr_employees --> employee_log
+    sp_sum_client_orders --> client_orders
+    test1 --> client_orders
+    sp_update_inventory --> inventory
+    sp_update_inventory --> products
+    class products,employees,inventory,employee_log,client_orders table;
+    class log_hr_employees,test1,sp_update_inventory,sp_sum_client_orders stored_proc;
 ```
