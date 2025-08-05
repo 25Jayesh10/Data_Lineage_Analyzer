@@ -1,60 +1,198 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Stored Procedure AST Schema",
-  "description": "Robust schema for stored procedure AST, supporting all statement types and nested control flow.",
+  "title": "Enterprise Stored Procedure AST Schema",
+  "description": "Enterprise-grade schema for stored procedure AST with full edge case handling.",
   "type": "array",
   "items": {
     "type": "object",
-    "required": ["proc_name", "params", "return_type", "variables", "statements"],
+    "required": [
+      "proc_name",
+      "params",
+      "return_type",
+      "variables",
+      "statements"
+    ],
     "properties": {
-      "proc_name": { "type": "string" },
+      "proc_name": {
+        "type": "string",
+        "minLength": 1
+      },
       "params": {
         "type": "array",
         "items": {
           "type": "object",
-          "required": ["name", "type"],
+          "required": [
+            "name",
+            "type",
+            "mode"
+          ],
           "properties": {
-            "name": { "type": "string", "minLength": 1 },
-            "type": { "type": "string", "minLength": 1 },
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "INT",
+                "INTEGER",
+                "BIGINT",
+                "SMALLINT",
+                "TINYINT",
+                "VARCHAR",
+                "CHAR",
+                "NVARCHAR",
+                "TEXT",
+                "BOOLEAN",
+                "DATE",
+                "TIMESTAMP",
+                "DATETIME",
+                "TIME",
+                "FLOAT",
+                "NUMERIC",
+                "DECIMAL"
+              ]
+            },
             "mode": {
               "type": "string",
-              "enum": ["IN", "OUT", "INOUT"],
-              "default": "IN"
+              "enum": [
+                "IN",
+                "OUT",
+                "INOUT"
+              ]
+            },
+            "default": {
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ]
             }
           },
           "additionalProperties": false
         }
       },
-      "return_type": { "type": "string" },
+      "return_type": {
+        "type": "string",
+        "enum": [
+          "VOID",
+          "INT",
+          "INTEGER",
+          "BIGINT",
+          "SMALLINT",
+          "TINYINT",
+          "VARCHAR",
+          "CHAR",
+          "NVARCHAR",
+          "TEXT",
+          "BOOLEAN",
+          "DATE",
+          "TIMESTAMP",
+          "DATETIME",
+          "TIME",
+          "FLOAT",
+          "NUMERIC",
+          "DECIMAL"
+        ]
+      },
       "variables": {
         "type": "array",
         "items": {
           "type": "object",
-          "required": ["name", "type"],
+          "required": [
+            "name",
+            "type"
+          ],
           "properties": {
-            "name": { "type": "string", "minLength": 1 },
-            "type": { "type": "string", "minLength": 1 }
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "INT",
+                "INTEGER",
+                "BIGINT",
+                "SMALLINT",
+                "TINYINT",
+                "VARCHAR",
+                "CHAR",
+                "NVARCHAR",
+                "TEXT",
+                "BOOLEAN",
+                "DATE",
+                "TIMESTAMP",
+                "DATETIME",
+                "TIME",
+                "FLOAT",
+                "NUMERIC",
+                "DECIMAL"
+              ]
+            },
+            "default": {
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ]
+            }
           },
           "additionalProperties": false
         }
       },
       "statements": {
         "type": "array",
-        "items": { "$ref": "#/definitions/statement" }
+        "maxItems": 500,
+        "items": {
+          "$ref": "#/definitions/statement"
+        }
       }
     },
     "additionalProperties": false
   },
   "definitions": {
+    "expression": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "required": [
+            "op",
+            "left",
+            "right"
+          ],
+          "properties": {
+            "op": {
+              "type": "string"
+            },
+            "left": {
+              "$ref": "#/definitions/expression"
+            },
+            "right": {
+              "$ref": "#/definitions/expression"
+            }
+          }
+        }
+      ]
+    },
     "statement": {
       "type": "object",
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "properties": {
         "type": {
           "type": "string",
           "enum": [
             "SET",
             "UPDATE",
+            "INSERT",
+            "DELETE",
             "SELECT_INTO",
             "DECLARE_CURSOR",
             "OPEN_CURSOR",
@@ -69,73 +207,149 @@
             "TRY",
             "EXCEPTION_HANDLER",
             "EXECUTE_PROCEDURE",
-            "INSERT",
-            "INSERT_INTO",
-            "SELECT"
-             
-            
+            "LOG_MESSAGE",
+            "RAW_SQL",
+            "BEGIN_TRANSACTION",
+            "COMMIT",
+            "ROLLBACK",
+            "DECLARE_TEMP_TABLE",
+            "EXECUTE_USING",
+            "CASE"
           ]
         },
-        "name": { "type": "string" },
-        "value": { "type": "string" },
-        "expression": { "type": "string" },
-        "message": { "type": "string" },
-        "condition": { "type": "string" },
-        "exception": { "type": "string" },
-        "query": { "type": "string" },
-        "table": { "type": "string" },
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/definitions/expression"
+        },
+        "expression": {
+          "$ref": "#/definitions/expression"
+        },
+        "message": {
+          "type": "string"
+        },
+        "condition": {
+          "$ref": "#/definitions/expression"
+        },
+        "exception": {
+          "type": "string"
+        },
+        "query": {
+          "type": "string"
+        },
+        "table": {
+          "type": "string"
+        },
         "set": {
           "type": "object",
           "patternProperties": {
-            "^.*$": { "type": "string" }
+            "^.*$": {
+              "$ref": "#/definitions/expression"
+            }
           },
           "additionalProperties": false
         },
-        "where": { "type": "string" },
+        "where": {
+          "$ref": "#/definitions/expression"
+        },
         "columns": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "values": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "$ref": "#/definitions/expression"
+          }
         },
-        "cursor_name": { "type": "string" },
+        "cursor_name": {
+          "type": "string"
+        },
         "into_vars": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "fetch_into": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
-        "procedure": { "type": "string" },
+        "procedure": {
+          "type": "string"
+        },
         "args": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "$ref": "#/definitions/expression"
+          }
         },
         "then": {
           "type": "array",
-          "items": { "$ref": "#/definitions/statement" }
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/definitions/statement"
+          }
         },
         "else": {
           "type": "array",
-          "items": { "$ref": "#/definitions/statement" }
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/definitions/statement"
+          }
         },
         "body": {
           "type": "array",
-          "items": { "$ref": "#/definitions/statement" }
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/definitions/statement"
+          }
         },
-        "catch": {
+        "when_clauses": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["exception", "body"],
+            "required": [
+              "condition",
+              "then"
+            ],
             "properties": {
-              "exception": { "type": "string" },
+              "condition": {
+                "$ref": "#/definitions/expression"
+              },
+              "then": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/statement"
+                }
+              }
+            }
+          }
+        },
+        "catch": {
+          "type": "array",
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "required": [
+              "exception",
+              "body"
+            ],
+            "properties": {
+              "exception": {
+                "type": "string"
+              },
               "body": {
                 "type": "array",
-                "items": { "$ref": "#/definitions/statement" }
+                "maxItems": 20,
+                "items": {
+                  "$ref": "#/definitions/statement"
+                }
               }
             },
             "additionalProperties": false
@@ -145,80 +359,282 @@
       "additionalProperties": false,
       "allOf": [
         {
-          "if": { "properties": { "type": { "const": "FOR_CURSOR_LOOP" } } },
-          "then": { "required": ["fetch_into", "cursor_name", "body"] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "INSERT"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "table",
+              "values"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "FETCH_CURSOR" } } },
-          "then": { "required": ["cursor_name", "fetch_into"] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "DELETE"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "table"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "DECLARE_CURSOR" } } },
-          "then": { "required": ["cursor_name", "query"] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "CASE"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "when_clauses"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "OPEN_CURSOR" } } },
-          "then": { "required": ["cursor_name"] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "FOR_CURSOR_LOOP"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "fetch_into",
+              "cursor_name",
+              "body"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "CLOSE_CURSOR" } } },
-          "then": { "required": ["cursor_name"] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "FETCH_CURSOR"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "cursor_name",
+              "fetch_into"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "DEALLOCATE_CURSOR" } } },
-          "then": { "required": ["cursor_name"] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "DECLARE_CURSOR"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "cursor_name",
+              "query"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "UPDATE" } } },
-          "then": { "required": ["table", "set"] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "OPEN_CURSOR"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "cursor_name"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "SELECT_INTO" } } },
-          "then": { "required": ["query"] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "CLOSE_CURSOR"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "cursor_name"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "RETURN" } } },
-          "then": { "required": ["expression"] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "DEALLOCATE_CURSOR"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "cursor_name"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "SET" } } },
-          "then": { "required": ["name", "value"] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "UPDATE"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "table",
+              "set"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "IF" } } },
-          "then": { "required": ["condition", "then"] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "SELECT_INTO"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "query",
+              "into_vars"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "WHILE" } } },
-          "then": { "required": ["condition", "body"] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "RETURN"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "expression"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "RAISE" } } },
-          "then": { "required": ["message"] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "SET"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "name",
+              "value"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "TRY" } } },
-          "then": { "required": ["body"] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "IF"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "condition",
+              "then"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "EXCEPTION_HANDLER" } } },
-          "then": { "required": ["exception", "body"] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "WHILE"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "condition",
+              "body"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "EXECUTE_PROCEDURE" } } },
-          "then": { "required": ["procedure", "args"] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "RAISE"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "message"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "INSERT" } } },
-          "then": { "required": ["table", "columns", "values"] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "TRY"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "body"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "INSERT_INTO" } } },
-          "then": { "required": ["table", "columns", "values"] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "EXCEPTION_HANDLER"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "exception",
+              "body"
+            ]
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "SELECT" } } },
-          "then": { "required": ["query"] }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "EXECUTE_PROCEDURE"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "procedure",
+              "args"
+            ]
+          }
         }
       ]
     }

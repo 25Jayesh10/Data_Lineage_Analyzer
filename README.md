@@ -1,3 +1,6 @@
+# FOLLOW THE AST SCHEMA VERY VERY STRICTLY
+
+
 # 📄 Tool 4: Data Lineage Analyzer
 
 ## 🔍 What is Tool 4?
@@ -279,3 +282,5 @@ in procedure • acmeerp. usp converttobase' for parameter '@Amount'
 TYPE MAPPING IS NOT ACCEPTING CHAR(3) BUT ACCEPTING CHAR SO THE (3) IS CREATING NEW DATA TYPE SO GIVING RROR MENTIONED ABOVE
 
 SOLUTION:- WE STRIP (3) SINCE IT IS NOT REQUIRED TO TOOL 4
+
+use brute force method as a fallback to travesre through queris for assigning user information(use REGEX). usefull if there are nested queries. and check access in case of nested queries.
