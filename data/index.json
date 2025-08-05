@@ -1,14 +1,9 @@
 {
-  "log_high_salary_employees": {
-    "params": [
-      {
-        "name": "@threshold_salary",
-        "type": "INT"
-      }
-    ],
+  "log_hr_employees": {
+    "params": [],
     "calls": [],
     "tables": [
-      "high_salary_log",
+      "employee_log",
       "employees"
     ]
   }

@@ -1,28 +1,34 @@
-CREATE PROCEDURE log_high_salary_employees
-    @threshold_salary INT
+CREATE PROCEDURE log_hr_employees
 AS
 BEGIN
     DECLARE @emp_id INT
     DECLARE @emp_name VARCHAR(100)
-    DECLARE @emp_salary INT
 
+    -- Declare the cursor
     DECLARE emp_cursor CURSOR FOR
-    SELECT emp_id, emp_name, salary
+    SELECT emp_id, emp_name
     FROM employees
-    WHERE salary > @threshold_salary
+    WHERE department = 'HR'
 
+    -- Open the cursor
     OPEN emp_cursor
 
-    FETCH emp_cursor INTO @emp_id, @emp_name, @emp_salary
+    -- Fetch the first row
+    FETCH emp_cursor INTO @emp_id, @emp_name
 
-    WHILE @@SQLSTATUS = 0
+    -- Loop through the result set
+    WHILE @@sqlstatus = 0
     BEGIN
-        INSERT INTO high_salary_log(emp_id, emp_name, salary, log_date)
-        VALUES (@emp_id, @emp_name, @emp_salary, GETDATE())
+        -- Insert into log table or perform any action
+        INSERT INTO employee_log (emp_id, emp_name, log_time)
+        VALUES (@emp_id, @emp_name, GETDATE())
 
-        FETCH emp_cursor INTO @emp_id, @emp_name, @emp_salary
+        -- Fetch the next row
+        FETCH emp_cursor INTO @emp_id, @emp_name
     END
 
+    -- Close and deallocate cursor
     CLOSE emp_cursor
     DEALLOCATE CURSOR emp_cursor
 END
+GO

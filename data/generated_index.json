@@ -1,9 +1,15 @@
 {
+  "log_hr_employees": {
+    "calls": [],
+    "tables": [
+      "employee_log",
+      "employees"
+    ]
+  },
   "log_high_salary_employees": {
     "calls": [],
     "tables": [
-      "high_salary_log",
-      "employees"
+      "high_salary_log"
     ]
   }
 }

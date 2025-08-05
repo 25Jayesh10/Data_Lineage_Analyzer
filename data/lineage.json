@@ -1,4 +1,20 @@
 {
+  "log_hr_employees": {
+    "type": "procedure",
+    "calls": []
+  },
+  "employee_log": {
+    "type": "table",
+    "calls": [
+      "log_hr_employees"
+    ]
+  },
+  "employees": {
+    "type": "table",
+    "calls": [
+      "log_hr_employees"
+    ]
+  },
   "log_high_salary_employees": {
     "type": "procedure",
     "calls": []
@@ -13,11 +29,5 @@
         "write"
       ]
     }
-  },
-  "employees": {
-    "type": "table",
-    "calls": [
-      "log_high_salary_employees"
-    ]
   }
 }
