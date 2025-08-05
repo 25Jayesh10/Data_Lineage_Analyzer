@@ -28,7 +28,8 @@ class ProcedureIndexer(TSqlParserListener):
             for param in param_list_ctx:
                 try:
                     param_name = param.children[0].getText()
-                    raw_type = param.children[1].getText().upper()
+                    import re
+                    raw_type = re.match(r'^[A-Z]+', param.children[1].getText().upper()).group(0)
                      # ✅ Strict validation of types
                     if raw_type not in TYPE_MAPPING:
                         logging.error(f"Unsupported type '{raw_type}' found in procedure '{proc_name}' for parameter '{param_name}'")

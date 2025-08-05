@@ -1,31 +1,55 @@
 {
-  "log_hr_employees": {
+  "acmeerp.usp_processfullpayrollcycle": {
     "type": "procedure",
     "calls": []
   },
-  "employee_log": {
+  "#payrollcalc": {
     "type": "table",
     "calls": [
-      "log_hr_employees"
+      "acmeerp.usp_processfullpayrollcycle"
     ]
   },
-  "employees": {
+  "acmeerp.payrolllogs": {
     "type": "table",
     "calls": [
-      "log_hr_employees"
+      "acmeerp.usp_processfullpayrollcycle"
     ]
   },
-  "log_high_salary_employees": {
-    "type": "procedure",
-    "calls": []
-  },
-  "high_salary_log": {
+  "acmeerp.exchangerates": {
     "type": "table",
     "calls": [
-      "log_high_salary_employees"
+      "acmeerp.usp_processfullpayrollcycle"
+    ]
+  },
+  "#PayrollCalc": {
+    "type": "table",
+    "calls": [
+      "AcmeERP.usp_ProcessFullPayrollCycle"
     ],
     "usage": {
-      "log_high_salary_employees": [
+      "AcmeERP.usp_ProcessFullPayrollCycle": [
+        "write"
+      ]
+    }
+  },
+  "AcmeERP.ExchangeRates": {
+    "type": "table",
+    "calls": [
+      "AcmeERP.usp_ProcessFullPayrollCycle"
+    ],
+    "usage": {
+      "AcmeERP.usp_ProcessFullPayrollCycle": [
+        "read"
+      ]
+    }
+  },
+  "AcmeERP.PayrollLogs": {
+    "type": "table",
+    "calls": [
+      "AcmeERP.usp_ProcessFullPayrollCycle"
+    ],
+    "usage": {
+      "AcmeERP.usp_ProcessFullPayrollCycle": [
         "write"
       ]
     }

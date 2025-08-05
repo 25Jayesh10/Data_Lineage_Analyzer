@@ -1,15 +1,10 @@
 {
-  "log_hr_employees": {
+  "acmeerp.usp_processfullpayrollcycle": {
     "calls": [],
     "tables": [
-      "employee_log",
-      "employees"
-    ]
-  },
-  "log_high_salary_employees": {
-    "calls": [],
-    "tables": [
-      "high_salary_log"
+      "#payrollcalc",
+      "acmeerp.payrolllogs",
+      "acmeerp.exchangerates"
     ]
   }
 }

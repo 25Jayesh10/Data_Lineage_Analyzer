@@ -113,7 +113,7 @@ def analyze_lineage(index_file :str, ast_file :str, output_file :str):
         proc_name = proc_ast.get("proc_name")
         if proc_name:
             ast_proc_map[proc_name] = proc_ast
-            lineage[proc_name]["type"] = "procedure"
+            #lineage[proc_name]["type"] = "procedure"
 
     for proc, ast in ast_proc_map.items():
         process_statements(proc, ast.get("statements", []), table_usage, lineage)

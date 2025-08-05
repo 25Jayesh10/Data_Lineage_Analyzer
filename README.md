@@ -266,3 +266,16 @@ Tool 4 takes structured metadata from previous tools and produces an easy-to-und
 used pytest for testing
 added type_mapping for tool 1
 added conditionfor type mapping if type is not available in type mapping then the code wont proced further and ill print the error
+
+C: run_t0014.py
+ERROR: root:Unsupported type 'CHAR(3)' found in procedure 'acmeerp.usp_converttobase' for parameter '@CurrencyCode•
+C: run_t0014.py
+ERROR: root:Unsupported type 'VARCHAR(3) found in
+procedure acmeerp. usp converttobase' for parameter '@CurrencyCode'
+C: run_t0014.py
+ERROR: root:Unsupported type 'DECIMAL (18, 2) • found
+in procedure • acmeerp. usp converttobase' for parameter '@Amount'
+
+TYPE MAPPING IS NOT ACCEPTING CHAR(3) BUT ACCEPTING CHAR SO THE (3) IS CREATING NEW DATA TYPE SO GIVING RROR MENTIONED ABOVE
+
+SOLUTION:- WE STRIP (3) SINCE IT IS NOT REQUIRED TO TOOL 4

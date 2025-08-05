@@ -1,3 +1,10 @@
+SET QUOTED_IDENTIFIER ON;
+GO
+
+IF OBJECT_ID('AcmeERP.usp_ProcessFullPayrollCycle', 'P') IS NOT NULL
+    DROP PROCEDURE AcmeERP.usp_ProcessFullPayrollCycle;
+GO
+
 CREATE PROCEDURE AcmeERP.usp_ProcessFullPayrollCycle
     @PayPeriodStart DATE,
     @PayPeriodEnd DATE

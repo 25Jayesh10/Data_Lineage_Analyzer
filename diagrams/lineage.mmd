@@ -2,8 +2,11 @@ graph BT
     %% Node styles
     classDef table fill:#f96,stroke:#333,stroke-width:2px,color:#000;
     classDef stored_proc fill:#9cf,stroke:#333,stroke-width:2px ,color:#000;
-    log_hr_employees --> employee_log
-    log_hr_employees --> employees
-    log_high_salary_employees --> high_salary_log
-    class high_salary_log,employees,employee_log table;
-    class log_hr_employees,log_high_salary_employees stored_proc;
+    acmeerp.usp_processfullpayrollcycle --> #payrollcalc
+    acmeerp.usp_processfullpayrollcycle --> acmeerp.payrolllogs
+    acmeerp.usp_processfullpayrollcycle --> acmeerp.exchangerates
+    AcmeERP.usp_ProcessFullPayrollCycle --> #PayrollCalc
+    AcmeERP.usp_ProcessFullPayrollCycle --> AcmeERP.ExchangeRates
+    AcmeERP.usp_ProcessFullPayrollCycle --> AcmeERP.PayrollLogs
+    class AcmeERP.PayrollLogs,acmeerp.payrolllogs,#payrollcalc,acmeerp.exchangerates,#PayrollCalc,AcmeERP.ExchangeRates table;
+    class acmeerp.usp_processfullpayrollcycle stored_proc;

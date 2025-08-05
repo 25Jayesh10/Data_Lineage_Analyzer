@@ -1,58 +1,211 @@
 [
   {
-    "proc_name": "log_high_salary_employees",
+    "proc_name": "AcmeERP.usp_ProcessFullPayrollCycle",
     "params": [
       {
-        "name": "@threshold_salary",
-        "type": "INT",
-        "mode": "IN"
+        "name": "@PayPeriodStart",
+        "type": "DATE"
+      },
+      {
+        "name": "@PayPeriodEnd",
+        "type": "DATE"
       }
     ],
-    "return_type": "void",
+    "return_type": "VOID",
     "variables": [
-      { "name": "@emp_id", "type": "INT" },
-      { "name": "@emp_name", "type": "VARCHAR(100)" },
-      { "name": "@emp_salary", "type": "INT" }
+      { "name": "@EmployeeID", "type": "INT" },
+      { "name": "@BaseSalary", "type": "DECIMAL(18,2)" },
+      { "name": "@Bonus", "type": "DECIMAL(18,2)" },
+      { "name": "@GrossSalary", "type": "DECIMAL(18,2)" },
+      { "name": "@Tax", "type": "DECIMAL(18,2)" },
+      { "name": "@NetSalary", "type": "DECIMAL(18,2)" },
+      { "name": "@Currency", "type": "CHAR(3)" },
+      { "name": "@ConvertedSalary", "type": "DECIMAL(18,2)" },
+      { "name": "@ExchangeRate", "type": "DECIMAL(18,6)" },
+      { "name": "@CurrentDate", "type": "DATE" },
+      { "name": "@ErrorMsg", "type": "NVARCHAR(4000)" },
+      { "name": "@ErrorSeverity", "type": "INT" },
+      { "name": "@ErrorState", "type": "INT" }
     ],
     "statements": [
       {
-        "type": "DECLARE_CURSOR",
-        "cursor_name": "emp_cursor",
-        "query": "SELECT emp_id, emp_name, salary FROM employees WHERE salary > @threshold_salary"
+        "type": "SET",
+        "name": "NOCOUNT",
+        "value": "ON"
       },
       {
-        "type": "OPEN_CURSOR",
-        "cursor_name": "emp_cursor"
-      },
-      {
-        "type": "FETCH_CURSOR",
-        "cursor_name": "emp_cursor",
-        "fetch_into": ["@emp_id", "@emp_name", "@emp_salary"]
-      },
-      {
-        "type": "WHILE",
-        "condition": "@@SQLSTATUS = 0",
+        "type": "TRY",
         "body": [
           {
-            "type": "INSERT_INTO",
-            "table": "high_salary_log",
-            "columns": ["emp_id", "emp_name", "salary", "log_date"],
-            "values": ["@emp_id", "@emp_name", "@emp_salary", "GETDATE()"]
+            "type": "EXECUTE_PROCEDURE",
+            "procedure": "BEGIN TRANSACTION",
+            "args": []
+          },
+          {
+            "type": "IF",
+            "condition": "OBJECT_ID('tempdb..#PayrollCalc') IS NOT NULL",
+            "then": [
+              {
+                "type": "EXECUTE_PROCEDURE",
+                "procedure": "DROP TABLE",
+                "args": ["#PayrollCalc"]
+              }
+            ]
+          },
+          {
+            "type": "EXECUTE_PROCEDURE",
+            "procedure": "CREATE TABLE",
+            "args": [
+              "#PayrollCalc (EmployeeID INT, BaseSalary DECIMAL(18,2), Bonus DECIMAL(18,2), GrossSalary DECIMAL(18,2), Tax DECIMAL(18,2), NetSalary DECIMAL(18,2), Currency CHAR(3), ConvertedSalary DECIMAL(18,2))"
+            ]
+          },
+          {
+            "type": "INSERT",
+            "table": "#PayrollCalc",
+            "columns": [
+              "EmployeeID",
+              "BaseSalary",
+              "Bonus",
+              "GrossSalary",
+              "Tax",
+              "NetSalary",
+              "Currency"
+            ],
+            "values": [
+              "SELECT e.EmployeeID, e.BaseSalary, CASE WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 10 THEN e.BaseSalary * 0.15 WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 5 THEN e.BaseSalary * 0.10 WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 2 THEN e.BaseSalary * 0.05 ELSE 0 END AS Bonus, e.BaseSalary + CASE WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 10 THEN e.BaseSalary * 0.15 WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 5 THEN e.BaseSalary * 0.10 WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 2 THEN e.BaseSalary * 0.05 ELSE 0 END AS GrossSalary, CASE WHEN e.BaseSalary <= 50000 THEN e.BaseSalary * 0.1 WHEN e.BaseSalary <= 75000 THEN e.BaseSalary * 0.15 ELSE e.BaseSalary * 0.2 END AS Tax, (e.BaseSalary + CASE WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 10 THEN e.BaseSalary * 0.15 WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 5 THEN e.BaseSalary * 0.10 WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 2 THEN e.BaseSalary * 0.05 ELSE 0 END) - CASE WHEN e.BaseSalary <= 50000 THEN e.BaseSalary * 0.1 WHEN e.BaseSalary <= 75000 THEN e.BaseSalary * 0.15 ELSE e.BaseSalary * 0.2 END AS NetSalary, ISNULL(e.Currency, 'USD') AS Currency FROM AcmeERP.Employees e"
+            ]
+          },
+          {
+            "type": "DECLARE_CURSOR",
+            "cursor_name": "PayrollCursor",
+            "query": "SELECT EmployeeID, GrossSalary, Currency FROM #PayrollCalc"
+          },
+          {
+            "type": "OPEN_CURSOR",
+            "cursor_name": "PayrollCursor"
           },
           {
             "type": "FETCH_CURSOR",
-            "cursor_name": "emp_cursor",
-            "fetch_into": ["@emp_id", "@emp_name", "@emp_salary"]
+            "cursor_name": "PayrollCursor",
+            "fetch_into": ["@EmployeeID", "@GrossSalary", "@Currency"]
+          },
+          {
+            "type": "WHILE",
+            "condition": "@@FETCH_STATUS = 0",
+            "body": [
+              {
+                "type": "IF",
+                "condition": "@Currency <> 'USD'",
+                "then": [
+                  {
+                    "type": "SELECT_INTO",
+                    "query": "SELECT TOP 1 @ExchangeRate = RateToBase FROM AcmeERP.ExchangeRates WHERE CurrencyCode = @Currency AND RateDate <= @CurrentDate ORDER BY RateDate DESC"
+                  },
+                  {
+                    "type": "IF",
+                    "condition": "@ExchangeRate IS NULL",
+                    "then": [
+                      {
+                        "type": "SET",
+                        "name": "@ExchangeRate",
+                        "value": "1"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "SET",
+                    "name": "@ConvertedSalary",
+                    "value": "@GrossSalary * @ExchangeRate"
+                  }
+                ],
+                "else": [
+                  {
+                    "type": "SET",
+                    "name": "@ConvertedSalary",
+                    "value": "@GrossSalary"
+                  }
+                ]
+              },
+              {
+                "type": "UPDATE",
+                "table": "#PayrollCalc",
+                "set": {
+                  "ConvertedSalary": "@ConvertedSalary"
+                },
+                "where": "EmployeeID = @EmployeeID"
+              },
+              {
+                "type": "FETCH_CURSOR",
+                "cursor_name": "PayrollCursor",
+                "fetch_into": ["@EmployeeID", "@GrossSalary", "@Currency"]
+              }
+            ]
+          },
+          {
+            "type": "CLOSE_CURSOR",
+            "cursor_name": "PayrollCursor"
+          },
+          {
+            "type": "DEALLOCATE_CURSOR",
+            "cursor_name": "PayrollCursor"
+          },
+          {
+            "type": "INSERT",
+            "table": "AcmeERP.PayrollLogs",
+            "columns": [
+              "EmployeeID",
+              "PayPeriodStart",
+              "PayPeriodEnd",
+              "GrossSalary",
+              "TaxDeducted"
+            ],
+            "values": [
+              "SELECT EmployeeID, @PayPeriodStart, @PayPeriodEnd, ConvertedSalary, Tax FROM #PayrollCalc"
+            ]
+          },
+          {
+            "type": "EXECUTE_PROCEDURE",
+            "procedure": "COMMIT TRANSACTION",
+            "args": []
+          }
+        ],
+        "catch": [
+          {
+            "exception": "CATCH",
+            "body": [
+              {
+                "type": "IF",
+                "condition": "@@TRANCOUNT > 0",
+                "then": [
+                  {
+                    "type": "EXECUTE_PROCEDURE",
+                    "procedure": "ROLLBACK TRANSACTION",
+                    "args": []
+                  }
+                ]
+              },
+              {
+                "type": "SET",
+                "name": "@ErrorMsg",
+                "value": "ERROR_MESSAGE()"
+              },
+              {
+                "type": "SET",
+                "name": "@ErrorSeverity",
+                "value": "ERROR_SEVERITY()"
+              },
+              {
+                "type": "SET",
+                "name": "@ErrorState",
+                "value": "ERROR_STATE()"
+              },
+              {
+                "type": "RAISE",
+                "message": "@ErrorMsg"
+              }
+            ]
           }
         ]
-      },
-      {
-        "type": "CLOSE_CURSOR",
-        "cursor_name": "emp_cursor"
-      },
-      {
-        "type": "DEALLOCATE_CURSOR",
-        "cursor_name": "emp_cursor"
       }
     ]
   }

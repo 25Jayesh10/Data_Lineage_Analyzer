@@ -1,10 +1,20 @@
 {
-  "log_hr_employees": {
-    "params": [],
+  "acmeerp.usp_processfullpayrollcycle": {
+    "params": [
+      {
+        "name": "@PayPeriodStart",
+        "type": "DATE"
+      },
+      {
+        "name": "@PayPeriodEnd",
+        "type": "DATE"
+      }
+    ],
     "calls": [],
     "tables": [
-      "employee_log",
-      "employees"
+      "#payrollcalc",
+      "acmeerp.payrolllogs",
+      "acmeerp.exchangerates"
     ]
   }
 }
