@@ -1,8 +1,4 @@
- 
-#This code is just an attempt at experimentation with developing a utility with which we can index the stored procedures in sybase database
-__author__="Adarsh Naik "
-__status__="Development"
-__date__="23-07-2025"
+
 import logging
 logging.basicConfig(level=logging.INFO)
 import json
@@ -33,6 +29,7 @@ class ProcedureIndexer(TSqlParserListener):
                         "name": param_name,
                         "type": param_type
                     })
+                    
                 except Exception as e:
                     logging.warning(f"Failed to extract param: {param.getText()} — {e}")
 
