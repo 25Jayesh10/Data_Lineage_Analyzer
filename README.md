@@ -270,7 +270,9 @@ used pytest for testing
 added type_mapping for tool 1
 added conditionfor type mapping if type is not available in type mapping then the code wont proced further and ill print the error
 
-C: run_t0014.py
+
+ERRORS FACING WITH FINAL TEST CASES: 
+1) C: run_t0014.py
 ERROR: root:Unsupported type 'CHAR(3)' found in procedure 'acmeerp.usp_converttobase' for parameter '@CurrencyCode•
 C: run_t0014.py
 ERROR: root:Unsupported type 'VARCHAR(3) found in
@@ -283,4 +285,8 @@ TYPE MAPPING IS NOT ACCEPTING CHAR(3) BUT ACCEPTING CHAR SO THE (3) IS CREATING 
 
 SOLUTION:- WE STRIP (3) SINCE IT IS NOT REQUIRED TO TOOL 4
 
-use brute force method as a fallback to travesre through queris for assigning user information(use REGEX). usefull if there are nested queries. and check access in case of nested queries.
+2) use brute force method as a fallback to travesre through queris for assigning user information(use REGEX). usefull if there are nested queries. and check access in case of nested queries.
+
+3) GETTING REDUNDACIES IN MERMAID AND LINEAGE COZ OF CONVERSION OF NAME OF PROCEDURES TO LOWER CASE
+
+SOLUTIONS:- ERROR FIXED WE ARE NO LONGER CONVERTING IT AND CAME UP WITH A PERMANANENT SOLUTION
