@@ -1,0 +1,17 @@
+{
+  "process_orders": {
+    "params": [
+      { "name": "order_id", "type": "INT" },
+      { "name": "customer_id", "type": "VARCHAR" }
+    ],
+    "calls": ["log_order", "validate_customer"],
+    "tables": ["orders", "customers"]
+  },
+  "log_order": {
+    "params": [
+      { "name": "order_id", "type": "INT" }
+    ],
+    "calls": [],
+    "tables": ["order_logs"]
+  }
+}

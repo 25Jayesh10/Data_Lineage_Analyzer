@@ -1,24 +1,18 @@
 {
-  "acmeerp.usp_processfullpayrollcycle": {
+  "log_hr_employees": {
     "type": "procedure",
     "calls": []
   },
-  "#payrollcalc": {
+  "employees": {
     "type": "table",
     "calls": [
-      "acmeerp.usp_processfullpayrollcycle"
+      "log_hr_employees"
     ]
   },
-  "acmeerp.payrolllogs": {
+  "employee_log": {
     "type": "table",
     "calls": [
-      "acmeerp.usp_processfullpayrollcycle"
-    ]
-  },
-  "acmeerp.exchangerates": {
-    "type": "table",
-    "calls": [
-      "acmeerp.usp_processfullpayrollcycle"
+      "log_hr_employees"
     ]
   },
   "#PayrollCalc": {
