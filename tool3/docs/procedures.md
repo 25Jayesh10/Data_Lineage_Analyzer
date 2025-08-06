@@ -1,26 +1,24 @@
-## Summary
+# Summary
 
-**Total Procedures**: 2  
-**Total Tables**: 3  
-**Most Called Procedure**: `log_order`
-
----
-
-
-## Table of Contents
-
-- [process_orders](#stored-procedure-process_orders)
-- [log_order](#stored-procedure-log_order)
+- **Total Procedures**: 2
+- **Total Tables**: 3
+- **Most Called Procedure**: `log_order`
 
 ---
 
+# Table of Contents
 
-# Stored Procedure:
-**process_orders**
+- [process_orders](#process_orders)
+- [log_order](#log_order)
 
 ---
 
-## Parameters
+## Stored Procedure: process_orders
+<a name="process_orders"></a>
+
+---
+
+### Parameters
 
 | Name | Type |
 |------|------|
@@ -29,21 +27,21 @@
 
 ---
 
-## Tables
+### Tables
 
 - orders
 - customers
 
 ---
 
-## Called Procedures
+### Called Procedures
 
 - log_order
 - validate_customer
 
 ---
 
-## Call Graph
+### Call Graph
 
 ```mermaid
 graph TD
@@ -55,7 +53,7 @@ graph TD
 
 ---
 
-## Business Logic
+### Business Logic
 
 No description provided.
 
@@ -63,12 +61,12 @@ No description provided.
 ---
 
 
-# Stored Procedure:
-**log_order**
+## Stored Procedure: log_order
+<a name="log_order"></a>
 
 ---
 
-## Parameters
+### Parameters
 
 | Name | Type |
 |------|------|
@@ -76,18 +74,18 @@ No description provided.
 
 ---
 
-## Tables
+### Tables
 
 - order_logs
 
 ---
 
-## Called Procedures
+### Called Procedures
 
 
 ---
 
-## Call Graph
+### Call Graph
 
 ```mermaid
 graph TD
@@ -96,7 +94,7 @@ graph TD
 
 ---
 
-## Business Logic
+### Business Logic
 
 No description provided.
 
