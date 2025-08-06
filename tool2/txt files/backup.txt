@@ -1,0 +1,267 @@
+import json
+from antlr4 import *
+from antlr.TSqlLexer import TSqlLexer
+from antlr.TSqlParser import TSqlParser
+from antlr.TSqlParserVisitor import TSqlParserVisitor
+
+class ASTBuilder(TSqlParserVisitor):
+    def __init__(self):
+        self.asts = []
+        self.current_ast = None
+        self.statement_stack = []
+
+    def get_full_text(self, ctx):
+        if not ctx:
+            return ""
+        try:
+            # Use start/stop from the context to get the exact original text
+            return ctx.start.getInputStream().getText(ctx.start.start, ctx.stop.stop)
+        except Exception:
+            # Fallback for nodes that might not have start/stop tokens
+            return ctx.getText()
+
+    def _add_statement(self, stmt_object):
+        if self.statement_stack:
+            self.statement_stack[-1].append(stmt_object)
+
+    def _get_procedure_name(self, ctx):
+        candidates = [
+            'func_proc_name_schema',
+            'full_object_name',
+            'func_proc_name',
+            'procedure_name',
+            'func_proc_name_server_database_schema'
+        ]
+        for name in candidates:
+            if hasattr(ctx, name) and getattr(ctx, name)():
+                return self.get_full_text(getattr(ctx, name)())
+        return "<unknown>"
+
+    def visitTsql_file(self, ctx):
+        self.visitChildren(ctx)
+        return self.asts
+
+    def visitBatch(self, ctx):
+        return self.visitChildren(ctx)
+
+    def visitCreate_or_alter_procedure(self, ctx):
+        self.current_ast = {
+            "proc_name": self._get_procedure_name(ctx),
+            "params": [],
+            "return_type": "INTEGER",
+            "variables": [],
+            "statements": []
+        }
+        self.asts.append(self.current_ast)
+
+        self.statement_stack.append(self.current_ast["statements"])
+        # Only visit the procedure body, not the name/params which are handled here
+        if ctx.sql_clauses():
+             self.visit(ctx.sql_clauses())
+        self.statement_stack.pop()
+
+    def visitProcedure_param(self, ctx):
+        param = {
+            "name": self.get_full_text(ctx.LOCAL_ID()),
+            "type": self.get_full_text(ctx.data_type()),
+            "mode": "OUT" if ctx.OUTPUT() or ctx.OUT() else "IN"
+        }
+        self.current_ast["params"].append(param)
+
+    def visitDeclare_statement(self, ctx):
+        # Handle both variable and cursor declarations
+        if ctx.declare_local():
+            for decl in ctx.declare_local():
+                self.current_ast["variables"].append({
+                    "name": self.get_full_text(decl.LOCAL_ID()),
+                    "type": self.get_full_text(decl.data_type())
+                })
+        elif ctx.declare_cursor():
+            self.visit(ctx.declare_cursor())
+
+
+    def visitSet_statement(self, ctx):
+        stmt = {"type": "SET"}
+        if ctx.LOCAL_ID():
+            stmt["name"] = self.get_full_text(ctx.LOCAL_ID())
+            stmt["value"] = self.get_full_text(ctx.expression())
+        else:
+            # Handles things like SET NOCOUNT ON
+            stmt["expression"] = self.get_full_text(ctx).replace("SET", "").strip()
+        self._add_statement(stmt)
+
+    def visitSelect_statement_standalone(self, ctx):
+        # This wrapper ensures we only process SELECTs that are actual statements
+        self.visit(ctx.select_statement())
+        return None
+
+    def visitSelect_statement(self, ctx):
+        stmt = {"type": "SELECT", "query": self.get_full_text(ctx)}
+        self._add_statement(stmt)
+        return None # Prevent re-visiting from other rules
+
+    def visitUpdate_statement(self, ctx):
+        stmt = {
+            "type": "UPDATE",
+            "table": self.get_full_text(ctx.ddl_object()),
+            "set": {},
+            "where": self.get_full_text(ctx.search_condition()) if ctx.where_clause() else ""
+        }
+        if ctx.update_elem():
+            for elem in ctx.update_elem():
+                col = self.get_full_text(elem.full_column_name())
+                val = self.get_full_text(elem.expression())
+                stmt["set"][col] = val
+        self._add_statement(stmt)
+
+    def visitReturn_statement(self, ctx):
+        stmt = {"type": "RETURN", "value": self.get_full_text(ctx.expression()) if ctx.expression() else "0"}
+        self._add_statement(stmt)
+
+    # CORRECTED: Robust IF/ELSE handling for blocks and single statements
+    def visitIf_statement(self, ctx: TSqlParser.If_statementContext):
+        stmt = {
+            "type": "IF",
+            "condition": self.get_full_text(ctx.search_condition()),
+            "then": [],
+        }
+        self._add_statement(stmt)
+
+        # Process the THEN block
+        self.statement_stack.append(stmt["then"])
+        # A THEN block can be a single statement or a block (sql_clauses)
+        if ctx.statement(0):
+            self.visit(ctx.statement(0))
+        elif ctx.sql_clauses(0):
+            self.visit(ctx.sql_clauses(0))
+        self.statement_stack.pop()
+
+        # Process the ELSE block
+        if ctx.ELSE():
+            stmt["else"] = []
+            self.statement_stack.append(stmt["else"])
+            if ctx.statement(1):
+                self.visit(ctx.statement(1))
+            elif ctx.sql_clauses(1):
+                self.visit(ctx.sql_clauses(1))
+            self.statement_stack.pop()
+        
+        return None # Manual traversal, so stop here
+
+    # NEW: Visitor for WHILE loops
+    def visitWhile_statement(self, ctx):
+        stmt = {
+            "type": "WHILE",
+            "condition": self.get_full_text(ctx.search_condition()),
+            "body": []
+        }
+        self._add_statement(stmt)
+        self.statement_stack.append(stmt["body"])
+        if ctx.sql_clauses():
+            self.visit(ctx.sql_clauses())
+        elif ctx.statement():
+            self.visit(ctx.statement())
+        self.statement_stack.pop()
+        return None # Manual traversal
+
+    def visitExecute_statement(self, ctx):
+        stmt = {"type": "EXEC", "command": self.get_full_text(ctx)}
+        self._add_statement(stmt)
+
+    # CORRECTED: This method now perfectly matches the grammar rule you provided.
+    def visitRaiseerror_statement(self, ctx: TSqlParser.Raiseerror_statementContext):
+        args = []
+        # Check which form of RAISERROR was used by looking for a labeled token
+        if ctx.severity: # First form: RAISERROR(msg, severity, state)
+            args.append(self.get_full_text(ctx.msg))
+            args.append(self.get_full_text(ctx.severity))
+            args.append(self.get_full_text(ctx.state))
+        elif ctx.formatstring: # Second form: RAISERROR msg_id format_string, args...
+            # The msg_id is the DECIMAL literal at child index 1
+            args.append(self.get_full_text(ctx.getChild(1)))
+            args.append(self.get_full_text(ctx.formatstring))
+            if ctx.argument:
+                for arg in ctx.argument:
+                    args.append(self.get_full_text(arg))
+        
+        stmt = {"type": "EXEC", "procedure": "RAISERROR", "args": args}
+        self._add_statement(stmt)
+
+    # # CORRECTED: All cursor operations now use id_() for the name
+    # def visitClose_statement(self, ctx):
+    #     stmt = {"type": "CLOSE_CURSOR", "cursor_name": self.get_full_text(ctx.id_())}
+    #     self._add_statement(stmt)
+
+    # def visitDeallocate_statement(self, ctx):
+    #     stmt = {"type": "DEALLOCATE_CURSOR", "cursor_name": self.get_full_text(ctx.id_())}
+    #     self._add_statement(stmt)
+
+    # def visitOpen_statement(self, ctx):
+    #     stmt = {"type": "OPEN_CURSOR", "cursor_name": self.get_full_text(ctx.id_())}
+    #     self._add_statement(stmt)'
+
+    def visitCursor_statement(self, ctx: TSqlParser.Cursor_statementContext):
+        # This method now dispatches based on the grammar rule matched.
+        if ctx.OPEN():
+            stmt = {"type": "OPEN_CURSOR", "cursor_name": self.get_full_text(ctx.cursor_name())}
+            self._add_statement(stmt)
+        elif ctx.CLOSE():
+            stmt = {"type": "CLOSE_CURSOR", "cursor_name": self.get_full_text(ctx.cursor_name())}
+            self._add_statement(stmt)
+        elif ctx.DEALLOCATE():
+            stmt = {"type": "DEALLOCATE_CURSOR", "cursor_name": self.get_full_text(ctx.cursor_name())}
+            self._add_statement(stmt)
+        else:
+            # Delegate to specific visitors for more complex statements
+            self.visitChildren(ctx)
+
+    # CORRECTED: Fetch logic now correctly separates cursor name (id) from INTO vars (LOCAL_ID)
+    def visitFetch_cursor(self, ctx):
+        stmt = {
+            "type": "FETCH_CURSOR",
+            "cursor_name": self.get_full_text(ctx.id_()),
+            "fetch_into": [self.get_full_text(id_) for id_ in ctx.LOCAL_ID()]
+        }
+        self._add_statement(stmt)
+
+    # CORRECTED: Replaced manual iteration with direct ANTLR context access
+    def visitDeclare_cursor(self, ctx):
+        stmt = {
+            "type": "DECLARE_CURSOR",
+            "cursor_name": self.get_full_text(ctx.id_()),
+            "query": self.get_full_text(ctx.select_statement())
+        }
+        self._add_statement(stmt)
+        # We've processed this node completely, so stop further default traversal
+        return None
+    
+    def visitSql_clauses(self, ctx):
+        return self.visitChildren(ctx)
+
+    def visitSql_clause(self, ctx):
+        return self.visitChildren(ctx)
+
+def generate_ast(sql_file_path: str) -> list:
+    with open(sql_file_path, "r") as f:
+        input_sql = f.read()
+
+    input_stream = InputStream(input_sql)
+    lexer = TSqlLexer(input_stream)
+    token_stream = CommonTokenStream(lexer)
+    parser = TSqlParser(token_stream)
+    tree = parser.tsql_file()
+
+    visitor = ASTBuilder()
+    asts = visitor.visit(tree)
+
+    if not asts:
+        print("❌ No procedure AST found.")
+    else:
+        print(f"✅ {len(asts)} procedure(s) parsed.")
+
+    return asts
+
+def save_ast(asts: list, output_path: str):
+    print(f"📝 Writing ASTs to {output_path}")
+    with open(output_path, "w") as f:
+        json.dump(asts, f, indent=4)

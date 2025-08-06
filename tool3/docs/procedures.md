@@ -1,3 +1,20 @@
+## Summary
+
+**Total Procedures**: 2  
+**Total Tables**: 3  
+**Most Called Procedure**: `log_order`
+
+---
+
+
+## Table of Contents
+
+- [process_orders](#stored-procedure-process_orders)
+- [log_order](#stored-procedure-log_order)
+
+---
+
+
 # Stored Procedure:
 **process_orders**
 

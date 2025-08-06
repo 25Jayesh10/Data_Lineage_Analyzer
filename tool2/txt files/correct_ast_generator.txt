@@ -1,0 +1,579 @@
+---------------------------------------------------------------
+## correct ast_generator.py if taking one procedure at a time
+---------------------------------------------------------------
+
+import json
+from antlr4 import *
+from antlr.TSqlLexer import TSqlLexer
+from antlr.TSqlParser import TSqlParser
+from antlr.TSqlParserVisitor import TSqlParserVisitor
+from antlr4.tree.Tree import TerminalNodeImpl
+
+class ASTBuilder(TSqlParserVisitor):
+    def __init__(self):
+        self.ast = {}
+        self.statement_stack = []
+
+    def get_full_text(self, ctx):
+        if not ctx:
+            return ""
+        try:
+            # Extract full source text with whitespace preserved
+            return ctx.start.getInputStream().getText(ctx.start.start, ctx.stop.stop)
+        except Exception:
+            # Fallback to ANTLR's default if stream positions are missing
+            return ctx.getText()
+
+    def _add_statement(self, stmt_object):
+        if self.statement_stack:
+            self.statement_stack[-1].append(stmt_object)
+
+    def _get_procedure_name(self, ctx):
+        possible_names = [
+            'func_proc_name_schema',
+            'full_object_name',
+            'func_proc_name',
+            'procedure_name',
+            'func_proc_name_server_database_schema'
+        ]
+        for name in possible_names:
+            if hasattr(ctx, name) and getattr(ctx, name)():
+                return self.get_full_text(getattr(ctx, name)())
+        return "<unknown>"
+
+
+
+    def visitTsql_file(self, ctx: TSqlParser.Tsql_fileContext):
+        for child in ctx.getChildren():
+            result = self.visit(child)
+            if result:
+                return result
+        return None
+
+    def visitBatch(self, ctx: TSqlParser.BatchContext):
+        for child in ctx.getChildren():
+            result = self.visit(child)
+            if result:
+                return result
+        return None
+
+    def visitSql_clauses(self, ctx: TSqlParser.Sql_clausesContext):
+        for child in ctx.getChildren():
+            result = self.visit(child)
+            if result:
+                return result
+        return None
+
+
+
+    # --- Top-Level Visitor ---
+
+    def visitCreate_or_alter_procedure(self, ctx: TSqlParser.Create_or_alter_procedureContext):
+        print("⚙️ Visiting create_or_alter_procedure")
+        self.ast = {
+            "proc_name": self._get_procedure_name(ctx),
+            "params": [],
+            "return_type": "INTEGER",
+            "variables": [],
+            "statements": []
+        }
+        self.statement_stack.append(self.ast["statements"])
+        self.visitChildren(ctx)
+        self.statement_stack.pop()
+        print("📦 Final AST built:", json.dumps(self.ast, indent=2))  # <--- ADD THIS FOR DEBUGGING
+        return self.ast  # <--- ✅ THIS LINE MUST EXIST
+
+
+    # --- Metadata Extraction ---
+
+    def visitProcedure_param(self, ctx: TSqlParser.Procedure_paramContext):
+        param_info = {
+            "name": self.get_full_text(ctx.LOCAL_ID()),
+            "type": self.get_full_text(ctx.data_type()),
+            "mode": "IN"
+        }
+        if ctx.OUT() or ctx.OUTPUT():
+            param_info["mode"] = "OUT"
+        self.ast["params"].append(param_info)
+
+    def visitDeclare_statement(self, ctx: TSqlParser.Declare_statementContext):
+        for var in ctx.declare_local():
+            var_info = {
+                "name": self.get_full_text(var.LOCAL_ID()),
+                "type": self.get_full_text(var.data_type())
+            }
+            self.ast["variables"].append(var_info)
+        return self.visitChildren(ctx)
+
+    # --- Statement Visitors ---
+
+    def visitSet_statement(self, ctx: TSqlParser.Set_statementContext):
+        stmt = {"type": "SET"}
+        if ctx.LOCAL_ID():
+            stmt["name"] = self.get_full_text(ctx.LOCAL_ID())
+            stmt["value"] = self.get_full_text(ctx.expression())
+        else:
+            stmt["expression"] = self.get_full_text(ctx).replace("SET", "").strip('; ')
+        self._add_statement(stmt)
+        return None  # ✅ Add this
+
+    def visitSelect_statement_standalone(self, ctx: TSqlParser.Select_statement_standaloneContext):
+        return self.visitChildren(ctx)
+
+    def visitSelect_statement(self, ctx: TSqlParser.Select_statementContext):
+        stmt = {"type": "SELECT", "query": self.get_full_text(ctx)}
+        into_vars = []
+        try:
+            select_list = ctx.query_expression().query_specification().select_list()
+            if select_list:
+                for elem in select_list.select_list_elem():
+                    if elem.LOCAL_ID():
+                        into_vars.append(self.get_full_text(elem.LOCAL_ID()))
+        except Exception:
+            pass
+        if into_vars:
+            stmt["into_vars"] = into_vars
+        self._add_statement(stmt)
+        return None
+
+    def visitUpdate_statement(self, ctx: TSqlParser.Update_statementContext):
+        set_clauses = {}
+        for elem in ctx.update_elem():
+            col = self.get_full_text(elem.full_column_name())
+            val = self.get_full_text(elem.expression())
+            set_clauses[col] = val
+        stmt = {
+            "type": "UPDATE",
+            "table": self.get_full_text(ctx.ddl_object()),
+            "set": set_clauses,
+            "where": self.get_full_text(ctx.search_condition()) if ctx.search_condition() else ""
+        }
+        self._add_statement(stmt)
+        return None
+
+    def visitReturn_statement(self, ctx: TSqlParser.Return_statementContext):
+        stmt = {
+            "type": "RETURN",
+            "value": self.get_full_text(ctx.expression()) if ctx.expression() else "0"
+        }
+        self._add_statement(stmt)
+        return None
+
+    def visitIf_statement(self, ctx: TSqlParser.If_statementContext):
+        if_stmt = {
+            "type": "IF",
+            "condition": self.get_full_text(ctx.search_condition()),
+            "then": [],
+            "else": []
+        }
+        self._add_statement(if_stmt)
+        
+
+        self.statement_stack.append(if_stmt["then"])
+        if ctx.sql_clauses(0):
+            self.visit(ctx.sql_clauses(0))
+        self.statement_stack.pop()
+
+        if ctx.sql_clauses(1):
+            self.statement_stack.append(if_stmt["else"])
+            self.visit(ctx.sql_clauses(1))
+            self.statement_stack.pop()
+
+        if not if_stmt["else"]:
+            del if_stmt["else"]
+        return None
+
+    def visitSql_clauses(self, ctx):
+        for child in ctx.getChildren():
+            self.visit(child)
+
+    def visitSql_clause(self, ctx):
+        return self.visitChildren(ctx)
+
+# --- Top-level Execution ---
+
+def generate_ast(sql_file_path: str) -> dict:
+    with open(sql_file_path, "r") as f:
+        input_sql = f.read()
+
+    input_stream = InputStream(input_sql)
+    lexer = TSqlLexer(input_stream)
+    token_stream = CommonTokenStream(lexer)
+    parser = TSqlParser(token_stream)
+    tree = parser.tsql_file()
+
+    visitor = ASTBuilder()
+
+    # ✅ Visit the full parse tree directly
+    ast = visitor.visit(tree)
+
+    if isinstance(ast, dict) and "proc_name" in ast:
+        print("✅ AST captured successfully.")
+    else:
+        print("❌ No procedure AST found in input SQL.")
+        ast = None
+
+    return ast
+
+
+
+def save_ast(ast: dict, output_path: str):
+    print(f"📝 Writing AST to {output_path}")
+    with open(output_path, "w") as f:
+        json.dump(ast, f, indent=4)
+
+
+---------------------------------------------------------------
+## correct ast_generator.py if taking multiple procedure at a time
+---------------------------------------------------------------
+
+import json
+from antlr4 import *
+from antlr.TSqlLexer import TSqlLexer
+from antlr.TSqlParser import TSqlParser
+from antlr.TSqlParserVisitor import TSqlParserVisitor
+from antlr4.tree.Tree import TerminalNodeImpl
+
+class ASTBuilder(TSqlParserVisitor):
+    def __init__(self):
+        self.asts = []
+        self.current_ast = None
+        self.statement_stack = []
+
+    def get_full_text(self, ctx):
+        if not ctx:
+            return ""
+        try:
+            return ctx.start.getInputStream().getText(ctx.start.start, ctx.stop.stop)
+        except Exception:
+            return ctx.getText()
+
+    def _add_statement(self, stmt_object):
+        if self.statement_stack:
+            self.statement_stack[-1].append(stmt_object)
+
+    def _get_procedure_name(self, ctx):
+        candidates = [
+            'func_proc_name_schema',
+            'full_object_name',
+            'func_proc_name',
+            'procedure_name',
+            'func_proc_name_server_database_schema'
+        ]
+        for name in candidates:
+            if hasattr(ctx, name) and getattr(ctx, name)():
+                return self.get_full_text(getattr(ctx, name)())
+        return "<unknown>"
+
+    def visitTsql_file(self, ctx):
+        self.visitChildren(ctx)
+        return self.asts
+
+    def visitBatch(self, ctx):
+        return self.visitChildren(ctx)
+
+    def visitCreate_or_alter_procedure(self, ctx: TSqlParser.Create_or_alter_procedureContext):
+        self.current_ast = {
+            "proc_name": self._get_procedure_name(ctx),
+            "params": [],
+            "return_type": "INTEGER",
+            "variables": [],
+            "statements": []
+        }
+        self.asts.append(self.current_ast)
+
+        self.statement_stack.append(self.current_ast["statements"])
+        self.visitChildren(ctx)
+        self.statement_stack.pop()
+
+    def visitProcedure_param(self, ctx: TSqlParser.Procedure_paramContext):
+        param = {
+            "name": self.get_full_text(ctx.LOCAL_ID()),
+            "type": self.get_full_text(ctx.data_type()),
+            "mode": "OUT" if ctx.OUTPUT() or ctx.OUT() else "IN"
+        }
+        self.current_ast["params"].append(param)
+
+    def visitDeclare_statement(self, ctx):
+        for decl in ctx.declare_local():
+            self.current_ast["variables"].append({
+                "name": self.get_full_text(decl.LOCAL_ID()),
+                "type": self.get_full_text(decl.data_type())
+            })
+
+    def visitSet_statement(self, ctx):
+        stmt = {"type": "SET"}
+        if ctx.LOCAL_ID():
+            stmt["name"] = self.get_full_text(ctx.LOCAL_ID())
+            stmt["value"] = self.get_full_text(ctx.expression())
+        else:
+            stmt["expression"] = self.get_full_text(ctx)
+        self._add_statement(stmt)
+
+    def visitSelect_statement(self, ctx):
+        stmt = {"type": "SELECT", "query": self.get_full_text(ctx)}
+        self._add_statement(stmt)
+
+    def visitUpdate_statement(self, ctx):
+        stmt = {
+            "type": "UPDATE",
+            "table": self.get_full_text(ctx.ddl_object()),
+            "set": {},
+            "where": self.get_full_text(ctx.search_condition()) if ctx.search_condition() else ""
+        }
+        for elem in ctx.update_elem():
+            stmt["set"][self.get_full_text(elem.full_column_name())] = self.get_full_text(elem.expression())
+        self._add_statement(stmt)
+
+    def visitReturn_statement(self, ctx):
+        stmt = {"type": "RETURN", "value": self.get_full_text(ctx.expression()) if ctx.expression() else "0"}
+        self._add_statement(stmt)
+
+    def visitIf_statement(self, ctx):
+        stmt = {
+            "type": "IF",
+            "condition": self.get_full_text(ctx.search_condition()),
+            "then": [],
+            "else": []
+        }
+        self._add_statement(stmt)
+
+        self.statement_stack.append(stmt["then"])
+        if ctx.sql_clauses(0):
+            self.visit(ctx.sql_clauses(0))
+        self.statement_stack.pop()
+
+        if ctx.sql_clauses(1):
+            self.statement_stack.append(stmt["else"])
+            self.visit(ctx.sql_clauses(1))
+            self.statement_stack.pop()
+        else:
+            del stmt["else"]
+
+    def visitWhile_statement(self, ctx):
+        stmt = {
+            "type": "WHILE",
+            "condition": self.get_full_text(ctx.search_condition()),
+            "body": []
+        }
+        self._add_statement(stmt)
+        self.statement_stack.append(stmt["body"])
+        self.visit(ctx.sql_clauses())
+        self.statement_stack.pop()
+
+    def visitTry_catch_statement(self, ctx):
+        stmt = {
+            "type": "TRY_CATCH",
+            "try": [],
+            "catch": []
+        }
+        self._add_statement(stmt)
+
+        self.statement_stack.append(stmt["try"])
+        self.visit(ctx.sql_clauses(0))
+        self.statement_stack.pop()
+
+        self.statement_stack.append(stmt["catch"])
+        self.visit(ctx.sql_clauses(1))
+        self.statement_stack.pop()
+
+    def visitExecute_statement(self, ctx):
+        stmt = {"type": "EXEC", "command": self.get_full_text(ctx)}
+        self._add_statement(stmt)
+
+    def visitBegin_transaction(self, ctx):
+        self._add_statement({"type": "BEGIN_TRANSACTION"})
+
+    def visitCommit_transaction(self, ctx):
+        self._add_statement({"type": "COMMIT_TRANSACTION"})
+
+    def visitRollback_transaction(self, ctx):
+        self._add_statement({"type": "ROLLBACK_TRANSACTION"})
+
+    def visitClose_cursor(self, ctx):
+        stmt = {"type": "CLOSE_CURSOR", "cursor": self.get_full_text(ctx.LOCAL_ID())}
+        self._add_statement(stmt)
+
+    def visitDeallocate_cursor(self, ctx):
+        stmt = {"type": "DEALLOCATE_CURSOR", "cursor": self.get_full_text(ctx.LOCAL_ID())}
+        self._add_statement(stmt)
+
+    def visitOpen_cursor(self, ctx):
+        stmt = {"type": "OPEN_CURSOR", "cursor": self.get_full_text(ctx.LOCAL_ID())}
+        self._add_statement(stmt)
+
+    def visitFetch_cursor(self, ctx):
+        stmt = {
+            "type": "FETCH_CURSOR",
+            "cursor": self.get_full_text(ctx.LOCAL_ID(0)),
+            "into": [self.get_full_text(id_) for id_ in ctx.LOCAL_ID()[1:]]
+        }
+        self._add_statement(stmt)
+
+    def visitDeclare_cursor(self, ctx):
+        cursor_name = self.get_full_text(ctx.children[1]) if len(ctx.children) > 1 else "<unknown>"
+        select_ctx = None
+        for child in ctx.children:
+            if isinstance(child, TSqlParser.Select_statementContext):
+                select_ctx = child
+                break
+        stmt = {
+            "type": "DECLARE_CURSOR",
+            "cursor": cursor_name,
+            "query": self.get_full_text(select_ctx) if select_ctx else "<missing_query>"
+        }
+        self._add_statement(stmt)
+
+    def visitSql_clauses(self, ctx):
+        return self.visitChildren(ctx)
+
+    def visitSql_clause(self, ctx):
+        return self.visitChildren(ctx)
+
+# --- Top-level Execution ---
+
+def generate_ast(sql_file_path: str) -> list:
+    with open(sql_file_path, "r") as f:
+        input_sql = f.read()
+
+    input_stream = InputStream(input_sql)
+    lexer = TSqlLexer(input_stream)
+    token_stream = CommonTokenStream(lexer)
+    parser = TSqlParser(token_stream)
+    tree = parser.tsql_file()
+
+    visitor = ASTBuilder()
+    asts = visitor.visit(tree)
+
+    if not asts:
+        print("❌ No procedure AST found.")
+    else:
+        print(f"✅ {len(asts)} procedure(s) parsed.")
+
+    return asts
+
+def save_ast(asts: list, output_path: str):
+    print(f"📝 Writing ASTs to {output_path}")
+    with open(output_path, "w") as f:
+        json.dump(asts, f, indent=4)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CREATE PROCEDURE dbo.sp_ProcessShipments
+    @BatchID INT,
+    @ProcessedCount INT OUTPUT
+AS
+BEGIN
+    DECLARE @ShipmentID INT, @Status VARCHAR(50)
+    DECLARE shipment_cursor CURSOR FOR
+        SELECT ShipmentID FROM Shipments WHERE BatchID = @BatchID AND Status = 'Pending'
+
+    SET @ProcessedCount = 0
+
+    BEGIN TRY
+        OPEN shipment_cursor
+        FETCH NEXT FROM shipment_cursor INTO @ShipmentID
+
+        WHILE @@FETCH_STATUS = 0
+        BEGIN
+            UPDATE Shipments
+            SET Status = 'Shipped'
+            WHERE ShipmentID = @ShipmentID
+
+            SET @ProcessedCount = @ProcessedCount + 1
+            FETCH NEXT FROM shipment_cursor INTO @ShipmentID
+        END
+
+        CLOSE shipment_cursor
+        DEALLOCATE shipment_cursor
+    END TRY
+    BEGIN CATCH
+        IF CURSOR_STATUS('global', 'shipment_cursor') >= -1
+        BEGIN
+            CLOSE shipment_cursor
+            DEALLOCATE shipment_cursor
+        END
+        RETURN -1
+    END CATCH
+
+    RETURN 0
+END
+GO
+
+CREATE PROCEDURE dbo.sp_ApplyDiscounts
+    @CustomerID INT,
+    @DiscountRate DECIMAL(5,2)
+AS
+BEGIN
+    BEGIN TRANSACTION
+
+    IF EXISTS (SELECT 1 FROM Customers WHERE CustomerID = @CustomerID AND IsActive = 1)
+    BEGIN
+        IF @DiscountRate BETWEEN 0 AND 50
+        BEGIN
+            UPDATE Orders
+            SET Discount = @DiscountRate
+            WHERE CustomerID = @CustomerID AND OrderDate >= DATEADD(month, -6, GETDATE())
+        END
+        ELSE
+        BEGIN
+            PRINT 'Invalid discount rate'
+            ROLLBACK TRANSACTION
+            RETURN -1
+        END
+    END
+    ELSE
+    BEGIN
+        PRINT 'Customer not found or inactive'
+        ROLLBACK TRANSACTION
+        RETURN -1
+    END
+
+    COMMIT TRANSACTION
+    RETURN 0
+END
+GO
+
+CREATE PROCEDURE dbo.sp_ExecuteDynamicQuery
+    @TableName VARCHAR(100),
+    @RowCount INT OUTPUT
+AS
+BEGIN
+    DECLARE @SQL NVARCHAR(500)
+
+    SET @SQL = 'SELECT COUNT(*) FROM ' + QUOTENAME(@TableName)
+    EXEC sp_executesql @SQL, N'@RowCount INT OUTPUT', @RowCount OUTPUT
+
+    IF @RowCount = 0
+    BEGIN
+        EXEC dbo.sp_LogEmptyTable @TableName
+    END
+
+    RETURN 0
+END
+GO
+
