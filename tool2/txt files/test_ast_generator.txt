@@ -1,0 +1,1276 @@
+# # import json
+# # from antlr4 import *
+# # from antlr.TSqlLexer import TSqlLexer
+# # from antlr.TSqlParser import TSqlParser
+# # from antlr.TSqlParserVisitor import TSqlParserVisitor
+
+
+# # class ASTBuilder(TSqlParserVisitor):
+# #     def __init__(self):
+# #         self.ast = {
+# #             "procedure": "",
+# #             "params": [],
+# #             "statements": [],
+# #             "variables": [],
+# #             "cursors": []
+# #         }
+
+# #     def visitCreate_or_alter_procedure(self, ctx: TSqlParser.Create_or_alter_procedureContext):
+# #         # Procedure name
+# #         proc_name = ctx.func_proc_name_schema().getText()
+# #         self.ast["procedure"] = proc_name
+
+# #         # Parameters
+# #         if ctx.procedure_param_list():
+# #             for param in ctx.procedure_param_list().procedure_param():
+# #                 name = param.id().getText()
+# #                 datatype = param.data_type().getText()
+# #                 self.ast["params"].append({
+# #                     "name": name,
+# #                     "type": datatype
+# #                 })
+
+# #         # Body statements
+# #         if ctx.sql_clauses():
+# #             self.visit(ctx.sql_clauses())
+
+# #         return self.ast
+
+# #     def visitSql_clauses(self, ctx: TSqlParser.Sql_clausesContext):
+# #         for child in ctx.children:
+# #             stmt = child.getText()
+# #             self.ast["statements"].append({
+# #                 "type": "sql_statement",
+# #                 "text": stmt
+# #             })
+
+# #     def visitDeclare_local(self, ctx: TSqlParser.Declare_localContext):
+# #         var_name = ctx.LOCAL_ID().getText()
+# #         var_type = ctx.data_type().getText()
+# #         self.ast["variables"].append({
+# #             "name": var_name,
+# #             "type": var_type
+# #         })
+
+# #     def visitCursor_statement(self, ctx: TSqlParser.Cursor_statementContext):
+# #         if ctx.declare_cursor():
+# #             cursor_ctx = ctx.declare_cursor()
+# #             cursor_name = cursor_ctx.cursor_name().getText()
+# #             select_stmt = cursor_ctx.select_statement().getText() if cursor_ctx.select_statement() else ""
+# #             self.ast["cursors"].append({
+# #                 "name": cursor_name,
+# #                 "select": select_stmt
+# #             })
+
+
+# # def generate_ast(sql_file_path: str) -> dict:
+# #     # Read SQL input
+# #     with open(sql_file_path, "r") as f:
+# #         input_sql = f.read()
+
+# #     # Setup ANTLR parsing
+# #     input_stream = InputStream(input_sql)
+# #     lexer = TSqlLexer(input_stream)
+# #     token_stream = CommonTokenStream(lexer)
+# #     parser = TSqlParser(token_stream)
+# #     tree = parser.tsql_file()
+
+# #     # Visit and build AST
+# #     visitor = ASTBuilder()
+# #     ast = visitor.visit(tree)
+
+# #     return ast
+
+
+# # def save_ast(ast: dict, output_path: str):
+# #     with open(output_path, "w") as f:
+# #         json.dump(ast, f, indent=4)
+
+
+# # if __name__ == "__main__":
+# #     import sys
+# #     if len(sys.argv) != 3:
+# #         print("Usage: python ast_generator.py <input.sql> <output.json>")
+# #         exit(1)
+
+# #     input_file = sys.argv[1]
+# #     output_file = sys.argv[2]
+
+# #     ast = generate_ast(input_file)
+# #     save_ast(ast, output_file)
+# #     print(f"AST written to {output_file}")
+
+# import json
+# from antlr4 import *
+# from antlr.TSqlLexer import TSqlLexer
+# from antlr.TSqlParser import TSqlParser
+# from antlr.TSqlParserVisitor import TSqlParserVisitor
+
+
+# class ASTBuilder(TSqlParserVisitor):
+#     def __init__(self):
+#         self.ast = {
+#             "procedure": "",
+#             "params": [],
+#             "statements": [],
+#             "variables": [],
+#             "cursors": []
+#         }
+
+#     def visitCreate_or_alter_procedure(self, ctx: TSqlParser.Create_or_alter_procedureContext):
+#         # Procedure name
+#         proc_name = ctx.func_proc_name_schema().getText()
+#         self.ast["procedure"] = proc_name
+
+#         # Parameters
+#         if ctx.procedure_param():
+#             for param in ctx.procedure_param():
+#                 param_name = param.id().getText() if param.id() else "<unknown>"
+#                 param_type = param.data_type().getText() if param.data_type() else "<unknown>"
+#                 self.ast["params"].append({
+#                     "name": param_name,
+#                     "type": param_type
+#                 })
+
+#         # Body statements
+#         if ctx.sql_clauses():
+#             self.visit(ctx.sql_clauses())
+
+#         return self.ast
+
+#     def visitSql_clauses(self, ctx: TSqlParser.Sql_clausesContext):
+#         for child in ctx.children:
+#             stmt = child.getText()
+#             self.ast["statements"].append({
+#                 "type": "sql_statement",
+#                 "text": stmt
+#             })
+
+#     def visitDeclare_local(self, ctx: TSqlParser.Declare_localContext):
+#         var_name = ctx.LOCAL_ID().getText() if ctx.LOCAL_ID() else "<unknown>"
+#         var_type = ctx.data_type().getText() if ctx.data_type() else "<unknown>"
+#         self.ast["variables"].append({
+#             "name": var_name,
+#             "type": var_type
+#         })
+
+#     def visitCursor_statement(self, ctx: TSqlParser.Cursor_statementContext):
+#         if ctx.declare_cursor():
+#             cursor_ctx = ctx.declare_cursor()
+#             cursor_name = cursor_ctx.cursor_name().getText() if cursor_ctx.cursor_name() else "<unknown>"
+#             select_stmt = cursor_ctx.select_statement().getText() if cursor_ctx.select_statement() else ""
+#             self.ast["cursors"].append({
+#                 "name": cursor_name,
+#                 "select": select_stmt
+#             })
+
+
+# def generate_ast(sql_file_path: str) -> dict:
+#     with open(sql_file_path, "r") as f:
+#         input_sql = f.read()
+
+#     input_stream = InputStream(input_sql)
+#     lexer = TSqlLexer(input_stream)
+#     token_stream = CommonTokenStream(lexer)
+#     parser = TSqlParser(token_stream)
+#     tree = parser.tsql_file()
+
+#     visitor = ASTBuilder()
+#     ast = visitor.visit(tree)
+#     return ast
+
+
+# def save_ast(ast: dict, output_path: str):
+#     with open(output_path, "w") as f:
+#         json.dump(ast, f, indent=4)
+
+
+# if __name__ == "__main__":
+#     import sys
+#     if len(sys.argv) != 3:
+#         print("Usage: python ast_generator.py <input.sql> <output.json>")
+#         exit(1)
+
+#     input_file = sys.argv[1]
+#     output_file = sys.argv[2]
+
+#     ast = generate_ast(input_file)
+#     save_ast(ast, output_file)
+#     print(f"AST written to {output_file}")
+
+
+
+
+
+
+
+
+
+
+
+# import json
+# from antlr4 import *
+# from antlr.TSqlLexer import TSqlLexer
+# from antlr.TSqlParser import TSqlParser
+# from antlr.TSqlParserVisitor import TSqlParserVisitor
+
+# class ASTBuilder(TSqlParserVisitor):
+#     def __init__(self):
+#         self.ast = {
+#             "proc_name": "",
+#             "params": [],
+#             "return_type": "",  # Add this field
+#             "variables": [],
+#             "statements": []
+#         }
+
+#     def visitCreate_or_alter_procedure(self, ctx: TSqlParser.Create_or_alter_procedureContext):
+#         # Procedure name
+#         if ctx.func_proc_name_schema():
+#             self.ast["proc_name"] = ctx.func_proc_name_schema().getText()
+#         elif ctx.func_proc_name_database_schema():
+#             self.ast["proc_name"] = ctx.func_proc_name_database_schema().getText()
+#         elif ctx.func_proc_name_server_database_schema():
+#             self.ast["proc_name"] = ctx.func_proc_name_server_database_schema().getText()
+#         else:
+#             self.ast["proc_name"] = "<unknown>"
+
+#         # Parameters
+#         params = ctx.procedure_param()
+#         if not isinstance(params, list):
+#             params = [params] if params else []
+#         for param in params:
+#             name = param.id_().getText() if param.id_() else "<unknown>"
+#             datatype = param.data_type().getText() if param.data_type() else "<unknown>"
+#             self.ast["params"].append({
+#                 "name": name,
+#                 "type": datatype,
+#                 "mode": "IN"  # Default mode, adjust if needed
+#             })
+
+#         # Return type (set to empty string or parse if available)
+#         self.ast["return_type"] = ""
+
+#         # Body statements
+#         clauses = ctx.sql_clauses()
+#         if clauses:
+#             if isinstance(clauses, list):
+#                 for clause in clauses:
+#                     self.visit(clause)
+#             else:
+#                 self.visit(clauses)
+
+#         return self.ast
+
+#     def visitSql_clauses(self, ctx: TSqlParser.Sql_clausesContext):
+#         for child in getattr(ctx, 'children', []):
+#             stmt = child.getText()
+#             self.ast["statements"].append({
+#                 "type": "sql_statement",
+#                 "text": stmt
+#             })
+
+#     def visitDeclare_local(self, ctx: TSqlParser.Declare_localContext):
+#         var_name = ctx.LOCAL_ID().getText() if ctx.LOCAL_ID() else "<unknown>"
+#         var_type = ctx.data_type().getText() if ctx.data_type() else "<unknown>"
+#         self.ast["variables"].append({
+#             "name": var_name,
+#             "type": var_type
+#         })
+
+#     def visitCursor_statement(self, ctx: TSqlParser.Cursor_statementContext):
+#         if ctx.declare_cursor():
+#             cursor_ctx = ctx.declare_cursor()
+#             cursor_name = cursor_ctx.cursor_name().getText() if cursor_ctx.cursor_name() else "<unknown>"
+#             select_stmt = cursor_ctx.select_statement().getText() if cursor_ctx.select_statement() else ""
+#             self.ast["cursors"].append({
+#                 "name": cursor_name,
+#                 "select": select_stmt
+#             })
+
+# def generate_ast(sql_file_path: str) -> dict:
+#     with open(sql_file_path, "r") as f:
+#         input_sql = f.read()
+
+#     input_stream = InputStream(input_sql)
+#     lexer = TSqlLexer(input_stream)
+#     token_stream = CommonTokenStream(lexer)
+#     parser = TSqlParser(token_stream)
+#     tree = parser.tsql_file()
+
+#     visitor = ASTBuilder()
+#     ast = visitor.visit(tree)
+#     return ast
+
+# def save_ast(ast: dict, output_path: str):
+#     with open(output_path, "w") as f:
+#         json.dump(ast, f, indent=4)
+
+# if __name__ == "__main__":
+#     import sys
+#     if len(sys.argv) != 3:
+#         print("Usage: python ast_generator.py <input.sql> <output.json>")
+#         exit(1)
+
+#     input_file = sys.argv[1]
+#     output_file = sys.argv[2]
+
+#     ast = generate_ast(input_file)
+#     save_ast(ast, output_file)
+#     print(f"AST written to {output_file}")
+---------------------------------------------------------
+
+
+
+
+
+
+
+import json
+from antlr4 import *
+from antlr.TSqlLexer import TSqlLexer
+from antlr.TSqlParser import TSqlParser
+from antlr.TSqlParserVisitor import TSqlParserVisitor
+
+class ASTBuilder(TSqlParserVisitor):
+    def __init__(self):
+        self.ast = {
+            "proc_name": "",
+            "params": [],
+            "return_type": "",
+            "variables": [],
+            "statements": []
+        }
+
+    def visitTsql_file(self, ctx):
+        # Visit children to reach batches/statements
+        return self.visitChildren(ctx)
+
+    def visitBatch(self, ctx):
+        # Visit children to reach statements
+        return self.visitChildren(ctx)
+
+    def visitBatch_level_statement(self, ctx):
+        # Visit children to reach create/alter procedure
+        return self.visitChildren(ctx)
+
+    def visitCreate_or_alter_procedure(self, ctx: TSqlParser.Create_or_alter_procedureContext):
+        # Procedure name
+        if ctx.func_proc_name_schema():
+            self.ast["proc_name"] = ctx.func_proc_name_schema().getText()
+        elif ctx.func_proc_name_database_schema():
+            self.ast["proc_name"] = ctx.func_proc_name_database_schema().getText()
+        elif ctx.func_proc_name_server_database_schema():
+            self.ast["proc_name"] = ctx.func_proc_name_server_database_schema().getText()
+        else:
+            self.ast["proc_name"] = "<unknown>"
+
+        # Parameters
+        params = ctx.procedure_param()
+        if not isinstance(params, list):
+            params = [params] if params else []
+        for param in params:
+            name = param.id_().getText() if param.id_() else "<unknown>"
+            datatype = param.data_type().getText() if param.data_type() else "<unknown>"
+            self.ast["params"].append({
+                "name": name,
+                "type": datatype,
+                "mode": "IN"
+            })
+
+        # Return type (set to empty string or parse if available)
+        self.ast["return_type"] = ""
+
+        # Body statements
+        clauses = ctx.sql_clauses()
+        if clauses:
+            if isinstance(clauses, list):
+                for clause in clauses:
+                    self.visit(clause)
+            else:
+                self.visit(clauses)
+
+        return self.ast
+
+    def visitSql_clauses(self, ctx: TSqlParser.Sql_clausesContext):
+        for child in getattr(ctx, 'children', []):
+            stmt = child.getText()
+            self.ast["statements"].append({
+                "type": "sql_statement",
+                "text": stmt
+            })
+
+    def visitDeclare_local(self, ctx: TSqlParser.Declare_localContext):
+        var_name = ctx.LOCAL_ID().getText() if ctx.LOCAL_ID() else "<unknown>"
+        var_type = ctx.data_type().getText() if ctx.data_type() else "<unknown>"
+        self.ast["variables"].append({
+            "name": var_name,
+            "type": var_type
+        })
+
+    # Optionally, add more visit methods for other statement types as needed
+
+def generate_ast(sql_file_path: str) -> dict:
+    with open(sql_file_path, "r") as f:
+        input_sql = f.read()
+
+    input_stream = InputStream(input_sql)
+    lexer = TSqlLexer(input_stream)
+    token_stream = CommonTokenStream(lexer)
+    parser = TSqlParser(token_stream)
+    tree = parser.tsql_file()
+
+    visitor = ASTBuilder()
+    ast = visitor.visit(tree)
+    # Always return a valid AST object
+    if ast is None:
+        ast = visitor.ast
+    return ast
+
+def save_ast(ast: dict, output_path: str):
+    with open(output_path, "w") as f:
+        json.dump(ast, f, indent=4)
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) != 3:
+        print("Usage: python ast_generator.py <input.sql> <output.json>")
+        exit(1)
+
+    input_file = sys.argv[1]
+    output_file = sys.argv[2]
+
+    ast = generate_ast(input_file)
+    save_ast(ast, output_file)
+    print(f"AST written to {output_file}")
+
+
+    # import json
+# from antlr4 import *
+# from antlr.TSqlLexer import TSqlLexer
+# from antlr.TSqlParser import TSqlParser
+# from antlr.TSqlParserVisitor import TSqlParserVisitor
+
+# class ASTBuilder(TSqlParserVisitor):
+#     def __init__(self):
+#         self.ast = {
+#             "proc_name": "",
+#             "params": [],
+#             "return_type": "",
+#             "variables": [],
+#             "statements": []
+#         }
+
+#     def visitTsql_file(self, ctx):
+#         # Visit children to reach batches/statements
+#         return self.visitChildren(ctx)
+
+#     def visitBatch(self, ctx):
+#         # Visit children to reach statements
+#         return self.visitChildren(ctx)
+
+#     def visitBatch_level_statement(self, ctx):
+#         # Visit children to reach create/alter procedure
+#         return self.visitChildren(ctx)
+
+#     def visitCreate_or_alter_procedure(self, ctx: TSqlParser.Create_or_alter_procedureContext):
+#         # Procedure name
+#         proc_name = "<unknown>"
+#         if ctx.func_proc_name_schema():
+#             proc_name = ctx.func_proc_name_schema().getText()
+#         elif ctx.func_proc_name_database_schema():
+#             proc_name = ctx.func_proc_name_database_schema().getText()
+#         elif ctx.func_proc_name_server_database_schema():
+#             proc_name = ctx.func_proc_name_server_database_schema().getText()
+#         self.ast["proc_name"] = proc_name
+
+#         # Parameters
+#         params = ctx.procedure_param()
+#         if params:
+#             if not isinstance(params, list):
+#                 params = [params]
+#             for param in params:
+#                 name = param.id_().getText() if param.id_() else "<unknown>"
+#                 datatype = param.data_type().getText() if param.data_type() else "<unknown>"
+#                 self.ast["params"].append({
+#                     "name": name,
+#                     "type": datatype,
+#                     "mode": "IN"
+#                 })
+
+#         # Return type (set to empty string or parse if available)
+#         self.ast["return_type"] = ""
+
+#         # Body statements
+#         clauses = ctx.sql_clauses()
+#         if clauses:
+#             if isinstance(clauses, list):
+#                 for clause in clauses:
+#                     self.visit(clause)
+#             else:
+#                 self.visit(clauses)
+
+#         return self.ast
+
+#     def visitSql_clauses(self, ctx: TSqlParser.Sql_clausesContext):
+#         for child in getattr(ctx, 'children', []):
+#             stmt = child.getText()
+#             self.ast["statements"].append({
+#                 "type": "sql_statement",
+#                 "text": stmt
+#             })
+
+#     def visitDeclare_local(self, ctx: TSqlParser.Declare_localContext):
+#         var_name = ctx.LOCAL_ID().getText() if ctx.LOCAL_ID() else "<unknown>"
+#         var_type = ctx.data_type().getText() if ctx.data_type() else "<unknown>"
+#         self.ast["variables"].append({
+#             "name": var_name,
+#             "type": var_type
+#         })
+
+#     # Optionally, add more visit methods for other statement types as needed
+
+# def generate_ast(sql_file_path: str) -> dict:
+#     with open(sql_file_path, "r") as f:
+#         input_sql = f.read()
+
+#     input_stream = InputStream(input_sql)
+#     lexer = TSqlLexer(input_stream)
+#     token_stream = CommonTokenStream(lexer)
+#     parser = TSqlParser(token_stream)
+#     tree = parser.tsql_file()
+
+#     visitor = ASTBuilder()
+#     ast = visitor.visit(tree)
+#     # Always return a valid AST object
+#     if ast is None:
+#         ast = visitor.ast
+#     return ast
+
+# def save_ast(ast: dict, output_path: str):
+#     with open(output_path, "w") as f:
+#         json.dump(ast, f, indent=4)
+
+# if __name__ == "__main__":
+#     import sys
+#     if len(sys.argv) != 3:
+#         print("Usage: python ast_generator.py <input.sql> <output.json>")
+#         exit(1)
+
+#     input_file = sys.argv[1]
+#     output_file = sys.argv[2]
+
+#     ast = generate_ast(input_file)
+#     save_ast(ast, output_file)
+#     print(f"AST written to {output_file}")
+
+# ast_generator.py
+
+import json
+from antlr4 import *
+from antlr.TSqlLexer import TSqlLexer
+from antlr.TSqlParser import TSqlParser
+from antlr.TSqlParserVisitor import TSqlParserVisitor
+
+class ASTBuilder(TSqlParserVisitor):
+    """
+    A visitor class to build an AST from a T-SQL parse tree.
+    """
+    def __init__(self):
+        self.ast = {
+            "proc_name": None,
+            "params": [],
+            "variables": [],
+            "statements": []
+        }
+
+    def get_full_text(self, ctx):
+        """Helper to get the full original text from a context."""
+        start = ctx.start.start
+        stop = ctx.stop.stop
+        return ctx.start.getInputStream().getText(start, stop)
+
+    # --- Top-level visitor entry points ---
+
+    def visitCreate_or_alter_procedure(self, ctx: TSqlParser.Create_or_alter_procedureContext):
+        # 1. Get Procedure Name (FIXED)
+        # This part is updated to correctly find the procedure name rule,
+        # which is commonly 'full_object_name' in T-SQL grammars.
+        if hasattr(ctx, 'full_object_name') and ctx.full_object_name():
+            self.ast["proc_name"] = self.get_full_text(ctx.full_object_name())
+        elif hasattr(ctx, 'func_proc_name') and ctx.func_proc_name(): # Fallback
+             self.ast["proc_name"] = self.get_full_text(ctx.func_proc_name())
+
+        # 2. Visit children to find parameters and the procedure body
+        self.visitChildren(ctx)
+        
+        # This is the final object to be returned
+        return self.ast
+
+    # --- Metadata Extraction ---
+
+    def visitProcedure_param(self, ctx: TSqlParser.Procedure_paramContext):
+        # Extract each parameter
+        param_info = {
+            "name": ctx.LOCAL_ID().getText(),
+            "type": ctx.data_type().getText(),
+            "mode": "IN" # Default mode
+        }
+        if ctx.OUT() or ctx.OUTPUT():
+            param_info["mode"] = "OUT"
+            
+        self.ast["params"].append(param_info)
+        return self.visitChildren(ctx)
+
+    def visitDeclare_local(self, ctx: TSqlParser.Declare_localContext):
+        # Extract each declared variable
+        var_info = {
+            "name": ctx.LOCAL_ID().getText(),
+            "type": ctx.data_type().getText()
+        }
+        self.ast["variables"].append(var_info)
+        
+        # Also add it as a statement
+        self.ast["statements"].append({
+            "type": "DECLARE",
+            "text": self.get_full_text(ctx)
+        })
+        return self.visitChildren(ctx)
+
+    # --- Statement Extraction ---
+
+    def visitSelect_statement(self, ctx: TSqlParser.Select_statementContext):
+        self.ast["statements"].append({
+            "type": "SELECT",
+            "text": self.get_full_text(ctx)
+        })
+        # We don't need to visit children of a statement we capture whole
+        return None
+
+    def visitInsert_statement(self, ctx: TSqlParser.Insert_statementContext):
+        self.ast["statements"].append({
+            "type": "INSERT",
+            "table": ctx.ddl_object().getText(),
+            "text": self.get_full_text(ctx)
+        })
+        return None
+
+    def visitUpdate_statement(self, ctx: TSqlParser.Update_statementContext):
+        self.ast["statements"].append({
+            "type": "UPDATE",
+            "text": self.get_full_text(ctx)
+        })
+        return None
+
+    # In ast_generator.py
+
+    def visitIf_statement(self, ctx: TSqlParser.If_statementContext):
+        # Determine the condition text by checking for the correct rule name
+        condition_text = ""
+        if hasattr(ctx, 'search_condition') and ctx.search_condition():
+            condition_text = self.get_full_text(ctx.search_condition())
+        elif hasattr(ctx, 'predicate') and ctx.predicate(): # Fallback for other grammars
+            condition_text = self.get_full_text(ctx.predicate())
+
+        self.ast["statements"].append({
+            "type": "IF",
+            "condition": condition_text,
+            "text": self.get_full_text(ctx)
+        })
+        # We visit children to capture statements inside the IF/ELSE blocks
+        return self.visitChildren(ctx)
+
+# --- Orchestration Functions ---
+
+def generate_ast(sql_file_path: str) -> dict:
+    """Parses a SQL file and returns the generated AST."""
+    with open(sql_file_path, "r") as f:
+        input_sql = f.read()
+
+    input_stream = InputStream(input_sql)
+    lexer = TSqlLexer(input_stream)
+    token_stream = CommonTokenStream(lexer)
+    parser = TSqlParser(token_stream)
+    tree = parser.tsql_file()
+
+    visitor = ASTBuilder()
+    ast = visitor.visit(tree)
+    
+    # The visitor returns the final AST from the top-level procedure rule
+    if ast:
+        return ast
+    # If no procedure was found, return the empty structure
+    return visitor.ast
+
+def save_ast(ast: dict, output_path: str):
+    """Saves the AST dictionary to a JSON file."""
+    with open(output_path, "w") as f:
+        json.dump(ast, f, indent=4)
+
+
+
+
+# # ast_generator.py
+
+# import json
+# from antlr4 import *
+# from antlr.TSqlLexer import TSqlLexer
+# from antlr.TSqlParser import TSqlParser
+# from antlr.TSqlParserVisitor import TSqlParserVisitor
+
+# class ASTBuilder(TSqlParserVisitor):
+#     """
+#     Final version of the AST builder, corrected using the specific rule names
+#     from the user's ANTLR grammar.
+#     """
+#     def __init__(self):
+#         self.ast = {}
+#         self.statement_stack = []
+
+#     def get_full_text(self, ctx):
+#         if not ctx:
+#             return ""
+#         start = ctx.start.start
+#         stop = ctx.stop.stop
+#         return ctx.start.getInputStream().getText(start, stop)
+        
+#     def _add_statement(self, stmt_object):
+#         if self.statement_stack:
+#             self.statement_stack[-1].append(stmt_object)
+
+#     def _get_procedure_name(self, ctx):
+#         # List of potential rule names, with the correct one added.
+#         possible_names = [
+#             'func_proc_name_schema', # CORRECT NAME FOUND FROM PARSE TREE
+#             'full_object_name',
+#             'func_proc_name',
+#             'procedure_name',
+#             'func_proc_name_server_database_schema'
+#         ]
+#         for name in possible_names:
+#             if hasattr(ctx, name) and getattr(ctx, name)():
+#                 return self.get_full_text(getattr(ctx, name)())
+#         raise AttributeError("AST Builder could not find a valid procedure name rule.")
+
+
+#     # --- Top-Level Visitor ---
+
+#     def visitCreate_or_alter_procedure(self, ctx: TSqlParser.Create_or_alter_procedureContext):
+#         self.ast = {
+#             "proc_name": self._get_procedure_name(ctx),
+#             "params": [],
+#             "return_type": "INTEGER",
+#             "variables": [],
+#             "statements": []
+#         }
+#         self.statement_stack.append(self.ast["statements"])
+#         self.visitChildren(ctx)
+#         self.statement_stack.pop()
+#         return self.ast
+
+#     # --- Metadata Extraction ---
+
+#     def visitProcedure_param(self, ctx: TSqlParser.Procedure_paramContext):
+#         param_info = {
+#             "name": self.get_full_text(ctx.LOCAL_ID()),
+#             "type": self.get_full_text(ctx.data_type()),
+#             "mode": "IN"
+#         }
+#         if ctx.OUT() or ctx.OUTPUT():
+#             param_info["mode"] = "OUT"
+#         self.ast["params"].append(param_info)
+
+#     # CORRECTED: The rule name is 'declare_statement', not 'declare_local'
+#     def visitDeclare_statement(self, ctx: TSqlParser.Declare_statementContext):
+#         # This rule can declare multiple variables, e.g., DECLARE @a INT, @b INT
+#         for var in ctx.declare_local():
+#             var_info = {
+#                 "name": self.get_full_text(var.LOCAL_ID()),
+#                 "type": self.get_full_text(var.data_type())
+#             }
+#             self.ast["variables"].append(var_info)
+#         return self.visitChildren(ctx)
+
+
+#     # --- Statement Visitors ---
+
+#     def visitSet_statement(self, ctx: TSqlParser.Set_statementContext):
+#         # This handles both SET @var = ... and SET NOCOUNT ON
+#         stmt = {"type": "SET"}
+#         if ctx.LOCAL_ID():
+#             stmt["name"] = self.get_full_text(ctx.LOCAL_ID())
+#             stmt["value"] = self.get_full_text(ctx.expression())
+#         else:
+#             stmt["expression"] = self.get_full_text(ctx).replace("SET", "").strip('; ')
+#         self._add_statement(stmt)
+
+#     def visitSelect_statement_standalone(self, ctx: TSqlParser.Select_statement_standaloneContext):
+#         # We visit the child `select_statement` which holds the details
+#         return self.visitChildren(ctx)
+
+#     def visitSelect_statement(self, ctx: TSqlParser.Select_statementContext):
+#         stmt = {"type": "SELECT", "query": self.get_full_text(ctx)}
+#         into_vars = []
+#         for elem in ctx.query_expression().query_specification().select_list().select_list_elem():
+#             if elem.LOCAL_ID():
+#                 into_vars.append(self.get_full_text(elem.LOCAL_ID()))
+#         if into_vars:
+#             stmt["into_vars"] = into_vars
+#         self._add_statement(stmt)
+#         return None # Stop further traversal
+
+#     def visitUpdate_statement(self, ctx: TSqlParser.Update_statementContext):
+#         set_clauses = {}
+#         for elem in ctx.update_elem():
+#             col = self.get_full_text(elem.full_column_name())
+#             val = self.get_full_text(elem.expression())
+#             set_clauses[col] = val
+#         stmt = {
+#             "type": "UPDATE",
+#             "table": self.get_full_text(ctx.ddl_object()), # CORRECTED
+#             "set": set_clauses,
+#             "where": self.get_full_text(ctx.search_condition()) if ctx.where_clause() else ""
+#         }
+#         self._add_statement(stmt)
+
+#     def visitReturn_statement(self, ctx: TSqlParser.Return_statementContext):
+#         stmt = {
+#             "type": "RETURN",
+#             "value": self.get_full_text(ctx.expression()) if ctx.expression() else "0"
+#         }
+#         self._add_statement(stmt)
+
+#     def visitIf_statement(self, ctx: TSqlParser.If_statementContext):
+#         if_stmt = {
+#             "type": "IF",
+#             "condition": self.get_full_text(ctx.search_condition()),
+#             "then": [],
+#             "else": [] 
+#         }
+#         self._add_statement(if_stmt)
+
+#         self.statement_stack.append(if_stmt["then"])
+#         self.visit(ctx.sql_clauses(0))
+#         self.statement_stack.pop()
+
+#         if len(ctx.sql_clauses()) > 1:
+#             self.statement_stack.append(if_stmt["else"])
+#             self.visit(ctx.sql_clauses(1))
+#             self.statement_stack.pop()
+        
+#         if not if_stmt["else"]:
+#             del if_stmt["else"]
+#         return None
+
+# def generate_ast(sql_file_path: str) -> dict:
+#     with open(sql_file_path, "r") as f:
+#         input_sql = f.read()
+
+#     input_stream = InputStream(input_sql)
+#     lexer = TSqlLexer(input_stream)
+#     token_stream = CommonTokenStream(lexer)
+#     parser = TSqlParser(token_stream)
+#     tree = parser.tsql_file()
+
+#     visitor = ASTBuilder()
+#     ast = visitor.visit(tree)
+#     return ast
+
+# def save_ast(ast: dict, output_path: str):
+#     with open(output_path, "w") as f:
+#         json.dump(ast, f, indent=4)
+
+# ast_generator.py
+
+
+
+
+
+
+
+-- -- test_cases.sql
+
+-- CREATE OR ALTER PROCEDURE dbo.sp_ProcessOrder
+--     @OrderID INT,
+--     @CustomerID INT,
+--     @Status VARCHAR(20) OUTPUT
+-- AS
+-- BEGIN
+--     SET NOCOUNT ON;
+
+--     DECLARE @OrderDate DATE;
+--     DECLARE @TotalAmount DECIMAL(18, 2);
+
+--     -- Check if the order exists
+--     IF NOT EXISTS (SELECT 1 FROM Sales.Orders WHERE OrderID = @OrderID)
+--     BEGIN
+--         SET @Status = 'Order Not Found';
+--         RETURN -1;
+--     END
+
+--     -- Retrieve order details
+--     SELECT
+--         @OrderDate = o.OrderDate,
+--         @TotalAmount = SUM(ol.Quantity * ol.UnitPrice)
+--     FROM Sales.Orders o
+--     JOIN Sales.OrderLines ol ON o.OrderID = ol.OrderID
+--     WHERE o.OrderID = @OrderID
+--     GROUP BY o.OrderDate;
+
+--     -- Update the order status
+--     UPDATE Sales.Orders
+--     SET Status = 'Processed'
+--     WHERE OrderID = @OrderID;
+
+--     SET @Status = 'Success';
+--     RETURN 0;
+-- END
+-- GO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import json
+from antlr4 import *
+from antlr.TSqlLexer import TSqlLexer
+from antlr.TSqlParser import TSqlParser
+from antlr.TSqlParserVisitor import TSqlParserVisitor
+from antlr4.tree.Tree import TerminalNodeImpl
+
+class ASTBuilder(TSqlParserVisitor):
+    """
+    This visitor walks the ANTLR parse tree and builds a list of Abstract Syntax Trees (ASTs),
+    one for each stored procedure found in the SQL file.
+    It is designed to produce an AST that matches a specific target JSON structure.
+    """
+    def __init__(self):
+        self.ast_list = []
+        self.current_ast = None
+        self.statement_stack = []
+
+    def get_full_text(self, ctx):
+        """
+        A robust way to get the full, original text of a context.
+        This handles both rule contexts (like a full statement) and terminal nodes (like a single token).
+        """
+        if not ctx:
+            return ""
+        
+        # If it's a terminal node (a token), just get its text.
+        if isinstance(ctx, TerminalNodeImpl):
+            return ctx.getText()
+
+        # If it's a rule context, get the full text from the input stream.
+        # This preserves original formatting, whitespace, and comments.
+        if hasattr(ctx, 'start') and hasattr(ctx, 'stop'):
+            return ctx.start.getInputStream().getText(ctx.start.start, ctx.stop.stop)
+        
+        # Fallback for any other unexpected types.
+        return ctx.getText()
+
+    def _add_statement(self, stmt_object):
+        """Adds a statement object to the current statement block on the stack."""
+        if self.statement_stack:
+            self.statement_stack[-1].append(stmt_object)
+
+    def _get_procedure_name(self, ctx):
+        """Finds and returns the procedure name from the context."""
+        # The grammar can have the procedure name in different places.
+        # This function checks common possibilities.
+        if hasattr(ctx, 'procedure_name') and ctx.procedure_name():
+            return self.get_full_text(ctx.procedure_name())
+        return "<unknown_procedure>"
+
+    # --- Top-Level Visitors ---
+
+    def visitTsql_file(self, ctx: TSqlParser.Tsql_fileContext):
+        """Entry point for visiting the parse tree."""
+        self.visitChildren(ctx)
+        return self.ast_list
+
+    def visitCreate_or_alter_procedure(self, ctx: TSqlParser.Create_or_alter_procedureContext):
+        """
+        Triggered for each CREATE/ALTER PROCEDURE block.
+        Initializes a new AST object for the procedure.
+        """
+        # Create a new AST for this procedure.
+        self.current_ast = {
+            "proc_name": self._get_procedure_name(ctx),
+            "params": [],
+            "return_type": "INTEGER",  # Default value, can be enhanced to parse RETURNS clause
+            "variables": [],
+            "statements": []
+        }
+        self.ast_list.append(self.current_ast)
+
+        # The main statement block for the procedure is the root of the stack.
+        self.statement_stack.append(self.current_ast["statements"])
+        self.visitChildren(ctx)
+        self.statement_stack.pop()
+        
+        # Reset current_ast in case there are other statements after the procedure.
+        self.current_ast = None
+        return None # We don't return the AST here, it's collected in self.ast_list
+
+    # --- Metadata Extraction ---
+
+    def visitProcedure_param(self, ctx: TSqlParser.Procedure_paramContext):
+        """Extracts information about a single procedure parameter."""
+        if not self.current_ast: return
+
+        param_info = {
+            "name": self.get_full_text(ctx.LOCAL_ID()),
+            "type": self.get_full_text(ctx.data_type()),
+            "mode": "IN"  # Default mode
+        }
+        if ctx.OUTPUT() or ctx.OUT():
+            param_info["mode"] = "OUT"
+        self.current_ast["params"].append(param_info)
+
+    def visitDeclare_statement(self, ctx: TSqlParser.Declare_statementContext):
+        """Extracts variable declarations."""
+        if not self.current_ast: return
+        
+        # Handle both variable and cursor declarations
+        if ctx.declare_local():
+            for var in ctx.declare_local():
+                var_info = {
+                    "name": self.get_full_text(var.LOCAL_ID()),
+                    "type": self.get_full_text(var.data_type())
+                }
+                self.current_ast["variables"].append(var_info)
+        elif ctx.declare_cursor():
+             self.visit(ctx.declare_cursor())
+
+
+    # --- Statement Visitors ---
+
+    def visitSet_statement(self, ctx: TSqlParser.Set_statementContext):
+        stmt = {"type": "SET"}
+        if ctx.LOCAL_ID():
+            stmt["name"] = self.get_full_text(ctx.LOCAL_ID())
+            stmt["value"] = self.get_full_text(ctx.expression())
+        else:
+            # Fallback for other SET statements like SET NOCOUNT ON
+            stmt["expression"] = self.get_full_text(ctx).replace("SET", "").strip('; ')
+        self._add_statement(stmt)
+
+    def visitSelect_statement(self, ctx: TSqlParser.Select_statementContext):
+        """Handles SELECT statements, which might be part of other statements."""
+        # This implementation assumes SELECT is handled by its parent (e.g., DECLARE_CURSOR)
+        # If standalone SELECTs are needed, this can be expanded.
+        pass
+
+    def visitUpdate_statement(self, ctx: TSqlParser.Update_statementContext):
+        set_clauses = {}
+        for elem in ctx.update_elem():
+            col = self.get_full_text(elem.full_column_name())
+            val = self.get_full_text(elem.expression())
+            set_clauses[col] = val
+        
+        stmt = {
+            "type": "UPDATE",
+            "table": self.get_full_text(ctx.ddl_object()),
+            "set": set_clauses,
+            "where": self.get_full_text(ctx.search_condition()) if ctx.search_condition() else ""
+        }
+        self._add_statement(stmt)
+
+    def visitReturn_statement(self, ctx: TSqlParser.Return_statementContext):
+        stmt = {
+            "type": "RETURN",
+            "value": self.get_full_text(ctx.expression()) if ctx.expression() else "0"
+        }
+        self._add_statement(stmt)
+
+    def visitIf_statement(self, ctx: TSqlParser.If_statementContext):
+        # NOTE: Using "statements" key to match the expected output, not "then"/"else" from schema
+        if_stmt = {
+            "type": "IF",
+            "condition": self.get_full_text(ctx.search_condition()),
+            "statements": [],
+        }
+        
+        # Handle the 'else' block if it exists
+        if ctx.ELSE():
+            if_stmt["else"] = []
+
+        self._add_statement(if_stmt)
+
+        # Process the "then" block
+        self.statement_stack.append(if_stmt["statements"])
+        self.visit(ctx.sql_clauses(0))
+        self.statement_stack.pop()
+
+        # Process the "else" block
+        if ctx.ELSE():
+            self.statement_stack.append(if_stmt["else"])
+            self.visit(ctx.sql_clauses(1))
+            self.statement_stack.pop()
+
+    def visitPrint_statement(self, ctx: TSqlParser.Print_statementContext):
+        stmt = {
+            "type": "PRINT",
+            "value": self.get_full_text(ctx.expression()) # Match expected key "value"
+        }
+        self._add_statement(stmt)
+
+    def visitTry_catch_statement(self, ctx: TSqlParser.Try_catch_statementContext):
+        # NOTE: Simplified structure to match expected output, not the complex schema object
+        try_catch_stmt = {
+            "type": "TRY_CATCH",
+            "try": [],
+            "catch": []
+        }
+        self._add_statement(try_catch_stmt)
+
+        # Process TRY block
+        self.statement_stack.append(try_catch_stmt["try"])
+        self.visit(ctx.sql_clauses(0))
+        self.statement_stack.pop()
+
+        # Process CATCH block
+        self.statement_stack.append(try_catch_stmt["catch"])
+        self.visit(ctx.sql_clauses(1))
+        self.statement_stack.pop()
+
+    def visitWhile_statement(self, ctx: TSqlParser.While_statementContext):
+        # NOTE: Using "statements" key to match the expected output, not "body" from schema
+        while_stmt = {
+            "type": "WHILE",
+            "condition": self.get_full_text(ctx.search_condition()),
+            "statements": []
+        }
+        self._add_statement(while_stmt)
+
+        self.statement_stack.append(while_stmt["statements"])
+        self.visit(ctx.sql_clauses())
+        self.statement_stack.pop()
+
+    # --- Cursor Handling ---
+
+    def visitDeclare_cursor(self, ctx: TSqlParser.Declare_cursorContext):
+        """Handles DECLARE CURSOR statements, extracting just the SELECT query."""
+        stmt = {
+            "type": "DECLARE_CURSOR",
+            "name": self.get_full_text(ctx.cursor_name()),
+            # Extract only the select statement, not the full declaration text
+            "query": self.get_full_text(ctx.select_statement()) 
+        }
+        self._add_statement(stmt)
+
+    # The previous consolidated `visitCursor_statement` was incorrect because the ANTLR visitor
+    # pattern calls the most specific method for a rule. The fix is to implement separate
+    # visitor methods for each specific cursor operation (open, fetch, close, deallocate).
+    # This aligns with the grammar structure and resolves the attribute error.
+
+    def visitOpen_cursor(self, ctx: TSqlParser.Open_cursorContext):
+        """Handles OPEN cursor statements."""
+        stmt = {
+            "type": "OPEN_CURSOR",
+            "name": self.get_full_text(ctx.cursor_name())
+        }
+        self._add_statement(stmt)
+        return self.visitChildren(ctx)
+
+    def visitFetch_cursor(self, ctx: TSqlParser.Fetch_cursorContext):
+        """Handles FETCH cursor statements."""
+        stmt = {
+            "type": "FETCH", # As per expected output
+            "cursor": self.get_full_text(ctx.cursor_name()),
+            "into": [self.get_full_text(i) for i in ctx.LOCAL_ID()]
+        }
+        self._add_statement(stmt)
+        return self.visitChildren(ctx)
+
+    def visitClose_cursor(self, ctx: TSqlParser.Close_cursorContext):
+        """Handles CLOSE cursor statements."""
+        stmt = {
+            "type": "CLOSE_CURSOR",
+            "name": self.get_full_text(ctx.cursor_name())
+        }
+        self._add_statement(stmt)
+        return self.visitChildren(ctx)
+
+    def visitDeallocate_cursor(self, ctx: TSqlParser.Deallocate_cursorContext):
+        """Handles DEALLOCATE cursor statements."""
+        stmt = {
+            "type": "DEALLOCATE_CURSOR",
+            "name": self.get_full_text(ctx.cursor_name())
+        }
+        self._add_statement(stmt)
+        return self.visitChildren(ctx)
+
+
+# --- Top-level Execution ---
+
+def generate_ast(sql_file_path: str) -> list:
+    """
+    Parses a SQL file and generates a list of ASTs.
+    """
+    with open(sql_file_path, "r", encoding='utf-8') as f:
+        input_sql = f.read()
+
+    input_stream = InputStream(input_sql)
+    lexer = TSqlLexer(input_stream)
+    token_stream = CommonTokenStream(lexer)
+    parser = TSqlParser(token_stream)
+    tree = parser.tsql_file()
+
+    visitor = ASTBuilder()
+    ast_list = visitor.visit(tree)
+
+    if ast_list:
+        print(f"✅ AST generated successfully for {len(ast_list)} procedure(s).")
+    else:
+        print("❌ No procedure ASTs were generated from the input SQL.")
+    
+    return ast_list
+
+def save_ast(ast_list: list, output_path: str):
+    """
+    Saves the list of ASTs to a JSON file.
+    """
+    if not ast_list:
+        print("No AST to save.")
+        return
+
+    print(f"📝 Writing AST to {output_path}")
+    # If there's only one procedure, save it as an object, otherwise as a list.
+    # Based on expected output, it seems a list is always desired.
+    with open(output_path, "w") as f:
+        # The expected output for a single procedure is just the object, not a list with one item.
+        # Let's adjust based on the count.
+        output_data = ast_list
+        if len(ast_list) == 1:
+            # If the expected output for one file is an object, uncomment the next line
+            # output_data = ast_list[0] 
+            pass # Sticking to a list as it's more consistent for multiple files.
+        json.dump(output_data, f, indent=2)

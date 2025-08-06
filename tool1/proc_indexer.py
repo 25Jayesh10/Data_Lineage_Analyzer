@@ -7,6 +7,10 @@ from tool1.TSqlLexer import TSqlLexer
 from tool1.TSqlParser import TSqlParser
 from tool1.TSqlParserListener import TSqlParserListener
 import os
+import sys
+
+with open("tool1/type_mapping.json") as f:
+    TYPE_MAPPING = json.load(f)
 
 class ProcedureIndexer(TSqlParserListener):
     def __init__(self):
@@ -24,10 +28,17 @@ class ProcedureIndexer(TSqlParserListener):
             for param in param_list_ctx:
                 try:
                     param_name = param.children[0].getText()
-                    param_type = param.children[1].getText()
+                    import re
+                    raw_type = re.match(r'^[A-Z]+', param.children[1].getText().upper()).group(0)
+                     # ✅ Strict validation of types
+                    if raw_type not in TYPE_MAPPING:
+                        logging.error(f"Unsupported type '{raw_type}' found in procedure '{proc_name}' for parameter '{param_name}'")
+                        sys.exit(1)  # ✅ Immediately exit the program     
+                    
+                    mapped_type = TYPE_MAPPING.get(raw_type, raw_type)  # ✅ Map type using dictionary
                     self.index[proc_name]["params"].append({
                         "name": param_name,
-                        "type": param_type
+                        "type": mapped_type
                     })
                     
                 except Exception as e:

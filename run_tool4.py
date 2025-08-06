@@ -1,16 +1,18 @@
 from src.analyze_lineage import analyze_lineage
 from src.generate_mermaid import generate_mermaid
 from src.convert_mmd_to_md import convert_mmd_to_md
+from src.validation_script import validate
+from src.lineage_to_index import generate_index
 import json
 import os
 from antlr4 import *
+from logging_styles import Colours
 from tool1.proc_indexer import ProcedureIndexer
 from tool1.TSqlLexer import TSqlLexer
 from tool1.TSqlParser import TSqlParser
-from logging_styles import Colours
-from src.validation_script import validate
 from tool1.index_validator import validate
-from src.lineage_to_index import generate_index
+from tool3.doc_generator import generate_docs
+
 
 
 
@@ -19,6 +21,7 @@ def main():
     input_dir = "data"    
     output_dir = "data"
     diagram_dir = "diagrams"
+    document_dir = "document"
 
     #tool 1 working starts
     input_file = "./test.sql"
@@ -54,6 +57,16 @@ def main():
         output_path = os.path.join(output_dir, "lineage.json")  # Tool 4 output
         mermaid_path = os.path.join(diagram_dir, "lineage.mmd") # Mermaid diagram output
         markdown_path = os.path.join(diagram_dir, "lineage.md")    # Mermaid .md file
+        
+         # ✅ Tool 3: Generate Markdown documentation
+        try:
+            print(Colours.YELLOW + "Generating Markdown documentation..." + Colours.RESET)
+            index_path = os.path.join(input_dir, "index.json")
+            generate_docs(index_path, output_dir=document_dir, output_file="procedures.md")
+            print(Colours.GREEN + "Documentation generated in 'document/procedures.md'" + Colours.RESET)
+        except Exception as e:
+            print(Colours.RED + f"Error generating documentation: {e}" + Colours.RESET)
+            return
         
         print(Colours.GREEN+"Starting Data Lineage Analysis..."+Colours.RESET)
         analyze_lineage(index_path, ast_path, output_path)

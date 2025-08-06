@@ -1,0 +1,742 @@
+[
+    {
+        "proc_name": "dbo.sp_ProcessShipments",
+        "params": [
+            {
+                "name": "@BatchID",
+                "type": "INT",
+                "mode": "IN"
+            },
+            {
+                "name": "@ProcessedCount",
+                "type": "INT",
+                "mode": "OUT"
+            }
+        ],
+        "return_type": "INTEGER",
+        "cursors": [],
+        "variables": [
+            {
+                "name": "@ShipmentID",
+                "type": "INT, @Status VARCHAR(50)"
+            }
+        ],
+        "statements": [
+            {
+                "type": "SET",
+                "set": {
+                    "@ProcessedCount": "0"
+                }
+            },
+            {
+                "type": "TRY",
+                "body": [],
+                "catch": [
+                    {
+                        "exception": "@@ERROR",
+                        "body": []
+                    }
+                ]
+            },
+            {
+                "type": "OPEN_CURSOR",
+                "cursor_name": "shipment_cursor"
+            },
+            {
+                "type": "FETCH_CURSOR",
+                "cursor_name": "shipment_cursor",
+                "fetch_into": [
+                    "@ShipmentID"
+                ]
+            },
+            {
+                "type": "RETURN",
+                "value": "0"
+            }
+        ]
+    },
+    {
+        "proc_name": "dbo.sp_ApplyDiscounts",
+        "params": [
+            {
+                "name": "@CustomerID",
+                "type": "INT",
+                "mode": "IN"
+            },
+            {
+                "name": "@DiscountRate",
+                "type": "DECIMAL(5,2)",
+                "mode": "IN"
+            }
+        ],
+        "return_type": "INTEGER",
+        "cursors": [],
+        "variables": [],
+        "statements": [
+            {
+                "type": "IF",
+                "condition": "EXISTS (SELECT 1 FROM Customers WHERE CustomerID = @CustomerID AND IsActive = 1)",
+                "then": [
+                    {
+                        "type": "IF",
+                        "condition": "@DiscountRate BETWEEN 0 AND 50",
+                        "then": [
+                            {
+                                "type": "UPDATE",
+                                "table": "Orders",
+                                "set": {
+                                    "Discount": "@DiscountRate"
+                                },
+                                "where": "CustomerID = @CustomerID AND OrderDate >= DATEADD(month, -6, GETDATE())"
+                            }
+                        ],
+                        "else": [
+                            {
+                                "type": "RETURN",
+                                "value": "-1"
+                            }
+                        ]
+                    }
+                ],
+                "else": [
+                    {
+                        "type": "RETURN",
+                        "value": "-1"
+                    }
+                ]
+            },
+            {
+                "type": "RETURN",
+                "value": "0"
+            }
+        ]
+    },
+    {
+        "proc_name": "dbo.sp_ExecuteDynamicQuery",
+        "params": [
+            {
+                "name": "@TableName",
+                "type": "VARCHAR(100)",
+                "mode": "IN"
+            },
+            {
+                "name": "@RowCount",
+                "type": "INT",
+                "mode": "OUT"
+            }
+        ],
+        "return_type": "INTEGER",
+        "cursors": [],
+        "variables": [
+            {
+                "name": "@SQL",
+                "type": "NVARCHAR(500)"
+            }
+        ],
+        "statements": [
+            {
+                "type": "SET",
+                "set": {
+                    "@SQL": "'SELECT COUNT(*) FROM ' + QUOTENAME(@TableName)"
+                }
+            },
+            {
+                "type": "EXEC",
+                "expression": "EXEC sp_executesql @SQL, N'@RowCount INT OUTPUT', @RowCount OUTPUT"
+            },
+            {
+                "type": "IF",
+                "condition": "@RowCount = 0",
+                "then": [
+                    {
+                        "type": "EXEC",
+                        "expression": "EXEC dbo.sp_LogEmptyTable @TableName"
+                    }
+                ]
+            },
+            {
+                "type": "RETURN",
+                "value": "0"
+            }
+        ]
+    },
+    {
+        "proc_name": "test1",
+        "params": [
+            {
+                "name": "@client_id",
+                "type": "INT",
+                "mode": "IN"
+            },
+            {
+                "name": "@from_date",
+                "type": "DATE",
+                "mode": "IN"
+            },
+            {
+                "name": "@to_date",
+                "type": "DATE",
+                "mode": "IN"
+            }
+        ],
+        "return_type": "INTEGER",
+        "cursors": [],
+        "variables": [
+            {
+                "name": "@grand_total",
+                "type": "NUMERIC(10,2), @order_total NUMERIC(10,2)"
+            }
+        ],
+        "statements": [
+            {
+                "type": "SET",
+                "set": {
+                    "@grand_total": "0.00"
+                }
+            },
+            {
+                "type": "OPEN_CURSOR",
+                "cursor_name": "cur_orders"
+            },
+            {
+                "type": "FETCH_CURSOR",
+                "cursor_name": "cur_orders",
+                "fetch_into": [
+                    "@order_total"
+                ]
+            },
+            {
+                "type": "WHILE",
+                "condition": "@@FETCH_STATUS = 0",
+                "body": [
+                    {
+                        "type": "IF",
+                        "condition": "@order_total > 750",
+                        "then": [
+                            {
+                                "type": "SET",
+                                "set": {
+                                    "@grand_total": "@grand_total + @order_total * 0.95"
+                                }
+                            }
+                        ],
+                        "else": [
+                            {
+                                "type": "SET",
+                                "set": {
+                                    "@grand_total": "@grand_total + @order_total"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "type": "FETCH_CURSOR",
+                "cursor_name": "cur_orders",
+                "fetch_into": [
+                    "@order_total"
+                ]
+            },
+            {
+                "type": "CLOSE_CURSOR",
+                "cursor_name": "cur_orders"
+            },
+            {
+                "type": "DEALLOCATE_CURSOR",
+                "cursor_name": "cur_orders"
+            },
+            {
+                "type": "IF",
+                "condition": "@grand_total > 10000",
+                "then": [
+                    {
+                        "type": "RAISERROR",
+                        "message": "'High-value threshold exceeded for client'",
+                        "severity": "16",
+                        "state": "1",
+                        "args": [],
+                        "options": []
+                    }
+                ]
+            },
+            {
+                "type": "RETURN",
+                "value": "@grand_total"
+            }
+        ]
+    },
+    {
+        "proc_name": "sp_sum_client_orders",
+        "params": [
+            {
+                "name": "@client_id",
+                "type": "INTEGER",
+                "mode": "IN"
+            },
+            {
+                "name": "@from_date",
+                "type": "DATE",
+                "mode": "IN"
+            },
+            {
+                "name": "@to_date",
+                "type": "DATE",
+                "mode": "IN"
+            }
+        ],
+        "return_type": "INTEGER",
+        "cursors": [],
+        "variables": [
+            {
+                "name": "@grand_total",
+                "type": "NUMERIC(10,2)"
+            },
+            {
+                "name": "@order_total",
+                "type": "NUMERIC(10,2)"
+            }
+        ],
+        "statements": [
+            {
+                "type": "SET",
+                "set": {
+                    "@grand_total": "0.00"
+                }
+            },
+            {
+                "type": "OPEN_CURSOR",
+                "cursor_name": "cur_orders"
+            },
+            {
+                "type": "WHILE",
+                "condition": "@@sqlstatus = 0",
+                "body": [
+                    {
+                        "type": "IF",
+                        "condition": "@order_total > 750",
+                        "then": [
+                            {
+                                "type": "SET",
+                                "set": {
+                                    "@grand_total": "@grand_total + (@order_total * 0.95)"
+                                }
+                            }
+                        ],
+                        "else": [
+                            {
+                                "type": "SET",
+                                "set": {
+                                    "@grand_total": "@grand_total + @order_total"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "type": "CLOSE_CURSOR",
+                "cursor_name": "cur_orders"
+            },
+            {
+                "type": "DEALLOCATE_CURSOR",
+                "cursor_name": "cur_orders"
+            },
+            {
+                "type": "IF",
+                "condition": "@grand_total > 10000",
+                "then": [
+                    {
+                        "type": "RAISERROR",
+                        "message": "'High-value threshold exceeded for client'",
+                        "severity": "16",
+                        "state": "1",
+                        "args": [],
+                        "options": []
+                    }
+                ]
+            },
+            {
+                "type": "RETURN",
+                "value": "@grand_total"
+            }
+        ]
+    },
+    {
+        "proc_name": "process_customer_orders",
+        "params": [
+            {
+                "name": "@customer_id",
+                "type": "INT",
+                "mode": "IN"
+            },
+            {
+                "name": "@order_summary",
+                "type": "VARCHAR(255)",
+                "mode": "OUT"
+            }
+        ],
+        "return_type": "INTEGER",
+        "cursors": [],
+        "variables": [
+            {
+                "name": "@order_id",
+                "type": "INT"
+            },
+            {
+                "name": "@order_amount",
+                "type": "NUMERIC(10, 2)"
+            },
+            {
+                "name": "@status",
+                "type": "VARCHAR(20)"
+            },
+            {
+                "name": "@sql_query",
+                "type": "TEXT"
+            },
+            {
+                "name": "@exists_flag",
+                "type": "INT"
+            }
+        ],
+        "statements": [
+            {
+                "type": "SELECT",
+                "query": "SELECT @exists_flag = COUNT(*)\n    FROM orders\n    WHERE customer_id = @customer_id"
+            },
+            {
+                "type": "IF",
+                "condition": "@exists_flag > 0",
+                "then": [
+                    {
+                        "type": "WHILE",
+                        "condition": "@@FETCH_STATUS = 0",
+                        "body": [
+                            {
+                                "type": "IF",
+                                "condition": "@order_amount > 1000",
+                                "then": [
+                                    {
+                                        "type": "SET",
+                                        "set": {
+                                            "@status": "'HighValue'"
+                                        }
+                                    }
+                                ],
+                                "else": [
+                                    {
+                                        "type": "IF",
+                                        "condition": "@order_amount <= 1000",
+                                        "then": [
+                                            {
+                                                "type": "SET",
+                                                "set": {
+                                                    "@status": "'Normal'"
+                                                }
+                                            }
+                                        ],
+                                        "else": [
+                                            {
+                                                "type": "SET",
+                                                "set": {
+                                                    "@status": "'Unknown'"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "TRY",
+                                "body": [
+                                    {
+                                        "type": "SET",
+                                        "set": {
+                                            "@sql_query": "'UPDATE orders SET status = ''' + @status + ''' WHERE order_id = ' + CAST(@order_id AS VARCHAR)"
+                                        }
+                                    }
+                                ],
+                                "catch": [
+                                    {
+                                        "exception": "@@ERROR",
+                                        "body": [
+                                            {
+                                                "type": "EXEC",
+                                                "expression": "EXEC(@sql_query)"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "EXEC",
+                                "expression": "EXEC log_order_activity @order_id, @status"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "SELECT",
+                        "query": "SELECT @order_summary = 'Processed ' + CAST(COUNT(*) AS VARCHAR) + ' orders.'\n        FROM orders\n        WHERE customer_id = @customer_id"
+                    }
+                ],
+                "else": [
+                    {
+                        "type": "SET",
+                        "set": {
+                            "@order_summary": "'No orders found.'"
+                        }
+                    }
+                ]
+            },
+            {
+                "type": "OPEN_CURSOR",
+                "cursor_name": "order_cursor"
+            },
+            {
+                "type": "FETCH_CURSOR",
+                "cursor_name": "order_cursor",
+                "fetch_into": [
+                    "@order_id",
+                    "@order_amount"
+                ]
+            },
+            {
+                "type": "FETCH_CURSOR",
+                "cursor_name": "order_cursor",
+                "fetch_into": [
+                    "@order_id",
+                    "@order_amount"
+                ]
+            },
+            {
+                "type": "CLOSE_CURSOR",
+                "cursor_name": "order_cursor"
+            },
+            {
+                "type": "DEALLOCATE_CURSOR",
+                "cursor_name": "order_cursor"
+            },
+            {
+                "type": "TRY",
+                "body": [
+                    {
+                        "type": "EXEC",
+                        "expression": "EXEC finalize_customer_summary @customer_id, @order_summary"
+                    }
+                ],
+                "catch": [
+                    {
+                        "exception": "@@ERROR",
+                        "body": []
+                    }
+                ]
+            },
+            {
+                "type": "RETURN",
+                "value": "0"
+            }
+        ]
+    },
+    {
+        "proc_name": "ultimate_edge_case_proc",
+        "params": [
+            {
+                "name": "@user_id",
+                "type": "INTEGER",
+                "mode": "IN"
+            },
+            {
+                "name": "@result_msg",
+                "type": "TEXT",
+                "mode": "OUT"
+            }
+        ],
+        "return_type": "INTEGER",
+        "cursors": [],
+        "variables": [
+            {
+                "name": "@loop_counter",
+                "type": "INTEGER"
+            },
+            {
+                "name": "@temp_value",
+                "type": "NUMERIC(10,2)"
+            },
+            {
+                "name": "@status_flag",
+                "type": "INTEGER"
+            },
+            {
+                "name": "@dynamic_sql",
+                "type": "TEXT"
+            },
+            {
+                "name": "@cursor_user_id",
+                "type": "INTEGER"
+            },
+            {
+                "name": "@cursor_user_name",
+                "type": "TEXT"
+            }
+        ],
+        "statements": [
+            {
+                "type": "SELECT",
+                "query": "SELECT @status_flag = COUNT(*)\n    FROM users\n    WHERE id = @user_id"
+            },
+            {
+                "type": "IF",
+                "condition": "@status_flag > 0",
+                "then": [
+                    {
+                        "type": "SET",
+                        "set": {
+                            "@loop_counter": "0"
+                        }
+                    },
+                    {
+                        "type": "WHILE",
+                        "condition": "@loop_counter < 5",
+                        "body": [
+                            {
+                                "type": "SET",
+                                "set": {
+                                    "@loop_counter": "@loop_counter + 1"
+                                }
+                            },
+                            {
+                                "type": "SET",
+                                "set": {
+                                    "@dynamic_sql": "'UPDATE logs SET status = ''processed'' WHERE user_id = ' + CAST(@user_id AS VARCHAR) + ' AND attempt = ' + CAST(@loop_counter AS VARCHAR)"
+                                }
+                            },
+                            {
+                                "type": "EXEC",
+                                "expression": "EXEC (@dynamic_sql)"
+                            },
+                            {
+                                "type": "IF",
+                                "condition": "@loop_counter = 3",
+                                "then": [
+                                    {
+                                        "type": "SET",
+                                        "set": {
+                                            "@temp_value": "999.99"
+                                        }
+                                    }
+                                ],
+                                "else": [
+                                    {
+                                        "type": "IF",
+                                        "condition": "@loop_counter > 3",
+                                        "then": [
+                                            {
+                                                "type": "SET",
+                                                "set": {
+                                                    "@temp_value": "123.45"
+                                                }
+                                            }
+                                        ],
+                                        "else": [
+                                            {
+                                                "type": "SET",
+                                                "set": {
+                                                    "@temp_value": "0.00"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "TRY",
+                                "body": [
+                                    {
+                                        "type": "EXEC",
+                                        "expression": "EXEC log_attempt @user_id, @loop_counter"
+                                    }
+                                ],
+                                "catch": [
+                                    {
+                                        "exception": "@@ERROR",
+                                        "body": [
+                                            {
+                                                "type": "RAISERROR",
+                                                "message": "'Logging attempt failed!'",
+                                                "severity": "16",
+                                                "state": "1",
+                                                "args": [],
+                                                "options": []
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "else": [
+                    {
+                        "type": "SET",
+                        "set": {
+                            "@result_msg": "'User does not exist.'"
+                        }
+                    }
+                ]
+            },
+            {
+                "type": "OPEN_CURSOR",
+                "cursor_name": "user_cursor"
+            },
+            {
+                "type": "FETCH_CURSOR",
+                "cursor_name": "user_cursor",
+                "fetch_into": [
+                    "@cursor_user_id",
+                    "@cursor_user_name"
+                ]
+            },
+            {
+                "type": "WHILE",
+                "condition": "@@FETCH_STATUS = 0",
+                "body": []
+            },
+            {
+                "type": "FETCH_CURSOR",
+                "cursor_name": "user_cursor",
+                "fetch_into": [
+                    "@cursor_user_id",
+                    "@cursor_user_name"
+                ]
+            },
+            {
+                "type": "CLOSE_CURSOR",
+                "cursor_name": "user_cursor"
+            },
+            {
+                "type": "DEALLOCATE_CURSOR",
+                "cursor_name": "user_cursor"
+            },
+            {
+                "type": "TRY",
+                "body": [
+                    {
+                        "type": "EXEC",
+                        "expression": "EXEC finalize_process @user_id"
+                    }
+                ],
+                "catch": [
+                    {
+                        "exception": "@@ERROR",
+                        "body": []
+                    }
+                ]
+            },
+            {
+                "type": "RETURN",
+                "value": "0"
+            }
+        ]
+    }
+]

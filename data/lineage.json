@@ -29,6 +29,7 @@
     "type": "table",
     "calls": [
       "AcmeERP.usp_ProcessFullPayrollCycle"
+      "AcmeERP.usp_ProcessFullPayrollCycle"
     ],
     "usage": {
       "AcmeERP.usp_ProcessFullPayrollCycle": [

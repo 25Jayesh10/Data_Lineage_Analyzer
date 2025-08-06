@@ -1,0 +1,125 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Stored Procedure AST Schema",
+  "description": "Robust enterprise-ready AST schema for multiple stored procedures",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["proc_name", "params", "return_type", "variables", "statements"],
+    "properties": {
+      "proc_name": { "type": "string" },
+      "params": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["name", "type"],
+          "properties": {
+            "name": { "type": "string" },
+            "type": { "type": "string" },
+            "mode": {
+              "type": "string",
+              "enum": ["IN", "OUT", "INOUT"],
+              "default": "IN"
+            }
+          }
+        }
+      },
+      "return_type": { "type": "string" },
+      "variables": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["name", "type"],
+          "properties": {
+            "name": { "type": "string" },
+            "type": { "type": "string" }
+          }
+        }
+      },
+      "statements": {
+        "type": "array",
+        "items": { "$ref": "#/definitions/statement" }
+      }
+    }
+  },
+  "definitions": {
+    "statement": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "type": "string" },
+        "name": { "type": "string" },
+        "value": { "type": "string" },
+        "expression": { "type": "string" },
+        "message": { "type": "string" },
+        "condition": { "type": "string" },
+        "exception": { "type": "string" },
+        "query": { "type": "string" },
+        "table": { "type": "string" },
+        "set": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "where": { "type": "string" },
+        "columns": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "values": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "cursor_name": { "type": "string" },
+        "into_vars": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "fetch_into": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "procedure": { "type": "string" },
+        "args": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "then": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/statement" }
+        },
+        "else": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/statement" }
+        },
+        "body": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/statement" }
+        },
+        "catch": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["exception", "body"],
+            "properties": {
+              "exception": { "type": "string" },
+              "body": {
+                "type": "array",
+                "items": { "$ref": "#/definitions/statement" }
+              }
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "type": { "const": "FOR_CURSOR_LOOP" } }
+          },
+          "then": {
+            "required": ["fetch_into"]
+          }
+        }
+      ]
+    }
+  }
+}

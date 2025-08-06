@@ -2,9 +2,18 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Enterprise Stored Procedure AST Schema",
   "description": "Enterprise-grade schema for stored procedure AST with full edge case handling.",
+  "title": "Enterprise Stored Procedure AST Schema",
+  "description": "Enterprise-grade schema for stored procedure AST with full edge case handling.",
   "type": "array",
   "items": {
     "type": "object",
+    "required": [
+      "proc_name",
+      "params",
+      "return_type",
+      "variables",
+      "statements"
+    ],
     "required": [
       "proc_name",
       "params",
@@ -17,10 +26,19 @@
         "type": "string",
         "minLength": 1
       },
+      "proc_name": {
+        "type": "string",
+        "minLength": 1
+      },
       "params": {
         "type": "array",
         "items": {
           "type": "object",
+          "required": [
+            "name",
+            "type",
+            "mode"
+          ],
           "required": [
             "name",
             "type",
@@ -68,10 +86,46 @@
                 "boolean",
                 "null"
               ]
+              "enum": [
+                "IN",
+                "OUT",
+                "INOUT"
+              ]
+            },
+            "default": {
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ]
             }
           },
           "additionalProperties": false
         }
+      },
+      "return_type": {
+        "type": "string",
+        "enum": [
+          "VOID",
+          "INT",
+          "INTEGER",
+          "BIGINT",
+          "SMALLINT",
+          "TINYINT",
+          "VARCHAR",
+          "CHAR",
+          "NVARCHAR",
+          "TEXT",
+          "BOOLEAN",
+          "DATE",
+          "TIMESTAMP",
+          "DATETIME",
+          "TIME",
+          "FLOAT",
+          "NUMERIC",
+          "DECIMAL"
+        ]
       },
       "return_type": {
         "type": "string",
@@ -139,12 +193,50 @@
                 "null"
               ]
             }
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "INT",
+                "INTEGER",
+                "BIGINT",
+                "SMALLINT",
+                "TINYINT",
+                "VARCHAR",
+                "CHAR",
+                "NVARCHAR",
+                "TEXT",
+                "BOOLEAN",
+                "DATE",
+                "TIMESTAMP",
+                "DATETIME",
+                "TIME",
+                "FLOAT",
+                "NUMERIC",
+                "DECIMAL"
+              ]
+            },
+            "default": {
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ]
+            }
           },
           "additionalProperties": false
         }
       },
       "statements": {
         "type": "array",
+        "maxItems": 500,
+        "items": {
+          "$ref": "#/definitions/statement"
+        }
         "maxItems": 500,
         "items": {
           "$ref": "#/definitions/statement"
@@ -180,8 +272,37 @@
         }
       ]
     },
+    "expression": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "required": [
+            "op",
+            "left",
+            "right"
+          ],
+          "properties": {
+            "op": {
+              "type": "string"
+            },
+            "left": {
+              "$ref": "#/definitions/expression"
+            },
+            "right": {
+              "$ref": "#/definitions/expression"
+            }
+          }
+        }
+      ]
+    },
     "statement": {
       "type": "object",
+      "required": [
+        "type"
+      ],
       "required": [
         "type"
       ],
@@ -216,7 +337,39 @@
             "DECLARE_TEMP_TABLE",
             "EXECUTE_USING",
             "CASE"
+            "LOG_MESSAGE",
+            "RAW_SQL",
+            "BEGIN_TRANSACTION",
+            "COMMIT",
+            "ROLLBACK",
+            "DECLARE_TEMP_TABLE",
+            "EXECUTE_USING",
+            "CASE"
           ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/definitions/expression"
+        },
+        "expression": {
+          "$ref": "#/definitions/expression"
+        },
+        "message": {
+          "type": "string"
+        },
+        "condition": {
+          "$ref": "#/definitions/expression"
+        },
+        "exception": {
+          "type": "string"
+        },
+        "query": {
+          "type": "string"
+        },
+        "table": {
+          "type": "string"
         },
         "name": {
           "type": "string"
@@ -248,8 +401,14 @@
             "^.*$": {
               "$ref": "#/definitions/expression"
             }
+            "^.*$": {
+              "$ref": "#/definitions/expression"
+            }
           },
           "additionalProperties": false
+        },
+        "where": {
+          "$ref": "#/definitions/expression"
         },
         "where": {
           "$ref": "#/definitions/expression"
@@ -259,12 +418,21 @@
           "items": {
             "type": "string"
           }
+          "items": {
+            "type": "string"
+          }
         },
         "values": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/expression"
           }
+          "items": {
+            "$ref": "#/definitions/expression"
+          }
+        },
+        "cursor_name": {
+          "type": "string"
         },
         "cursor_name": {
           "type": "string"
@@ -274,9 +442,15 @@
           "items": {
             "type": "string"
           }
+          "items": {
+            "type": "string"
+          }
         },
         "fetch_into": {
           "type": "array",
+          "items": {
+            "type": "string"
+          }
           "items": {
             "type": "string"
           }
@@ -284,8 +458,14 @@
         "procedure": {
           "type": "string"
         },
+        "procedure": {
+          "type": "string"
+        },
         "args": {
           "type": "array",
+          "items": {
+            "$ref": "#/definitions/expression"
+          }
           "items": {
             "$ref": "#/definitions/expression"
           }
@@ -296,9 +476,17 @@
           "items": {
             "$ref": "#/definitions/statement"
           }
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/definitions/statement"
+          }
         },
         "else": {
           "type": "array",
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/definitions/statement"
+          }
           "maxItems": 20,
           "items": {
             "$ref": "#/definitions/statement"
@@ -331,12 +519,42 @@
               }
             }
           }
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/definitions/statement"
+          }
+        },
+        "when_clauses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "condition",
+              "then"
+            ],
+            "properties": {
+              "condition": {
+                "$ref": "#/definitions/expression"
+              },
+              "then": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/statement"
+                }
+              }
+            }
+          }
         },
         "catch": {
           "type": "array",
           "maxItems": 5,
+          "maxItems": 5,
           "items": {
             "type": "object",
+            "required": [
+              "exception",
+              "body"
+            ],
             "required": [
               "exception",
               "body"
@@ -345,8 +563,15 @@
               "exception": {
                 "type": "string"
               },
+              "exception": {
+                "type": "string"
+              },
               "body": {
                 "type": "array",
+                "maxItems": 20,
+                "items": {
+                  "$ref": "#/definitions/statement"
+                }
                 "maxItems": 20,
                 "items": {
                   "$ref": "#/definitions/statement"
@@ -407,8 +632,34 @@
               "when_clauses"
             ]
           }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "CASE"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "when_clauses"
+            ]
+          }
         },
         {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "FOR_CURSOR_LOOP"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "fetch_into",
+              "cursor_name",
+              "body"
+            ]
+          }
           "if": {
             "properties": {
               "type": {
@@ -438,8 +689,34 @@
               "fetch_into"
             ]
           }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "FETCH_CURSOR"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "cursor_name",
+              "fetch_into"
+            ]
+          }
         },
         {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "DECLARE_CURSOR"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "cursor_name",
+              "query"
+            ]
+          }
           "if": {
             "properties": {
               "type": {

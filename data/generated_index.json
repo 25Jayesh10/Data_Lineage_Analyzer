@@ -7,5 +7,24 @@
       "#PayrollCalc",
       "AcmeERP.Employees"
     ]
+  },
+  "sp_sum_client_orders": {
+    "calls": [],
+    "tables": [
+      "client_orders"
+    ]
+  },
+  "test1": {
+    "calls": [],
+    "tables": [
+      "client_orders"
+    ]
+  },
+  "sp_update_inventory": {
+    "calls": [],
+    "tables": [
+      "products",
+      "inventory"
+    ]
   }
 }

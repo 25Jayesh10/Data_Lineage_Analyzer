@@ -1,6 +1,7 @@
 [
   {
     "proc_name": "AcmeERP.usp_ProcessFullPayrollCycle",
+    "proc_name": "AcmeERP.usp_ProcessFullPayrollCycle",
     "params": [
       {
         "name": "@PayPeriodStart",
@@ -13,6 +14,7 @@
         "mode": "IN"
       }
     ],
+    "return_type": "VOID",
     "return_type": "VOID",
     "variables": [
       { "name": "@EmployeeID", "type": "INT" },
