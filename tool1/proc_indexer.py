@@ -14,7 +14,7 @@ class ProcedureIndexer(TSqlParserListener):
         self.index = {}
 
     def enterCreate_or_alter_procedure(self, ctx):
-        proc_name = ctx.func_proc_name_schema().getText().lower()
+        proc_name = ctx.func_proc_name_schema().getText() #make this lowercase or uppercase based on your needs or keep as it is
         self.current_proc = proc_name
         self.index[proc_name] = {"params": [], "calls": [], "tables": []}
 
@@ -50,13 +50,13 @@ class ProcedureIndexer(TSqlParserListener):
                         if text.startswith("(") or text.startswith("@"):
                             break
                         if text.isidentifier():
-                            self.index[self.current_proc]["calls"].append(text.lower())
+                            self.index[self.current_proc]["calls"].append(text) #lowercase if needed
                             return
                 else:
                     # Fallback if it's a terminal node
                     text = child.getText()
                     if text.upper() not in {"EXEC", "EXECUTE"} and text.isidentifier():
-                        self.index[self.current_proc]["calls"].append(text.lower())
+                        self.index[self.current_proc]["calls"].append(text) #lowercase if needed
                         return
         except Exception as e:
             logging.warning(f"Failed to extract procedure call from EXEC: {e}")
@@ -64,17 +64,17 @@ class ProcedureIndexer(TSqlParserListener):
 
     def enterInsert_statement(self, ctx):
         if self.current_proc:
-            table = ctx.ddl_object().getText().lower()
+            table = ctx.ddl_object().getText()
             self.index[self.current_proc]["tables"].append(table)
 
     def enterUpdate_statement(self, ctx):
         if self.current_proc:
-            table = ctx.ddl_object().getText().lower()
+            table = ctx.ddl_object().getText()
             self.index[self.current_proc]["tables"].append(table)
 
     def enterDelete_statement(self, ctx):
         if self.current_proc:
-            table = ctx.delete_statement_from().ddl_object().getText().lower()
+            table = ctx.delete_statement_from().ddl_object().getText()
             self.index[self.current_proc]["tables"].append(table)
 
     def enterSelect_statement_standalone(self, ctx):
@@ -83,7 +83,7 @@ class ProcedureIndexer(TSqlParserListener):
                 from_clause = ctx.select_statement().query_expression().query_specification().table_sources()
                 if from_clause:
                     for ts in from_clause.table_source():
-                        table = ts.table_source_item().full_table_name().getText().lower()
+                        table = ts.table_source_item().full_table_name().getText() #use .lower() to convert to lowercase if needed
                         self.index[self.current_proc]["tables"].append(table)
             except:
                 pass  # Some selects may not have full context

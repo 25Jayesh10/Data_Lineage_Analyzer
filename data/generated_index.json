@@ -1,9 +1,11 @@
 {
-  "log_high_salary_employees": {
+  "AcmeERP.usp_ProcessFullPayrollCycle": {
     "calls": [],
     "tables": [
-      "high_salary_log",
-      "employees"
+      "AcmeERP.PayrollLogs",
+      "AcmeERP.ExchangeRates",
+      "#PayrollCalc",
+      "AcmeERP.Employees"
     ]
   }
 }

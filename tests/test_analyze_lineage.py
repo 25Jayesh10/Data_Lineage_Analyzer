@@ -6,7 +6,7 @@ def test_update_usage(tmp_path):
         {
             "proc_name": "proc_update",
             "params": [],
-            "return_type": "void",
+            "return_type": "VOID",
             "variables": [],
             "statements": [
                 {"type": "UPDATE", "table": "employees", "set": {"salary": "salary+1000"}}
@@ -31,7 +31,7 @@ def test_delete_usage(tmp_path):
         {
             "proc_name": "proc_delete",
             "params": [],
-            "return_type": "void",
+            "return_type": "VOID",
             "variables": [],
             "statements": [
                 {"type": "DELETE", "table": "employees"}
@@ -56,7 +56,7 @@ def test_multiple_procs_access_same_table(tmp_path):
         {
             "proc_name": "proc_a",
             "params": [],
-            "return_type": "void",
+            "return_type": "VOID",
             "variables": [],
             "statements": [
                 {"type": "SELECT", "query": "SELECT * FROM t1"}
@@ -65,7 +65,7 @@ def test_multiple_procs_access_same_table(tmp_path):
         {
             "proc_name": "proc_b",
             "params": [],
-            "return_type": "void",
+            "return_type": "VOID",
             "variables": [],
             "statements": [
                 {"type": "UPDATE", "table": "t1", "set": {"col": "val"}}
@@ -93,7 +93,7 @@ def test_proc_reads_and_writes_same_table(tmp_path):
         {
             "proc_name": "proc_rw",
             "params": [],
-            "return_type": "void",
+            "return_type": "VOID",
             "variables": [],
             "statements": [
                 {"type": "SELECT", "query": "SELECT * FROM t2"},
@@ -120,12 +120,13 @@ def simple_ast():
         {
             "proc_name": "proc_test",
             "params": [],
-            "return_type": "void",
+            "return_type": "VOID",
             "variables": [],
             "statements": [
                 {
-                    "type": "SELECT_INTO",
-                    "query": "SELECT * FROM employees"
+                    "type": "SELECT",
+                    "query": "SELECT * FROM employees",
+                    "into_vars": []
                 },
                 {
                     "type": "INSERT_INTO",
@@ -154,16 +155,16 @@ def test_procedure_calls_another(tmp_path):
         {
             "proc_name": "proc_main",
             "params": [],
-            "return_type": "void",
+            "return_type": "VOID",
             "variables": [],
             "statements": [
-                {"type": "CALL", "proc": "proc_sub"}
+                {"type": "EXECUTE_PROCEDURE", "procedure": "proc_sub", "args": []}
             ]
         },
         {
             "proc_name": "proc_sub",
             "params": [],
-            "return_type": "void",
+            "return_type": "VOID",
             "variables": [],
             "statements": []
         }
@@ -243,12 +244,13 @@ def test_multiple_procedures_lineage(tmp_path):
         {
             "proc_name": "proc_a",
             "params": [],
-            "return_type": "void",
+            "return_type": "VOID",
             "variables": [],
             "statements": [
                 {
                     "type": "SELECT_INTO",
-                    "query": "SELECT * FROM table1"
+                    "query": "SELECT * FROM table1",
+                    "into_vars": []
                 },
                 {
                     "type": "INSERT_INTO",
@@ -261,7 +263,7 @@ def test_multiple_procedures_lineage(tmp_path):
         {
             "proc_name": "proc_b",
             "params": [],
-            "return_type": "void",
+            "return_type": "VOID",
             "variables": [],
             "statements": [
                 {
@@ -302,3 +304,197 @@ def test_multiple_procedures_lineage(tmp_path):
     # Ensure both procedures are listed
     assert result["proc_a"]["type"] == "procedure"
     assert result["proc_b"]["type"] == "procedure"
+
+
+#test complex sql query with some scope for RAW_SQL
+# NOTE- IF THIS TEST FAILS THEN ITS HIGLY LIKELY THAT THE ISSUE IS DUE TO THE CHANGED AST STRUCTURE. PLEASE VERIFY THE AST STRUCTURE BELOW AGAINST THE FIELDS THE CODE IS EXPECTING
+
+def test_RAW_SQL_and_complex_queries(tmp_path):
+    index_file = tmp_path / "index.json"
+    ast_file = tmp_path / "ast.json"
+    output_file = tmp_path / "output.json"
+
+    index_data={
+  "AcmeERP.usp_ProcessFullPayrollCycle": {
+    "params": [
+      {
+        "name": "@PayPeriodStart",
+        "type": "DATE"
+      },
+      {
+        "name": "@PayPeriodEnd",
+        "type": "DATE"
+      }
+    ],
+    "calls": [],
+    "tables": [
+      "AcmeERP.PayrollLogs",
+      "AcmeERP.ExchangeRates",
+      "#PayrollCalc"
+    ]
+  }
+}
+    
+    ast_data=[
+  {
+    "proc_name": "AcmeERP.usp_ProcessFullPayrollCycle",
+    "params": [
+      {
+        "name": "@PayPeriodStart",
+        "type": "DATE",
+        "mode": "IN"
+      },
+      {
+        "name": "@PayPeriodEnd",
+        "type": "DATE",
+        "mode": "IN"
+      }
+    ],
+    "return_type": "VOID",
+    "variables": [
+      { "name": "@EmployeeID", "type": "INT" },
+      { "name": "@BaseSalary", "type": "DECIMAL" },
+      { "name": "@Bonus", "type": "DECIMAL" },
+      { "name": "@GrossSalary", "type": "DECIMAL" },
+      { "name": "@Tax", "type": "DECIMAL" },
+      { "name": "@NetSalary", "type": "DECIMAL" },
+      { "name": "@Currency", "type": "CHAR" },
+      { "name": "@ConvertedSalary", "type": "DECIMAL" },
+      { "name": "@ExchangeRate", "type": "DECIMAL" },
+      { "name": "@CurrentDate", "type": "DATE" },
+      { "name": "@ErrorMsg", "type": "NVARCHAR" },
+      { "name": "@ErrorSeverity", "type": "INT" },
+      { "name": "@ErrorState", "type": "INT" }
+    ],
+    "statements": [
+      {
+        "type": "RAW_SQL",
+        "query": "SET NOCOUNT ON;"
+      },
+      {
+        "type": "TRY",
+        "body": [
+          { "type": "BEGIN_TRANSACTION" },
+          {
+            "type": "SET",
+            "name": "@CurrentDate",
+            "value": "GETDATE()"
+          },
+          {
+            "type": "RAW_SQL",
+            "query": "IF OBJECT_ID('tempdb..#PayrollCalc') IS NOT NULL DROP TABLE #PayrollCalc;"
+          },
+          {
+            "type": "DECLARE_TEMP_TABLE",
+            "name": "#PayrollCalc",
+            "query": "CREATE TABLE #PayrollCalc (EmployeeID INT, BaseSalary DECIMAL(18,2), Bonus DECIMAL(18,2), GrossSalary DECIMAL(18,2), Tax DECIMAL(18,2), NetSalary DECIMAL(18,2), Currency CHAR(3), ConvertedSalary DECIMAL(18,2));"
+          },
+          {
+            "type": "RAW_SQL",
+            "query": "INSERT INTO #PayrollCalc (EmployeeID, BaseSalary, Bonus, GrossSalary, Tax, NetSalary, Currency) SELECT e.EmployeeID, e.BaseSalary, CASE WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 10 THEN e.BaseSalary * 0.15 WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 5 THEN e.BaseSalary * 0.10 WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 2 THEN e.BaseSalary * 0.05 ELSE 0 END AS Bonus, e.BaseSalary + CASE WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 10 THEN e.BaseSalary * 0.15 WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 5 THEN e.BaseSalary * 0.10 WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 2 THEN e.BaseSalary * 0.05 ELSE 0 END AS GrossSalary, CASE WHEN e.BaseSalary <= 50000 THEN e.BaseSalary * 0.1 WHEN e.BaseSalary <= 75000 THEN e.BaseSalary * 0.15 ELSE e.BaseSalary * 0.2 END AS Tax, (e.BaseSalary + CASE WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 10 THEN e.BaseSalary * 0.15 WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 5 THEN e.BaseSalary * 0.10 WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 2 THEN e.BaseSalary * 0.05 ELSE 0 END) - CASE WHEN e.BaseSalary <= 50000 THEN e.BaseSalary * 0.1 WHEN e.BaseSalary <= 75000 THEN e.BaseSalary * 0.15 ELSE e.BaseSalary * 0.2 END AS NetSalary, ISNULL(e.Currency, 'USD') AS Currency FROM AcmeERP.Employees e;"
+          },
+          {
+            "type": "DECLARE_CURSOR",
+            "cursor_name": "PayrollCursor",
+            "query": "SELECT EmployeeID, GrossSalary, Currency FROM #PayrollCalc"
+          },
+          { "type": "OPEN_CURSOR", "cursor_name": "PayrollCursor" },
+          {
+            "type": "FETCH_CURSOR",
+            "cursor_name": "PayrollCursor",
+            "fetch_into": ["@EmployeeID", "@GrossSalary", "@Currency"]
+          },
+          {
+            "type": "WHILE",
+            "condition": { "op": "=", "left": "@@FETCH_STATUS", "right": "0" },
+            "body": [
+              {
+                "type": "IF",
+                "condition": { "op": "<>", "left": "@Currency", "right": "'USD'" },
+                "then": [
+                  {
+                    "type": "SELECT_INTO",
+                    "query": "SELECT TOP 1 RateToBase FROM AcmeERP.ExchangeRates WHERE CurrencyCode = @Currency AND RateDate <= @CurrentDate ORDER BY RateDate DESC",
+                    "into_vars": ["@ExchangeRate"]
+                  },
+                  {
+                    "type": "IF",
+                    "condition": { "op": "IS", "left": "@ExchangeRate", "right": "NULL" },
+                    "then": [
+                      { "type": "SET", "name": "@ExchangeRate", "value": "1" }
+                    ]
+                  },
+                  {
+                    "type": "SET",
+                    "name": "@ConvertedSalary",
+                    "value": { "op": "*", "left": "@GrossSalary", "right": "@ExchangeRate" }
+                  }
+                ],
+                "else": [
+                  { "type": "SET", "name": "@ConvertedSalary", "value": "@GrossSalary" }
+                ]
+              },
+              {
+                "type": "UPDATE",
+                "table": "#PayrollCalc",
+                "set": { "ConvertedSalary": "@ConvertedSalary" },
+                "where": { "op": "=", "left": "EmployeeID", "right": "@EmployeeID" }
+              },
+              {
+                "type": "FETCH_CURSOR",
+                "cursor_name": "PayrollCursor",
+                "fetch_into": ["@EmployeeID", "@GrossSalary", "@Currency"]
+              }
+            ]
+          },
+          { "type": "CLOSE_CURSOR", "cursor_name": "PayrollCursor" },
+          { "type": "DEALLOCATE_CURSOR", "cursor_name": "PayrollCursor" },
+          {
+            "type": "RAW_SQL",
+            "query": "INSERT INTO AcmeERP.PayrollLogs (EmployeeID, PayPeriodStart, PayPeriodEnd, GrossSalary, TaxDeducted) SELECT EmployeeID, @PayPeriodStart, @PayPeriodEnd, ConvertedSalary, Tax FROM #PayrollCalc;"
+          },
+          { "type": "COMMIT" }
+        ],
+        "catch": [
+          {
+            "exception": "ANY",
+            "body": [
+              {
+                "type": "IF",
+                "condition": { "op": ">", "left": "@@TRANCOUNT", "right": "0" },
+                "then": [
+                  { "type": "ROLLBACK" }
+                ]
+              },
+              {
+                "type": "RAW_SQL",
+                "query": "SELECT @ErrorMsg = ERROR_MESSAGE(), @ErrorSeverity = ERROR_SEVERITY(), @ErrorState = ERROR_STATE();"
+              },
+              {
+                "type": "RAISE",
+                "message": "RAISERROR (@ErrorMsg, @ErrorSeverity, @ErrorState);"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
+    index_file.write_text(json.dumps(index_data))
+    ast_file.write_text(json.dumps(ast_data))
+
+    analyze_lineage(str(index_file), str(ast_file), str(output_file))
+    with open(output_file)as f:
+        result=json.load(f)
+    
+    #important assertions
+    assert result["AcmeERP.usp_ProcessFullPayrollCycle"]["type"]=="procedure"
+    assert result["AcmeERP.PayrollLogs"]["type"]=="table"
+    #if the AST structure doesnt handle NESTED queries properly then this testcase if passed shows that RAW_SQL and all other query_fields are also getting scanned by the lineage analyzer
+    assert result["AcmeERP.PayrollLogs"]["usage"]["AcmeERP.usp_ProcessFullPayrollCycle"]==["write"]
+    #proc calling table
+    assert result["AcmeERP.Employees"]["calls"]==["AcmeERP.usp_ProcessFullPayrollCycle"]
+    assert result["AcmeERP.Employees"]["usage"]["AcmeERP.usp_ProcessFullPayrollCycle"]==["read"]
+
+    

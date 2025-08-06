@@ -12,19 +12,19 @@ def analyze_lineage(index_file :str, ast_file :str, output_file :str):
                     return table
         return None
 
-    def extract_table_from_insert(proc_sql):
-        # crude extraction: look for INSERT INTO <table>
-        tokens = proc_sql.replace(",", " ").split()
-        if len(tokens) >= 3 and tokens[0].upper() == "INSERT" and tokens[1].upper() == "INTO":
-            table = tokens[2].strip('();')
-            if not table.startswith("@"):
-                return table
-        return None
+    # def extract_table_from_insert(proc_sql):
+    #     # crude extraction: look for INSERT INTO <table>
+    #     tokens = proc_sql.replace(",", " ").split()
+    #     if len(tokens) >= 3 and tokens[0].upper() == "INSERT" and tokens[1].upper() == "INTO":
+    #         table = tokens[2].strip('();')
+    #         if not table.startswith("@"):
+    #             return table
+    #     return None
     # what if there is something like select into (lets try to find out)
 
     def process_statements(proc, stmts, table_usage, lineage):
         for stmt in stmts:
-            stmt_type = stmt.get("type", "").upper()
+            stmt_type = stmt.get("type", "").upper() #converts to uppercase if not.
 
             # Detect SELECT_INTO or SELECT (read)
             if stmt_type in ("SELECT_INTO", "SELECT"):
@@ -35,18 +35,7 @@ def analyze_lineage(index_file :str, ast_file :str, output_file :str):
                     lineage[table]["calls"].add(proc)
                     table_usage[table][proc].append("read")
 
-            # Detect INSERT (write)
-            if stmt_type == "EXECUTE_PROCEDURE":
-                proc_sql = stmt.get("procedure", "")
-                table = extract_table_from_insert(proc_sql)
-                if table:
-                    lineage[table]["type"] = "table"
-                    lineage[table]["calls"].add(proc)
-                    table_usage[table][proc].append("write")
-                # Detect procedure calls (if it's a real procedure name)
-                if proc_sql and proc_sql.isidentifier():
-                    lineage[proc]["calls"].add(proc_sql)
-                    lineage[proc_sql]["type"] = "procedure"
+            
 
             # Detect UPDATE (write)
             if stmt_type == "UPDATE":
@@ -57,7 +46,7 @@ def analyze_lineage(index_file :str, ast_file :str, output_file :str):
                     table_usage[table][proc].append("write")
             
             #Detect Insert (write)
-            if stmt_type=="INSERT":
+            if stmt_type=="INSERT_INTO":
                 table=stmt.get("table")
                 if table :
                     lineage[table]["type"]="table"
@@ -79,6 +68,42 @@ def analyze_lineage(index_file :str, ast_file :str, output_file :str):
                     lineage[table]["calls"].add(proc)
                     table_usage[table][proc].append("write")
 
+            #curude extraction of reads and writes info (this is a fallback in case the AST does not present nested queries in a structured format)
+
+            #crude extraction
+            query = stmt.get("query", "") #converts to uppercase if not.
+            if stmt_type and query:
+                tokens = query.replace(",", " ").replace(";", " ").split()
+                for i, token in enumerate(tokens):
+                    # UPDATE <table>
+                    if token.upper() == "UPDATE" and i + 1 < len(tokens):
+                        table = tokens[i + 1]
+                        lineage[table]["type"] = "table"
+                        lineage[table]["calls"].add(proc)
+                        table_usage[table][proc].append("write")
+                    # INSERT INTO <table>
+                    if token.upper() == "INSERT" and i + 1 < len(tokens) and tokens[i + 1].upper() == "INTO" and i + 2 < len(tokens):
+                        table = tokens[i + 2]
+                        lineage[table]["type"] = "table"
+                        lineage[table]["calls"].add(proc)
+                        table_usage[table][proc].append("write")
+                    # SELECT ... FROM <table>
+                    if token.upper() == "FROM" and i + 1 < len(tokens):
+                        table = tokens[i + 1]
+                        lineage[table]["type"] = "table"
+                        lineage[table]["calls"].add(proc)
+                        table_usage[table][proc].append("read")
+                    # SELECT INTO <table>
+                    if token.upper() == "INTO" and i > 0 and tokens[i - 1].upper() == "SELECT" and i + 1 < len(tokens):
+                        table = tokens[i + 1]
+                        lineage[table]["type"] = "table"
+                        lineage[table]["calls"].add(proc)
+                        table_usage[table][proc].append("write")
+
+
+                
+
+## Next snippet has to be examined if actually needed as its relevance depends on how well the AST presents the output while formatting
             # Recursively process nested statements in control flow
             for key in ["then", "else", "body", "catch"]:
                 if key in stmt and isinstance(stmt[key], list):
@@ -107,13 +132,14 @@ def analyze_lineage(index_file :str, ast_file :str, output_file :str):
             lineage[proc]["calls"].add(called_proc)
             lineage[called_proc]["type"] = "procedure"
 
+#The snippet below activates the AST based detection which can be a bit redundant
     # Use Tool 2 data (AST-based detection)
     ast_proc_map = {}
     for proc_ast in ast_data:
         proc_name = proc_ast.get("proc_name")
         if proc_name:
             ast_proc_map[proc_name] = proc_ast
-            lineage[proc_name]["type"] = "procedure"
+            #lineage[proc_name]["type"] = "procedure"
 
     for proc, ast in ast_proc_map.items():
         process_statements(proc, ast.get("statements", []), table_usage, lineage)

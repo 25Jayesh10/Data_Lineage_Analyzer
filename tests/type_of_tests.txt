@@ -4,4 +4,9 @@
 4) proc reads and writes same table - passed
 5) proc calls another - passed
 6) test read and write - passed
-7) multiple proc in sql file
+7) multiple proc in sql file- passed
+8) complex procedures with abstract ast structure- passed
+
+## Tests Remaining 
+1) Recursive calls  nested if else and other queries
+2) File opening

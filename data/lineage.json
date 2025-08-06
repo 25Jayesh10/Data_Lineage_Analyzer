@@ -1,23 +1,51 @@
 {
-  "log_high_salary_employees": {
+  "AcmeERP.usp_ProcessFullPayrollCycle": {
     "type": "procedure",
     "calls": []
   },
-  "high_salary_log": {
+  "AcmeERP.PayrollLogs": {
     "type": "table",
     "calls": [
-      "log_high_salary_employees"
+      "AcmeERP.usp_ProcessFullPayrollCycle"
     ],
     "usage": {
-      "log_high_salary_employees": [
+      "AcmeERP.usp_ProcessFullPayrollCycle": [
         "write"
       ]
     }
   },
-  "employees": {
+  "AcmeERP.ExchangeRates": {
     "type": "table",
     "calls": [
-      "log_high_salary_employees"
-    ]
+      "AcmeERP.usp_ProcessFullPayrollCycle"
+    ],
+    "usage": {
+      "AcmeERP.usp_ProcessFullPayrollCycle": [
+        "read"
+      ]
+    }
+  },
+  "#PayrollCalc": {
+    "type": "table",
+    "calls": [
+      "AcmeERP.usp_ProcessFullPayrollCycle"
+    ],
+    "usage": {
+      "AcmeERP.usp_ProcessFullPayrollCycle": [
+        "read",
+        "write"
+      ]
+    }
+  },
+  "AcmeERP.Employees": {
+    "type": "table",
+    "calls": [
+      "AcmeERP.usp_ProcessFullPayrollCycle"
+    ],
+    "usage": {
+      "AcmeERP.usp_ProcessFullPayrollCycle": [
+        "read"
+      ]
+    }
   }
 }

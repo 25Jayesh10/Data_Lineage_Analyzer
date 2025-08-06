@@ -1,15 +1,20 @@
 {
-  "log_high_salary_employees": {
+  "AcmeERP.usp_ProcessFullPayrollCycle": {
     "params": [
       {
-        "name": "@threshold_salary",
-        "type": "INT"
+        "name": "@PayPeriodStart",
+        "type": "DATE"
+      },
+      {
+        "name": "@PayPeriodEnd",
+        "type": "DATE"
       }
     ],
     "calls": [],
     "tables": [
-      "high_salary_log",
-      "employees"
+      "AcmeERP.PayrollLogs",
+      "AcmeERP.ExchangeRates",
+      "#PayrollCalc"
     ]
   }
 }
