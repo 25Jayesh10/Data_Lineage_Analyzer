@@ -2,8 +2,27 @@
   "log_hr_employees": {
     "calls": [],
     "tables": [
-      "employees",
-      "employee_log"
+      "employee_log",
+      "employees"
+    ]
+  },
+  "sp_sum_client_orders": {
+    "calls": [],
+    "tables": [
+      "client_orders"
+    ]
+  },
+  "test1": {
+    "calls": [],
+    "tables": [
+      "client_orders"
+    ]
+  },
+  "sp_update_inventory": {
+    "calls": [],
+    "tables": [
+      "products",
+      "inventory"
     ]
   }
 }

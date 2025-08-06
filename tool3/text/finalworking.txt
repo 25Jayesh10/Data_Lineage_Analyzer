@@ -108,3 +108,6 @@ def generate_docs(json_path, output_dir="docs", output_file="procedures.md"):
         f.write(full_doc)
 
     print(f"Generated: {output_path}")
+
+# Run it
+generate_docs("index.json")
