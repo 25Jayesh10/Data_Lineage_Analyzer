@@ -1,7 +1,7 @@
 # Summary
 
-- **Total Procedures**: 2
-- **Total Tables**: 3
+- **Total Procedures**: 3
+- **Total Tables**: 5
 - **Most Called Procedure**: `log_order`
 
 ---
@@ -10,6 +10,7 @@
 
 - [process_orders](#process_orders)
 - [log_order](#log_order)
+- [log_hr_employees](#log_hr_employees)
 
 ---
 
@@ -90,6 +91,48 @@ No description provided.
 ```mermaid
 graph TD
     log_order --> order_logs
+```
+
+---
+
+### Business Logic
+
+No description provided.
+
+
+---
+
+
+## Stored Procedure: log_hr_employees
+<a name="log_hr_employees"></a>
+
+---
+
+### Parameters
+
+| Name | Type |
+|------|------|
+
+---
+
+### Tables
+
+- employees
+- employee_log
+
+---
+
+### Called Procedures
+
+
+---
+
+### Call Graph
+
+```mermaid
+graph TD
+    log_hr_employees --> employees
+    log_hr_employees --> employee_log
 ```
 
 ---

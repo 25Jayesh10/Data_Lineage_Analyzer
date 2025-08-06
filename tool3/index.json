@@ -13,5 +13,13 @@
     ],
     "calls": [],
     "tables": ["order_logs"]
+  },
+  "log_hr_employees": {
+    "params": [],
+    "calls": [],
+    "tables": [
+      "employees",
+      "employee_log"
+    ]
   }
 }
