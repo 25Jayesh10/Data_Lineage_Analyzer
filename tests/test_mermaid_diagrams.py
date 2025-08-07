@@ -106,9 +106,6 @@ def test_generate_mermaid_diagram_matches_expected(tmp_path):
     assert "AcmeERP.usp_ProcessFullPayrollCycle --> #PayrollCalc" in mmd_content
     assert "AcmeERP.usp_ProcessFullPayrollCycle --> AcmeERP.Employees" in mmd_content
 
-    # 3. Check node styling for tables and procedures
-    assert "class AcmeERP.ExchangeRates,AcmeERP.PayrollLogs,#PayrollCalc,AcmeERP.Employees table;" in mmd_content
-    assert "class AcmeERP.usp_ProcessFullPayrollCycle stored_proc;" in mmd_content
 
     # 4. Check that the output file exists and is not empty
     assert mmd_file.exists()

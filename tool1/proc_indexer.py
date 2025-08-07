@@ -8,7 +8,7 @@ from tool1.TSqlParser import TSqlParser
 from tool1.TSqlParserListener import TSqlParserListener
 import os
 import sys
-
+from line_profiler import profile
 with open("tool1/type_mapping.json") as f:
     TYPE_MAPPING = json.load(f)
 
@@ -16,7 +16,7 @@ class ProcedureIndexer(TSqlParserListener):
     def __init__(self):
         self.current_proc = None
         self.index = {}
-
+    @profile
     def enterCreate_or_alter_procedure(self, ctx):
         proc_name = ctx.func_proc_name_schema().getText() #make this lowercase or uppercase based on your needs or keep as it is
         self.current_proc = proc_name
@@ -44,7 +44,7 @@ class ProcedureIndexer(TSqlParserListener):
                 except Exception as e:
                     logging.warning(f"Failed to extract param: {param.getText()} — {e}")
 
-
+    @profile
     def enterExecute_statement(self, ctx):
         if not self.current_proc:
             return
@@ -72,22 +72,22 @@ class ProcedureIndexer(TSqlParserListener):
         except Exception as e:
             logging.warning(f"Failed to extract procedure call from EXEC: {e}")
 
-
+    @profile
     def enterInsert_statement(self, ctx):
         if self.current_proc:
             table = ctx.ddl_object().getText()
             self.index[self.current_proc]["tables"].append(table)
-
+    @profile
     def enterUpdate_statement(self, ctx):
         if self.current_proc:
             table = ctx.ddl_object().getText()
             self.index[self.current_proc]["tables"].append(table)
-
+    @profile
     def enterDelete_statement(self, ctx):
         if self.current_proc:
             table = ctx.delete_statement_from().ddl_object().getText()
             self.index[self.current_proc]["tables"].append(table)
-
+    @profile
     def enterSelect_statement_standalone(self, ctx):
         if self.current_proc:
             try:
@@ -98,7 +98,7 @@ class ProcedureIndexer(TSqlParserListener):
                         self.index[self.current_proc]["tables"].append(table)
             except:
                 pass  # Some selects may not have full context
-
+    @profile
     def get_index(self):
     # Remove duplicates
         for proc in self.index.values():

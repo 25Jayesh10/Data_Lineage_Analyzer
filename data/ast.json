@@ -1,7 +1,6 @@
 [
   {
     "proc_name": "AcmeERP.usp_ProcessFullPayrollCycle",
-    "proc_name": "AcmeERP.usp_ProcessFullPayrollCycle",
     "params": [
       {
         "name": "@PayPeriodStart",
@@ -14,7 +13,6 @@
         "mode": "IN"
       }
     ],
-    "return_type": "VOID",
     "return_type": "VOID",
     "variables": [
       { "name": "@EmployeeID", "type": "INT" },
@@ -116,7 +114,7 @@
           { "type": "DEALLOCATE_CURSOR", "cursor_name": "PayrollCursor" },
           {
             "type": "RAW_SQL",
-            "query": "INSERT INTO AcmeERP.PayrollLogs (EmployeeID, PayPeriodStart, PayPeriodEnd, GrossSalary, TaxDeducted) SELECT EmployeeID, @PayPeriodStart, @PayPeriodEnd, ConvertedSalary, Tax FROM #PayrollCalc;"
+            "query": "INSERT into AcmeERP.PayrollLogs (EmployeeID, PayPeriodStart, PayPeriodEnd, GrossSalary, TaxDeducted) SELECT EmployeeID, @PayPeriodStart, @PayPeriodEnd, ConvertedSalary, Tax FROM #PayrollCalc;"
           },
           { "type": "COMMIT" }
         ],

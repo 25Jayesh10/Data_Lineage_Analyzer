@@ -1,6 +1,8 @@
 import json
 from collections import defaultdict
+from line_profiler import profile
 
+@profile
 def analyze_lineage(index_file :str, ast_file :str, output_file :str):
     def extract_table_from_query(query):
         # crude extraction: look for FROM <table>
@@ -27,7 +29,7 @@ def analyze_lineage(index_file :str, ast_file :str, output_file :str):
             stmt_type = stmt.get("type", "").upper() #converts to uppercase if not.
 
             # Detect SELECT_INTO or SELECT (read)
-            if stmt_type in ("SELECT_INTO", "SELECT"):
+            if stmt_type in ("SELECT_INTO", "SELECT"): # there can be possible issues here because of SELECT
                 query = stmt.get("query", "")
                 table = extract_table_from_query(query)
                 if table:
@@ -52,13 +54,7 @@ def analyze_lineage(index_file :str, ast_file :str, output_file :str):
                     lineage[table]["type"]="table"
                     lineage[table]["calls"].add(proc)
                     table_usage[table][proc].append("write")
-            #Detect Insert Into (write)
-            if stmt_type=="INSERT_INTO":
-                table=stmt.get("table")
-                if table :
-                    lineage[table]["type"]="table"
-                    lineage[table]["calls"].add(proc)
-                    table_usage[table][proc].append("write")
+           
 
             # Detect DELETE (write)
             if stmt_type == "DELETE":
@@ -67,38 +63,38 @@ def analyze_lineage(index_file :str, ast_file :str, output_file :str):
                     lineage[table]["type"] = "table"
                     lineage[table]["calls"].add(proc)
                     table_usage[table][proc].append("write")
-
+            
             #curude extraction of reads and writes info (this is a fallback in case the AST does not present nested queries in a structured format)
-
-            #crude extraction
-            query = stmt.get("query", "") #converts to uppercase if not.
-            if stmt_type and query:
-                tokens = query.replace(",", " ").replace(";", " ").split()
-                for i, token in enumerate(tokens):
-                    # UPDATE <table>
-                    if token.upper() == "UPDATE" and i + 1 < len(tokens):
-                        table = tokens[i + 1]
-                        lineage[table]["type"] = "table"
-                        lineage[table]["calls"].add(proc)
-                        table_usage[table][proc].append("write")
-                    # INSERT INTO <table>
-                    if token.upper() == "INSERT" and i + 1 < len(tokens) and tokens[i + 1].upper() == "INTO" and i + 2 < len(tokens):
-                        table = tokens[i + 2]
-                        lineage[table]["type"] = "table"
-                        lineage[table]["calls"].add(proc)
-                        table_usage[table][proc].append("write")
-                    # SELECT ... FROM <table>
-                    if token.upper() == "FROM" and i + 1 < len(tokens):
-                        table = tokens[i + 1]
-                        lineage[table]["type"] = "table"
-                        lineage[table]["calls"].add(proc)
-                        table_usage[table][proc].append("read")
-                    # SELECT INTO <table>
-                    if token.upper() == "INTO" and i > 0 and tokens[i - 1].upper() == "SELECT" and i + 1 < len(tokens):
-                        table = tokens[i + 1]
-                        lineage[table]["type"] = "table"
-                        lineage[table]["calls"].add(proc)
-                        table_usage[table][proc].append("write")
+            if stmt_type not in ["INSERT_INTO","DELETE","UPDATE","SELECT_INTO","SELECT"]: # ie the statement is RAW_SQL type or some other type
+                #crude extraction
+                query = stmt.get("query", "") #converts to uppercase if not.
+                if stmt_type and query:
+                    tokens = query.replace(",", " ").replace(";", " ").split()
+                    for i, token in enumerate(tokens):
+                        # UPDATE <table>
+                        if token.upper() == "UPDATE" and i + 1 < len(tokens):
+                            table = tokens[i + 1]
+                            lineage[table]["type"] = "table"
+                            lineage[table]["calls"].add(proc)
+                            table_usage[table][proc].append("write")
+                        # INSERT INTO <table>
+                        if token.upper() == "INSERT" and i + 1 < len(tokens) and tokens[i + 1].upper() == "INTO" and i + 2 < len(tokens):
+                            table = tokens[i + 2]
+                            lineage[table]["type"] = "table"
+                            lineage[table]["calls"].add(proc)
+                            table_usage[table][proc].append("write")
+                        # SELECT ... FROM <table>
+                        if token.upper() == "FROM" and i + 1 < len(tokens):
+                            table = tokens[i + 1]
+                            lineage[table]["type"] = "table"
+                            lineage[table]["calls"].add(proc)
+                            table_usage[table][proc].append("read")
+                        # SELECT INTO <table>
+                        if token.upper() == "INTO" and i > 0 and tokens[i - 1].upper() == "SELECT" and i + 1 < len(tokens):
+                            table = tokens[i + 1]
+                            lineage[table]["type"] = "table"
+                            lineage[table]["calls"].add(proc)
+                            table_usage[table][proc].append("write")
 
 
                 
