@@ -271,7 +271,7 @@ added type_mapping for tool 1
 added conditionfor type mapping if type is not available in type mapping then the code wont proced further and ill print the error
 
 
-ERRORS FACING WITH FINAL TEST CASES: 
+## ERRORS FACING WITH FINAL TEST CASES: 
 1) C: run_t0014.py
 ERROR: root:Unsupported type 'CHAR(3)' found in procedure 'acmeerp.usp_converttobase' for parameter '@CurrencyCode•
 C: run_t0014.py
@@ -290,3 +290,11 @@ SOLUTION:- WE STRIP (3) SINCE IT IS NOT REQUIRED TO TOOL 4
 3) GETTING REDUNDACIES IN MERMAID AND LINEAGE COZ OF CONVERSION OF NAME OF PROCEDURES TO LOWER CASE
 
 SOLUTIONS:- ERROR FIXED WE ARE NO LONGER CONVERTING IT AND CAME UP WITH A PERMANANENT SOLUTION
+
+
+
+## command to run the files:
+ - python run_tool4.py
+
+## command to test coverage of the files:
+ - pytest --cov=source ---cov-report==html

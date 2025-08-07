@@ -13,3 +13,4 @@ diagrams\lineage.md
 diagrams\lineage.mmd
 htmlcov
 .coverage
+.env
