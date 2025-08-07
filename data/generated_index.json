@@ -1,15 +1,17 @@
 {
-  "AcmeERP.usp_ProcessFullPayrollCycle": {
-    "calls": [],
+  "log_hr_employees": {
+    "calls": [
+      "sp_process_and_log"
+    ],
     "tables": [
-      "AcmeERP.PayrollLogs",
-      "AcmeERP.ExchangeRates",
-      "#PayrollCalc",
-      "AcmeERP.Employees"
+      "employee_log",
+      "employees"
     ]
   },
   "sp_sum_client_orders": {
-    "calls": [],
+    "calls": [
+      "sp_process_and_log"
+    ],
     "tables": [
       "client_orders"
     ]
@@ -23,8 +25,12 @@
   "sp_update_inventory": {
     "calls": [],
     "tables": [
-      "products",
-      "inventory"
+      "inventory",
+      "products"
     ]
+  },
+  "sp_process_and_log": {
+    "calls": [],
+    "tables": []
   }
 }

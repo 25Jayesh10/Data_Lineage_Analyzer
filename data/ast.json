@@ -1,147 +1,593 @@
 [
   {
-    "proc_name": "AcmeERP.usp_ProcessFullPayrollCycle",
-    "proc_name": "AcmeERP.usp_ProcessFullPayrollCycle",
+    "proc_name": "log_hr_employees",
+    "params": [],
+    "return_type": "VOID",
+    "variables": [
+      {
+        "name": "@emp_id",
+        "type": "INT"
+      },
+      {
+        "name": "@emp_name",
+        "type": "VARCHAR"
+      }
+    ],
+    "statements": [
+      {
+        "type": "DECLARE_CURSOR",
+        "cursor_name": "emp_cursor",
+        "query": "SELECT emp_id, emp_name FROM employees WHERE department = 'HR'"
+      },
+      {
+        "type": "OPEN_CURSOR",
+        "cursor_name": "emp_cursor"
+      },
+      {
+        "type": "FETCH_CURSOR",
+        "cursor_name": "emp_cursor",
+        "fetch_into": [
+          "@emp_id",
+          "@emp_name"
+        ]
+      },
+      {
+        "type": "WHILE",
+        "condition": {
+          "op": "=",
+          "left": "@@sqlstatus",
+          "right": "0"
+        },
+        "body": [
+          {
+            "type": "INSERT_INTO",
+            "table": "employee_log",
+            "columns": [
+              "emp_id",
+              "emp_name",
+              "log_time"
+            ],
+            "values": [
+              "@emp_id",
+              "@emp_name",
+              "GETDATE()"
+            ]
+          },
+          {
+            "type": "FETCH_CURSOR",
+            "cursor_name": "emp_cursor",
+            "fetch_into": [
+              "@emp_id",
+              "@emp_name"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "CLOSE_CURSOR",
+        "cursor_name": "emp_cursor"
+      },
+      {
+        "type": "DEALLOCATE_CURSOR",
+        "cursor_name": "emp_cursor"
+      }
+    ]
+  },
+  {
+    "proc_name": "sp_sum_client_orders",
     "params": [
       {
-        "name": "@PayPeriodStart",
+        "name": "@client_id",
+        "type": "INTEGER",
+        "mode": "IN"
+      },
+      {
+        "name": "@from_date",
         "type": "DATE",
         "mode": "IN"
       },
       {
-        "name": "@PayPeriodEnd",
+        "name": "@to_date",
+        "type": "DATE",
+        "mode": "IN"
+      }
+    ],
+    "return_type": "NUMERIC",
+    "variables": [
+      {
+        "name": "@grand_total",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "@order_total",
+        "type": "NUMERIC"
+      }
+    ],
+    "statements": [
+      {
+        "type": "DECLARE_CURSOR",
+        "cursor_name": "cur_orders",
+        "query": "SELECT total_price FROM client_orders WHERE client_id = @client_id AND order_date BETWEEN @from_date AND @to_date"
+      },
+      {
+        "type": "SET",
+        "name": "@grand_total",
+        "value": "0.00"
+      },
+      {
+        "type": "OPEN_CURSOR",
+        "cursor_name": "cur_orders"
+      },
+      {
+        "type": "FETCH_CURSOR",
+        "cursor_name": "cur_orders",
+        "fetch_into": [
+          "@order_total"
+        ]
+      },
+      {
+        "type": "WHILE",
+        "condition": {
+          "op": "=",
+          "left": "@@sqlstatus",
+          "right": "0"
+        },
+        "body": [
+          {
+            "type": "IF",
+            "condition": {
+              "op": ">",
+              "left": "@order_total",
+              "right": "750"
+            },
+            "then": [
+              {
+                "type": "SET",
+                "name": "@grand_total",
+                "value": {
+                  "op": "+",
+                  "left": "@grand_total",
+                  "right": {
+                    "op": "*",
+                    "left": "@order_total",
+                    "right": "0.95"
+                  }
+                }
+              }
+            ],
+            "else": [
+              {
+                "type": "SET",
+                "name": "@grand_total",
+                "value": {
+                  "op": "+",
+                  "left": "@grand_total",
+                  "right": "@order_total"
+                }
+              }
+            ]
+          },
+          {
+            "type": "FETCH_CURSOR",
+            "cursor_name": "cur_orders",
+            "fetch_into": [
+              "@order_total"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "CLOSE_CURSOR",
+        "cursor_name": "cur_orders"
+      },
+      {
+        "type": "DEALLOCATE_CURSOR",
+        "cursor_name": "cur_orders"
+      },
+      {
+        "type": "IF",
+        "condition": {
+          "op": ">",
+          "left": "@grand_total",
+          "right": "10000"
+        },
+        "then": [
+          {
+            "type": "RAISE",
+            "message": "High-value threshold exceeded for client"
+          }
+        ]
+      },
+      {
+        "type": "RETURN",
+        "expression": "@grand_total"
+      }
+    ]
+  },
+  {
+    "proc_name": "test1",
+    "params": [
+      {
+        "name": "@client_id",
+        "type": "INT",
+        "mode": "IN"
+      },
+      {
+        "name": "@from_date",
+        "type": "DATE",
+        "mode": "IN"
+      },
+      {
+        "name": "@to_date",
+        "type": "DATE",
+        "mode": "IN"
+      }
+    ],
+    "return_type": "NUMERIC",
+    "variables": [
+      {
+        "name": "@grand_total",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "@order_total",
+        "type": "NUMERIC"
+      }
+    ],
+    "statements": [
+      {
+        "type": "SET",
+        "name": "@grand_total",
+        "value": "0.00"
+      },
+      {
+        "type": "DECLARE_CURSOR",
+        "cursor_name": "cur_orders",
+        "query": "SELECT total_price FROM client_orders WHERE client_id = @client_id AND order_date BETWEEN @from_date AND @to_date"
+      },
+      {
+        "type": "OPEN_CURSOR",
+        "cursor_name": "cur_orders"
+      },
+      {
+        "type": "FETCH_CURSOR",
+        "cursor_name": "cur_orders",
+        "fetch_into": [
+          "@order_total"
+        ]
+      },
+      {
+        "type": "WHILE",
+        "condition": {
+          "op": "=",
+          "left": "@@FETCH_STATUS",
+          "right": "0"
+        },
+        "body": [
+          {
+            "type": "IF",
+            "condition": {
+              "op": ">",
+              "left": "@order_total",
+              "right": "750"
+            },
+            "then": [
+              {
+                "type": "SET",
+                "name": "@grand_total",
+                "value": {
+                  "op": "+",
+                  "left": "@grand_total",
+                  "right": {
+                    "op": "*",
+                    "left": "@order_total",
+                    "right": "0.95"
+                  }
+                }
+              }
+            ],
+            "else": [
+              {
+                "type": "SET",
+                "name": "@grand_total",
+                "value": {
+                  "op": "+",
+                  "left": "@grand_total",
+                  "right": "@order_total"
+                }
+              }
+            ]
+          },
+          {
+            "type": "FETCH_CURSOR",
+            "cursor_name": "cur_orders",
+            "fetch_into": [
+              "@order_total"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "CLOSE_CURSOR",
+        "cursor_name": "cur_orders"
+      },
+      {
+        "type": "DEALLOCATE_CURSOR",
+        "cursor_name": "cur_orders"
+      },
+      {
+        "type": "IF",
+        "condition": {
+          "op": ">",
+          "left": "@grand_total",
+          "right": "10000"
+        },
+        "then": [
+          {
+            "type": "RAISE",
+            "message": "High-value threshold exceeded for client"
+          }
+        ]
+      },
+      {
+        "type": "RETURN",
+        "expression": "@grand_total"
+      }
+    ]
+  },
+  {
+    "proc_name": "sp_sum_client_orders",
+    "params": [
+      {
+        "name": "@client_id",
+        "type": "INTEGER",
+        "mode": "IN"
+      },
+      {
+        "name": "@from_date",
+        "type": "DATE",
+        "mode": "IN"
+      },
+      {
+        "name": "@to_date",
+        "type": "DATE",
+        "mode": "IN"
+      }
+    ],
+    "return_type": "NUMERIC",
+    "variables": [
+      {
+        "name": "@grand_total",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "@order_total",
+        "type": "NUMERIC"
+      }
+    ],
+    "statements": [
+      {
+        "type": "DECLARE_CURSOR",
+        "cursor_name": "cur_orders",
+        "query": "SELECT total_price FROM client_orders WHERE client_id = @client_id AND order_date BETWEEN @from_date AND @to_date"
+      },
+      {
+        "type": "SET",
+        "name": "@grand_total",
+        "value": "0.00"
+      },
+      {
+        "type": "OPEN_CURSOR",
+        "cursor_name": "cur_orders"
+      },
+      {
+        "type": "FETCH_CURSOR",
+        "cursor_name": "cur_orders",
+        "fetch_into": [
+          "@order_total"
+        ]
+      },
+      {
+        "type": "WHILE",
+        "condition": {
+          "op": "=",
+          "left": "@@sqlstatus",
+          "right": "0"
+        },
+        "body": [
+          {
+            "type": "IF",
+            "condition": {
+              "op": ">",
+              "left": "@order_total",
+              "right": "750"
+            },
+            "then": [
+              {
+                "type": "SET",
+                "name": "@grand_total",
+                "value": {
+                  "op": "+",
+                  "left": "@grand_total",
+                  "right": {
+                    "op": "*",
+                    "left": "@order_total",
+                    "right": "0.95"
+                  }
+                }
+              }
+            ],
+            "else": [
+              {
+                "type": "SET",
+                "name": "@grand_total",
+                "value": {
+                  "op": "+",
+                  "left": "@grand_total",
+                  "right": "@order_total"
+                }
+              }
+            ]
+          },
+          {
+            "type": "FETCH_CURSOR",
+            "cursor_name": "cur_orders",
+            "fetch_into": [
+              "@order_total"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "CLOSE_CURSOR",
+        "cursor_name": "cur_orders"
+      },
+      {
+        "type": "DEALLOCATE_CURSOR",
+        "cursor_name": "cur_orders"
+      },
+      {
+        "type": "IF",
+        "condition": {
+          "op": ">",
+          "left": "@grand_total",
+          "right": "10000"
+        },
+        "then": [
+          {
+            "type": "RAISE",
+            "message": "High-value threshold exceeded for client"
+          }
+        ]
+      },
+      {
+        "type": "RETURN",
+        "expression": "@grand_total"
+      }
+    ]
+  },
+  {
+    "proc_name": "sp_update_inventory",
+    "params": [],
+    "return_type": "VOID",
+    "variables": [
+      {
+        "name": "@product_id",
+        "type": "INT"
+      },
+      {
+        "name": "@quantity",
+        "type": "INT"
+      }
+    ],
+    "statements": [
+      {
+        "type": "DECLARE_CURSOR",
+        "cursor_name": "inventory_cursor",
+        "query": "SELECT product_id FROM products WHERE discontinued = 0"
+      },
+      {
+        "type": "OPEN_CURSOR",
+        "cursor_name": "inventory_cursor"
+      },
+      {
+        "type": "FETCH_CURSOR",
+        "cursor_name": "inventory_cursor",
+        "fetch_into": [
+          "@product_id"
+        ]
+      },
+      {
+        "type": "WHILE",
+        "condition": {
+          "op": "=",
+          "left": "@@FETCH_STATUS",
+          "right": "0"
+        },
+        "body": [
+          {
+            "type": "SELECT_INTO",
+            "query": "SELECT SUM(quantity) FROM inventory WHERE product_id = @product_id",
+            "into_vars": [
+              "@quantity"
+            ]
+          },
+          {
+            "type": "IF",
+            "condition": {
+              "op": "<",
+              "left": "@quantity",
+              "right": "10"
+            },
+            "then": [
+              {
+                "type": "UPDATE",
+                "table": "products",
+                "set": {
+                  "restock": "1"
+                },
+                "where": {
+                  "op": "=",
+                  "left": "product_id",
+                  "right": "@product_id"
+                }
+              }
+            ]
+          },
+          {
+            "type": "FETCH_CURSOR",
+            "cursor_name": "inventory_cursor",
+            "fetch_into": [
+              "@product_id"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "CLOSE_CURSOR",
+        "cursor_name": "inventory_cursor"
+      },
+      {
+        "type": "DEALLOCATE_CURSOR",
+        "cursor_name": "inventory_cursor"
+      }
+    ]
+  },
+  {
+    "proc_name": "sp_process_and_log",
+    "params": [
+      {
+        "name": "@client_id",
+        "type": "INTEGER",
+        "mode": "IN"
+      },
+      {
+        "name": "@from_date",
+        "type": "DATE",
+        "mode": "IN"
+      },
+      {
+        "name": "@to_date",
         "type": "DATE",
         "mode": "IN"
       }
     ],
     "return_type": "VOID",
-    "return_type": "VOID",
-    "variables": [
-      { "name": "@EmployeeID", "type": "INT" },
-      { "name": "@BaseSalary", "type": "DECIMAL" },
-      { "name": "@Bonus", "type": "DECIMAL" },
-      { "name": "@GrossSalary", "type": "DECIMAL" },
-      { "name": "@Tax", "type": "DECIMAL" },
-      { "name": "@NetSalary", "type": "DECIMAL" },
-      { "name": "@Currency", "type": "CHAR" },
-      { "name": "@ConvertedSalary", "type": "DECIMAL" },
-      { "name": "@ExchangeRate", "type": "DECIMAL" },
-      { "name": "@CurrentDate", "type": "DATE" },
-      { "name": "@ErrorMsg", "type": "NVARCHAR" },
-      { "name": "@ErrorSeverity", "type": "INT" },
-      { "name": "@ErrorState", "type": "INT" }
-    ],
+    "variables": [],
     "statements": [
       {
-        "type": "RAW_SQL",
-        "query": "SET NOCOUNT ON;"
+        "type": "EXECUTE_PROCEDURE",
+        "procedure": "sp_sum_client_orders",
+        "args": [
+          "@client_id",
+          "@from_date",
+          "@to_date"
+        ]
       },
       {
-        "type": "TRY",
-        "body": [
-          { "type": "BEGIN_TRANSACTION" },
-          {
-            "type": "SET",
-            "name": "@CurrentDate",
-            "value": "GETDATE()"
-          },
-          {
-            "type": "RAW_SQL",
-            "query": "IF OBJECT_ID('tempdb..#PayrollCalc') IS NOT NULL DROP TABLE #PayrollCalc;"
-          },
-          {
-            "type": "DECLARE_TEMP_TABLE",
-            "name": "#PayrollCalc",
-            "query": "CREATE TABLE #PayrollCalc (EmployeeID INT, BaseSalary DECIMAL(18,2), Bonus DECIMAL(18,2), GrossSalary DECIMAL(18,2), Tax DECIMAL(18,2), NetSalary DECIMAL(18,2), Currency CHAR(3), ConvertedSalary DECIMAL(18,2));"
-          },
-          {
-            "type": "RAW_SQL",
-            "query": "INSERT INTO #PayrollCalc (EmployeeID, BaseSalary, Bonus, GrossSalary, Tax, NetSalary, Currency) SELECT e.EmployeeID, e.BaseSalary, CASE WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 10 THEN e.BaseSalary * 0.15 WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 5 THEN e.BaseSalary * 0.10 WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 2 THEN e.BaseSalary * 0.05 ELSE 0 END AS Bonus, e.BaseSalary + CASE WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 10 THEN e.BaseSalary * 0.15 WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 5 THEN e.BaseSalary * 0.10 WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 2 THEN e.BaseSalary * 0.05 ELSE 0 END AS GrossSalary, CASE WHEN e.BaseSalary <= 50000 THEN e.BaseSalary * 0.1 WHEN e.BaseSalary <= 75000 THEN e.BaseSalary * 0.15 ELSE e.BaseSalary * 0.2 END AS Tax, (e.BaseSalary + CASE WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 10 THEN e.BaseSalary * 0.15 WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 5 THEN e.BaseSalary * 0.10 WHEN DATEDIFF(YEAR, e.HireDate, @PayPeriodEnd) >= 2 THEN e.BaseSalary * 0.05 ELSE 0 END) - CASE WHEN e.BaseSalary <= 50000 THEN e.BaseSalary * 0.1 WHEN e.BaseSalary <= 75000 THEN e.BaseSalary * 0.15 ELSE e.BaseSalary * 0.2 END AS NetSalary, ISNULL(e.Currency, 'USD') AS Currency FROM AcmeERP.Employees e;"
-          },
-          {
-            "type": "DECLARE_CURSOR",
-            "cursor_name": "PayrollCursor",
-            "query": "SELECT EmployeeID, GrossSalary, Currency FROM #PayrollCalc"
-          },
-          { "type": "OPEN_CURSOR", "cursor_name": "PayrollCursor" },
-          {
-            "type": "FETCH_CURSOR",
-            "cursor_name": "PayrollCursor",
-            "fetch_into": ["@EmployeeID", "@GrossSalary", "@Currency"]
-          },
-          {
-            "type": "WHILE",
-            "condition": { "op": "=", "left": "@@FETCH_STATUS", "right": "0" },
-            "body": [
-              {
-                "type": "IF",
-                "condition": { "op": "<>", "left": "@Currency", "right": "'USD'" },
-                "then": [
-                  {
-                    "type": "SELECT_INTO",
-                    "query": "SELECT TOP 1 RateToBase FROM AcmeERP.ExchangeRates WHERE CurrencyCode = @Currency AND RateDate <= @CurrentDate ORDER BY RateDate DESC",
-                    "into_vars": ["@ExchangeRate"]
-                  },
-                  {
-                    "type": "IF",
-                    "condition": { "op": "IS", "left": "@ExchangeRate", "right": "NULL" },
-                    "then": [
-                      { "type": "SET", "name": "@ExchangeRate", "value": "1" }
-                    ]
-                  },
-                  {
-                    "type": "SET",
-                    "name": "@ConvertedSalary",
-                    "value": { "op": "*", "left": "@GrossSalary", "right": "@ExchangeRate" }
-                  }
-                ],
-                "else": [
-                  { "type": "SET", "name": "@ConvertedSalary", "value": "@GrossSalary" }
-                ]
-              },
-              {
-                "type": "UPDATE",
-                "table": "#PayrollCalc",
-                "set": { "ConvertedSalary": "@ConvertedSalary" },
-                "where": { "op": "=", "left": "EmployeeID", "right": "@EmployeeID" }
-              },
-              {
-                "type": "FETCH_CURSOR",
-                "cursor_name": "PayrollCursor",
-                "fetch_into": ["@EmployeeID", "@GrossSalary", "@Currency"]
-              }
-            ]
-          },
-          { "type": "CLOSE_CURSOR", "cursor_name": "PayrollCursor" },
-          { "type": "DEALLOCATE_CURSOR", "cursor_name": "PayrollCursor" },
-          {
-            "type": "RAW_SQL",
-            "query": "INSERT INTO AcmeERP.PayrollLogs (EmployeeID, PayPeriodStart, PayPeriodEnd, GrossSalary, TaxDeducted) SELECT EmployeeID, @PayPeriodStart, @PayPeriodEnd, ConvertedSalary, Tax FROM #PayrollCalc;"
-          },
-          { "type": "COMMIT" }
-        ],
-        "catch": [
-          {
-            "exception": "ANY",
-            "body": [
-              {
-                "type": "IF",
-                "condition": { "op": ">", "left": "@@TRANCOUNT", "right": "0" },
-                "then": [
-                  { "type": "ROLLBACK" }
-                ]
-              },
-              {
-                "type": "RAW_SQL",
-                "query": "SELECT @ErrorMsg = ERROR_MESSAGE(), @ErrorSeverity = ERROR_SEVERITY(), @ErrorState = ERROR_STATE();"
-              },
-              {
-                "type": "RAISE",
-                "message": "RAISERROR (@ErrorMsg, @ErrorSeverity, @ErrorState);"
-              }
-            ]
-          }
-        ]
+        "type": "EXECUTE_PROCEDURE",
+        "procedure": "log_hr_employees",
+        "args": []
       }
     ]
   }

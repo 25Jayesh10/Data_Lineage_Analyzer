@@ -1,52 +1,85 @@
 {
-  "AcmeERP.usp_ProcessFullPayrollCycle": {
+  "log_hr_employees": {
     "type": "procedure",
     "calls": []
   },
-  "AcmeERP.PayrollLogs": {
+  "employee_log": {
     "type": "table",
     "calls": [
-      "AcmeERP.usp_ProcessFullPayrollCycle"
+      "log_hr_employees"
     ],
     "usage": {
-      "AcmeERP.usp_ProcessFullPayrollCycle": [
+      "log_hr_employees": [
         "write"
       ]
     }
   },
-  "AcmeERP.ExchangeRates": {
+  "employees": {
     "type": "table",
     "calls": [
-      "AcmeERP.usp_ProcessFullPayrollCycle"
+      "log_hr_employees"
     ],
     "usage": {
-      "AcmeERP.usp_ProcessFullPayrollCycle": [
+      "log_hr_employees": [
         "read"
       ]
     }
   },
-  "#PayrollCalc": {
+  "sp_sum_client_orders": {
+    "type": "procedure",
+    "calls": []
+  },
+  "client_orders": {
     "type": "table",
     "calls": [
-      "AcmeERP.usp_ProcessFullPayrollCycle"
-      "AcmeERP.usp_ProcessFullPayrollCycle"
+      "sp_sum_client_orders",
+      "test1"
     ],
     "usage": {
-      "AcmeERP.usp_ProcessFullPayrollCycle": [
+      "sp_sum_client_orders": [
+        "read"
+      ],
+      "test1": [
+        "read"
+      ]
+    }
+  },
+  "test1": {
+    "type": "procedure",
+    "calls": []
+  },
+  "sp_update_inventory": {
+    "type": "procedure",
+    "calls": []
+  },
+  "inventory": {
+    "type": "table",
+    "calls": [
+      "sp_update_inventory"
+    ],
+    "usage": {
+      "sp_update_inventory": [
+        "read"
+      ]
+    }
+  },
+  "products": {
+    "type": "table",
+    "calls": [
+      "sp_update_inventory"
+    ],
+    "usage": {
+      "sp_update_inventory": [
         "read",
         "write"
       ]
     }
   },
-  "AcmeERP.Employees": {
-    "type": "table",
+  "sp_process_and_log": {
+    "type": "procedure",
     "calls": [
-      "AcmeERP.usp_ProcessFullPayrollCycle"
-    ],
-    "usage": {
-      "AcmeERP.usp_ProcessFullPayrollCycle": [
-        "read"
-      ]
-    }
+      "log_hr_employees",
+      "sp_sum_client_orders"
+    ]
   }
 }

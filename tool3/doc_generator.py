@@ -2,6 +2,8 @@ import json
 import os
 from collections import Counter
 import re
+from tool3.llm_service import generate_business_logic
+
 
 def slugify(text):
     # Converts text to a GitHub-compatible anchor
@@ -9,6 +11,13 @@ def slugify(text):
     text = re.sub(r"[^\w\s-]", "", text)
     text = text.replace(" ", "-")
     return text
+
+# Load the SQL file
+with open("test.sql", "r") as f:
+    sql_text = f.read()
+
+# Simple regex to extract stored procedure blocks (you can improve this as needed)
+procedure_blocks = re.findall(r"CREATE\s+PROCEDURE\s+.*?AS\s+BEGIN(.*?)END", sql_text, re.DOTALL | re.IGNORECASE)
 
 def generate_markdown(proc_name, details):
     anchor = slugify(proc_name)
@@ -43,9 +52,16 @@ def generate_markdown(proc_name, details):
         md.append(f"    {proc_name} --> {table}")
     md.append("```\n\n---\n")
 
-    # Placeholder for business logic
+    # Business Logic via Gemini LLM
     md.append("### Business Logic\n")
-    md.append("No description provided.\n")
+    try:
+        sql_code = details.get("sql", "")
+        params_list = [f"@{p['name']}" for p in details.get("params", [])]
+        description = generate_business_logic(proc_name, params_list, details.get("tables", []), sql_code)
+        md.append(description)
+    except Exception as e:
+        md.append("Description could not be generated due to an error.\n")
+        print(f"⚠️ Error generating description for {proc_name}: {e}")
 
     md.append("\n---\n\n")
     return "\n".join(md)
@@ -83,9 +99,21 @@ def generate_toc(data):
     toc_lines.append("\n---\n")
     return "\n".join(toc_lines)
 
+def extract_sql_blocks(sql_text):
+    proc_blocks = {}
+    pattern = re.compile(r"CREATE\s+PROCEDURE\s+(\w+).*?AS\s+BEGIN(.*?)END", re.DOTALL | re.IGNORECASE)
+    for match in pattern.finditer(sql_text):
+        proc_name = match.group(1)
+        sql_body = match.group(0)  # Full block including CREATE ... END
+        proc_blocks[proc_name] = sql_body.strip()
+    return proc_blocks
+
+
 def generate_docs(json_path, output_dir="docs", output_file="procedures.md"):
     with open(json_path) as f:
         data = json.load(f)
+
+    sql_blocks = extract_sql_blocks(sql_text)
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -99,6 +127,8 @@ def generate_docs(json_path, output_dir="docs", output_file="procedures.md"):
 
     # Add procedure markdown blocks
     for proc_name, details in data.items():
+        # Attach SQL block before passing to markdown generator
+        details["sql"] = sql_blocks.get(proc_name, "")
         markdown = generate_markdown(proc_name, details)
         all_markdown.append(markdown)
 
