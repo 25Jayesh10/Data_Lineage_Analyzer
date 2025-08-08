@@ -298,3 +298,10 @@ SOLUTIONS:- ERROR FIXED WE ARE NO LONGER CONVERTING IT AND CAME UP WITH A PERMAN
 
 ## command to test coverage of the files:
  - pytest --cov=source ---cov-report==html
+
+
+
+we made index generator to generate index.json using a fixed index schema, for our tool 4 testing since it acts as input
+we made ast generator to generate ast.json using a fixed ast schema, for our tool 4 testing since it acts as input
+worked tool 3 and add new features, used llm to generate a brief description based on the query being processed
+implemetned the backtracing index generator from lineage to test if the output is correct.

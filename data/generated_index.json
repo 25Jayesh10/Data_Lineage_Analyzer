@@ -1,13 +1,9 @@
 {
   "log_hr_employees": {
-    "calls": [
-      "sp_process_and_log"
-    ],
+    "calls": [],
     "tables": [
-      "AcmeERP.PayrollLogs",
-      "AcmeERP.ExchangeRates",
-      "#PayrollCalc",
-      "AcmeERP.Employees"
+      "employees",
+      "employee_log"
     ]
   }
 }

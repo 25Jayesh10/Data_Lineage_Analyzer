@@ -12,8 +12,6 @@ from tool1.TSqlLexer import TSqlLexer
 from tool1.TSqlParser import TSqlParser
 
 from tool3.doc_generator import generate_docs
-from line_profiler import profile
-
 
 
 

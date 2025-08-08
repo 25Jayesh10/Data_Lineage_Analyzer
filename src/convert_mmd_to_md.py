@@ -1,5 +1,3 @@
-from line_profiler import profile
-@profile
 def convert_mmd_to_md(mmd_file, md_file):
     """
     Converts a Mermaid .mmd file to a .md file with a Mermaid code block.

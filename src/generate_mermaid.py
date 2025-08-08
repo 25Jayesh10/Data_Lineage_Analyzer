@@ -1,8 +1,6 @@
 import json
 import os
-from line_profiler import profile
 
-@profile
 def generate_mermaid(lineage_path, output_path):
     """
     Generates a Mermaid.js diagram file from lineage.json.

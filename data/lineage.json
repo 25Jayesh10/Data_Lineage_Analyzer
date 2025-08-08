@@ -1,84 +1,138 @@
 {
-  "log_hr_employees": {
+  "AcmeERP.usp_ProcessFullPayrollCycle": {
     "type": "procedure",
     "calls": []
   },
-  "employees": {
-    "type": "table",
-    "calls": [
-      "log_hr_employees"
-    ],
-    "usage": {
-      "log_hr_employees": [
-        "read"
-      ]
-    }
-  },
-  "employee_log": {
-    "type": "table",
-    "calls": [
-      "log_hr_employees"
-    ],
-    "usage": {
-      "log_hr_employees": [
-        "write"
-      ]
-    }
-  },
-  "sp_sum_client_orders": {
-    "type": "procedure",
-    "calls": []
-  },
-  "client_orders": {
+  "AcmeERP.PayrollLogs": {
     "type": "table",
     "calls": [
       "AcmeERP.usp_ProcessFullPayrollCycle"
     ],
-    "usage": {
-      "sp_sum_client_orders": [
-        "read"
-      ],
-      "test1": [
-        "read"
-      ]
-    }
+    "columns": [
+      {
+        "name": "EmployeeID",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "EmployeeID",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "EmployeeID",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "EmployeeID",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "EmployeeID",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      }
+    ]
   },
-  "test1": {
-    "type": "procedure",
-    "calls": []
-  },
-  "sp_update_inventory": {
-    "type": "procedure",
-    "calls": []
-  },
-  "products": {
+  "AcmeERP.ExchangeRates": {
     "type": "table",
     "calls": [
-      "sp_update_inventory"
+      "AcmeERP.usp_ProcessFullPayrollCycle"
     ],
-    "usage": {
-      "sp_update_inventory": [
-        "read",
-        "write"
-      ]
-    }
+    "columns": [
+      {
+        "name": "EmployeeID",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "EmployeeID",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "EmployeeID",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "EmployeeID",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "EmployeeID",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      }
+    ]
   },
-  "inventory": {
+  "#PayrollCalc": {
     "type": "table",
     "calls": [
-      "sp_update_inventory"
+      "AcmeERP.usp_ProcessFullPayrollCycle"
     ],
-    "usage": {
-      "sp_update_inventory": [
-        "read"
-      ]
-    }
+    "columns": [
+      {
+        "name": "EmployeeID",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "EmployeeID",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "EmployeeID",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "EmployeeID",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "EmployeeID",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      }
+    ]
   },
-  "sp_process_and_log": {
-    "type": "procedure",
+  "AcmeERP.Employees": {
+    "type": "table",
     "calls": [
-      "log_hr_employees",
-      "sp_sum_client_orders"
+      "AcmeERP.usp_ProcessFullPayrollCycle"
+    ],
+    "columns": [
+      {
+        "name": "EmployeeID",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "EmployeeID",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "EmployeeID",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "EmployeeID",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "EmployeeID",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      }
     ]
   }
 }

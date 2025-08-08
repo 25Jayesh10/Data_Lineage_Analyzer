@@ -2,8 +2,7 @@
 
 import os
 import json
-from line_profiler import profile
-@profile
+
 def validate(index_path :str,ast_path :str ):
    
     try:

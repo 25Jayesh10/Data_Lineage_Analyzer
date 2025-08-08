@@ -1,8 +1,7 @@
 import json
 from collections import defaultdict
-from line_profiler import profile
 
-@profile
+
 def analyze_lineage(index_file :str, ast_file :str, output_file :str):
     def extract_table_from_query(query):
         # crude extraction: look for FROM <table>

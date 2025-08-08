@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Database Object Lineage Schema",
+  "description": "A generalized schema to describe lineage relationships and usage of database objects such as tables and stored procedures.",
+  "type": "object",
+  "patternProperties": {
+    "^[a-zA-Z0-9_#\\.]+$": {
+      "$ref": "#/$defs/databaseObject"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "databaseObject": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "description": "The type of the database object (e.g., table, procedure).",
+          "type": "string",
+          "enum": [
+            "procedure",
+            "table"
+          ]
+        },
+        "calls": {
+          "description": "A list of procedures that call or reference this database object.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "columns": {
+          "description": "For tables, this is a list of columns and their specific usage.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/columnDetail"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "calls"
+      ],
+      "if": {
+        "properties": {
+          "type": {
+            "const": "table"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "columns"
+        ]
+      }
+    },
+    "columnDetail": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "The name of the column.",
+          "type": "string"
+        },
+        "usage": {
+          "description": "Describes how the column is accessed by the calling procedure.",
+          "type": "string",
+          "enum": [
+            "read",
+            "write",
+            "update"
+          ]
+        },
+        "calling_procedure": {
+          "description": "The name of the procedure that is accessing this column.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "usage",
+        "calling_procedure"
+      ]
+    }
+  }
+}
