@@ -30,8 +30,8 @@
 
 ### Tables
 
-- employee_log
 - employees
+- employee_log
 
 ---
 
@@ -44,15 +44,15 @@
 
 ```mermaid
 graph TD
-    log_hr_employees --> employee_log
     log_hr_employees --> employees
+    log_hr_employees --> employee_log
 ```
 
 ---
 
 ### Business Logic
 
-The stored procedure `log_hr_employees` automatically records all HR department employees into the `employee_log` table.  It iterates through the `employees` table, selecting only those employees belonging to the 'HR' department. For each identified HR employee, it inserts a new log entry into `employee_log`, including the employee's ID, name, and the current timestamp. This provides an audit trail of all HR employees, useful for tracking personnel, reporting, or security purposes.  The procedure uses a cursor, which while functional, is less efficient than set-based operations and should be considered for optimization in high-volume environments.
+This stored procedure automatically logs all HR employees into the `employee_log` table.  It records each employee's ID and name along with the timestamp of the log entry.  This provides an audit trail of HR personnel.
 
 ---
 
@@ -94,7 +94,7 @@ graph TD
 
 ### Business Logic
 
-The stored procedure `sp_sum_client_orders` calculates the total revenue for a specified client within a given date range, applying a 5% discount to orders exceeding $750.  It iterates through the client's orders, summing the discounted value of those exceeding the threshold to arrive at a final discounted grand total.  The procedure uses a cursor to process each order individually; this approach, while functional, can be inefficient for large datasets.
+This stored procedure calculates the total value of a client's orders within a specified date range, applying a 5% discount to orders exceeding $750.  It aggregates order totals for a given client ID, considering only orders placed between the provided `from_date` and `to_date`.  The procedure's output (currently incomplete in the provided code) would represent the final discounted sum of qualifying orders.
 
 ---
 
@@ -136,7 +136,7 @@ graph TD
 
 ### Business Logic
 
-Procedure `test1` calculates the total revenue for a given client (`@@client_id`) within a specified date range (`@@from_date` to `@@to_date`).  It iterates through the client's orders in the `client_orders` table.  For orders exceeding 750, a 5% discount is applied before accumulating the total revenue (`@grand_total`).  Orders less than or equal to 750 are added to the total without discount.  The procedure ultimately returns the final discounted revenue for the specified client and time period.
+The `test1` procedure calculates the total revenue for a given client within a specified date range.  Orders exceeding 750 receive a 5% discount before being included in the total. The procedure iterates through the client's orders to compute this discounted revenue.
 
 ---
 
@@ -155,8 +155,8 @@ Procedure `test1` calculates the total revenue for a given client (`@@client_id`
 
 ### Tables
 
-- inventory
 - products
+- inventory
 
 ---
 
@@ -169,15 +169,15 @@ Procedure `test1` calculates the total revenue for a given client (`@@client_id`
 
 ```mermaid
 graph TD
-    sp_update_inventory --> inventory
     sp_update_inventory --> products
+    sp_update_inventory --> inventory
 ```
 
 ---
 
 ### Business Logic
 
-The stored procedure `sp_update_inventory` automatically flags products requiring restocking.  It iterates through each active product (discontinued = 0) in the `products` table, summing its current inventory quantity from the `inventory` table. If the total quantity for a product falls below 10 units, the procedure updates the `restock` flag in the `products` table to 1, indicating a need for replenishment.  This streamlines the inventory management process by proactively identifying low-stock items.
+This stored procedure identifies products that are not discontinued and have low inventory levels.  It reviews inventory quantities for each product and flags those with less than 10 units remaining as requiring restocking.
 
 ---
 
@@ -221,7 +221,7 @@ graph TD
 
 ### Business Logic
 
-The stored procedure `sp_process_and_log` performs two distinct business functions. First, it calculates the sum of orders for a specified client within a given date range by calling the `sp_sum_client_orders` procedure.  Second, regardless of the client or date range provided, it logs all HR employees by executing the `log_hr_employees` procedure.  The procedure's overall purpose is to provide both client-specific order aggregation and a consistent HR employee log, potentially for reporting or auditing purposes.  The seemingly unrelated logging action suggests a design that may benefit from refactoring to separate these distinct business processes into individual procedures.
+This stored procedure processes client order data and generates an HR employee log.  It calculates a sum of orders for a specified client within a given date range and then logs all HR employees, regardless of the client or date parameters.  The procedure's output consists of the order summation and an HR employee log;  it doesn't directly return values.
 
 ---
 

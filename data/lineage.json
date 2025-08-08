@@ -3,17 +3,6 @@
     "type": "procedure",
     "calls": []
   },
-  "employee_log": {
-    "type": "table",
-    "calls": [
-      "log_hr_employees"
-    ],
-    "usage": {
-      "log_hr_employees": [
-        "write"
-      ]
-    }
-  },
   "employees": {
     "type": "table",
     "calls": [
@@ -22,6 +11,17 @@
     "usage": {
       "log_hr_employees": [
         "read"
+      ]
+    }
+  },
+  "employee_log": {
+    "type": "table",
+    "calls": [
+      "log_hr_employees"
+    ],
+    "usage": {
+      "log_hr_employees": [
+        "write"
       ]
     }
   },
@@ -52,17 +52,6 @@
     "type": "procedure",
     "calls": []
   },
-  "inventory": {
-    "type": "table",
-    "calls": [
-      "sp_update_inventory"
-    ],
-    "usage": {
-      "sp_update_inventory": [
-        "read"
-      ]
-    }
-  },
   "products": {
     "type": "table",
     "calls": [
@@ -72,6 +61,17 @@
       "sp_update_inventory": [
         "read",
         "write"
+      ]
+    }
+  },
+  "inventory": {
+    "type": "table",
+    "calls": [
+      "sp_update_inventory"
+    ],
+    "usage": {
+      "sp_update_inventory": [
+        "read"
       ]
     }
   },

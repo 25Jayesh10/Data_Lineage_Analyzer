@@ -4,8 +4,8 @@
       "sp_process_and_log"
     ],
     "tables": [
-      "employee_log",
-      "employees"
+      "employees",
+      "employee_log"
     ]
   },
   "sp_sum_client_orders": {
@@ -25,8 +25,8 @@
   "sp_update_inventory": {
     "calls": [],
     "tables": [
-      "inventory",
-      "products"
+      "products",
+      "inventory"
     ]
   },
   "sp_process_and_log": {
