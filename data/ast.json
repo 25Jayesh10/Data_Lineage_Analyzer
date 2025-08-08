@@ -1,80 +1,6 @@
 [
   {
-    "proc_name": "log_hr_employees",
-    "params": [],
-    "return_type": "VOID",
-    "variables": [
-      {
-        "name": "@emp_id",
-        "type": "INT"
-      },
-      {
-        "name": "@emp_name",
-        "type": "VARCHAR"
-      }
-    ],
-    "statements": [
-      {
-        "type": "DECLARE_CURSOR",
-        "cursor_name": "emp_cursor",
-        "query": "SELECT emp_id, emp_name FROM employees WHERE department = 'HR'"
-      },
-      {
-        "type": "OPEN_CURSOR",
-        "cursor_name": "emp_cursor"
-      },
-      {
-        "type": "FETCH_CURSOR",
-        "cursor_name": "emp_cursor",
-        "fetch_into": [
-          "@emp_id",
-          "@emp_name"
-        ]
-      },
-      {
-        "type": "WHILE",
-        "condition": {
-          "op": "=",
-          "left": "@@sqlstatus",
-          "right": "0"
-        },
-        "body": [
-          {
-            "type": "INSERT_INTO",
-            "table": "employee_log",
-            "columns": [
-              "emp_id",
-              "emp_name",
-              "log_time"
-            ],
-            "values": [
-              "@emp_id",
-              "@emp_name",
-              "GETDATE()"
-            ]
-          },
-          {
-            "type": "FETCH_CURSOR",
-            "cursor_name": "emp_cursor",
-            "fetch_into": [
-              "@emp_id",
-              "@emp_name"
-            ]
-          }
-        ]
-      },
-      {
-        "type": "CLOSE_CURSOR",
-        "cursor_name": "emp_cursor"
-      },
-      {
-        "type": "DEALLOCATE_CURSOR",
-        "cursor_name": "emp_cursor"
-      }
-    ]
-  },
-  {
-    "proc_name": "sp_sum_client_orders",
+    "proc_name": "AcmeERP.usp_ProcessFullPayrollCycle",
     "params": [
       {
         "name": "@client_id",
@@ -92,7 +18,7 @@
         "mode": "IN"
       }
     ],
-    "return_type": "NUMERIC",
+    "return_type": "VOID",
     "variables": [
       {
         "name": "@grand_total",
@@ -404,190 +330,48 @@
             },
             "then": [
               {
-                "type": "SET",
-                "name": "@grand_total",
-                "value": {
-                  "op": "+",
-                  "left": "@grand_total",
-                  "right": {
-                    "op": "*",
-                    "left": "@order_total",
-                    "right": "0.95"
-                  }
-                }
-              }
-            ],
-            "else": [
-              {
-                "type": "SET",
-                "name": "@grand_total",
-                "value": {
-                  "op": "+",
-                  "left": "@grand_total",
-                  "right": "@order_total"
-                }
-              }
-            ]
-          },
-          {
-            "type": "FETCH_CURSOR",
-            "cursor_name": "cur_orders",
-            "fetch_into": [
-              "@order_total"
-            ]
-          }
-        ]
-      },
-      {
-        "type": "CLOSE_CURSOR",
-        "cursor_name": "cur_orders"
-      },
-      {
-        "type": "DEALLOCATE_CURSOR",
-        "cursor_name": "cur_orders"
-      },
-      {
-        "type": "IF",
-        "condition": {
-          "op": ">",
-          "left": "@grand_total",
-          "right": "10000"
-        },
-        "then": [
-          {
-            "type": "RAISE",
-            "message": "High-value threshold exceeded for client"
-          }
-        ]
-      },
-      {
-        "type": "RETURN",
-        "expression": "@grand_total"
-      }
-    ]
-  },
-  {
-    "proc_name": "sp_update_inventory",
-    "params": [],
-    "return_type": "VOID",
-    "variables": [
-      {
-        "name": "@product_id",
-        "type": "INT"
-      },
-      {
-        "name": "@quantity",
-        "type": "INT"
-      }
-    ],
-    "statements": [
-      {
-        "type": "DECLARE_CURSOR",
-        "cursor_name": "inventory_cursor",
-        "query": "SELECT product_id FROM products WHERE discontinued = 0"
-      },
-      {
-        "type": "OPEN_CURSOR",
-        "cursor_name": "inventory_cursor"
-      },
-      {
-        "type": "FETCH_CURSOR",
-        "cursor_name": "inventory_cursor",
-        "fetch_into": [
-          "@product_id"
-        ]
-      },
-      {
-        "type": "WHILE",
-        "condition": {
-          "op": "=",
-          "left": "@@FETCH_STATUS",
-          "right": "0"
-        },
-        "body": [
-          {
-            "type": "SELECT_INTO",
-            "query": "SELECT SUM(quantity) FROM inventory WHERE product_id = @product_id",
-            "into_vars": [
-              "@quantity"
-            ]
-          },
-          {
-            "type": "IF",
-            "condition": {
-              "op": "<",
-              "left": "@quantity",
-              "right": "10"
-            },
-            "then": [
-              {
                 "type": "UPDATE",
-                "table": "products",
-                "set": {
-                  "restock": "1"
-                },
-                "where": {
-                  "op": "=",
-                  "left": "product_id",
-                  "right": "@product_id"
-                }
+                "table": "#PayrollCalc",
+                "set": { "ConvertedSalary": "@ConvertedSalary" },
+                "where": { "op": "=", "left": "EmployeeID", "right": "@EmployeeID" }
+              },
+              {
+                "type": "FETCH_CURSOR",
+                "cursor_name": "PayrollCursor",
+                "fetch_into": ["@EmployeeID", "@GrossSalary", "@Currency"]
               }
             ]
           },
+          { "type": "CLOSE_CURSOR", "cursor_name": "PayrollCursor" },
+          { "type": "DEALLOCATE_CURSOR", "cursor_name": "PayrollCursor" },
           {
-            "type": "FETCH_CURSOR",
-            "cursor_name": "inventory_cursor",
-            "fetch_into": [
-              "@product_id"
+            "type": "RAW_SQL",
+            "query": "INSERT into AcmeERP.PayrollLogs (EmployeeID, PayPeriodStart, PayPeriodEnd, GrossSalary, TaxDeducted) SELECT EmployeeID, @PayPeriodStart, @PayPeriodEnd, ConvertedSalary, Tax FROM #PayrollCalc;"
+          },
+          { "type": "COMMIT" }
+        ],
+        "catch": [
+          {
+            "exception": "ANY",
+            "body": [
+              {
+                "type": "IF",
+                "condition": { "op": ">", "left": "@@TRANCOUNT", "right": "0" },
+                "then": [
+                  { "type": "ROLLBACK" }
+                ]
+              },
+              {
+                "type": "RAW_SQL",
+                "query": "SELECT @ErrorMsg = ERROR_MESSAGE(), @ErrorSeverity = ERROR_SEVERITY(), @ErrorState = ERROR_STATE();"
+              },
+              {
+                "type": "RAISE",
+                "message": "RAISERROR (@ErrorMsg, @ErrorSeverity, @ErrorState);"
+              }
             ]
           }
         ]
-      },
-      {
-        "type": "CLOSE_CURSOR",
-        "cursor_name": "inventory_cursor"
-      },
-      {
-        "type": "DEALLOCATE_CURSOR",
-        "cursor_name": "inventory_cursor"
-      }
-    ]
-  },
-  {
-    "proc_name": "sp_process_and_log",
-    "params": [
-      {
-        "name": "@client_id",
-        "type": "INTEGER",
-        "mode": "IN"
-      },
-      {
-        "name": "@from_date",
-        "type": "DATE",
-        "mode": "IN"
-      },
-      {
-        "name": "@to_date",
-        "type": "DATE",
-        "mode": "IN"
-      }
-    ],
-    "return_type": "VOID",
-    "variables": [],
-    "statements": [
-      {
-        "type": "EXECUTE_PROCEDURE",
-        "procedure": "sp_sum_client_orders",
-        "args": [
-          "@client_id",
-          "@from_date",
-          "@to_date"
-        ]
-      },
-      {
-        "type": "EXECUTE_PROCEDURE",
-        "procedure": "log_hr_employees",
-        "args": []
       }
     ]
   }

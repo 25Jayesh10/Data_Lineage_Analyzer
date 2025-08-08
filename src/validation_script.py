@@ -2,11 +2,14 @@
 
 import os
 import json
-def validate():
+from line_profiler import profile
+@profile
+def validate(index_path :str,ast_path :str ):
+   
     try:
-        with open("data/index.json","r") as f:
+        with open(index_path,"r") as f:
             index_data=json.load(f)
-        with open("data/ast.json","r") as f:
+        with open(ast_path,"r") as f:
             ast_data=json.load(f)
     except Exception as e:
         print(f"Error while opening the file- {e}")

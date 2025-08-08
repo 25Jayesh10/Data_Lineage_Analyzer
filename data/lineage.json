@@ -32,8 +32,7 @@
   "client_orders": {
     "type": "table",
     "calls": [
-      "sp_sum_client_orders",
-      "test1"
+      "AcmeERP.usp_ProcessFullPayrollCycle"
     ],
     "usage": {
       "sp_sum_client_orders": [

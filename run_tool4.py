@@ -2,7 +2,7 @@ from src.analyze_lineage import analyze_lineage
 from src.generate_mermaid import generate_mermaid
 from src.convert_mmd_to_md import convert_mmd_to_md
 from src.validation_script import validate
-from src.lineage_to_index import generate_index
+from lineage_to_index import generate_index
 import json
 import os
 from antlr4 import *
@@ -10,8 +10,9 @@ from logging_styles import Colours
 from tool1.proc_indexer import ProcedureIndexer
 from tool1.TSqlLexer import TSqlLexer
 from tool1.TSqlParser import TSqlParser
-from tool1.index_validator import validate
+
 from tool3.doc_generator import generate_docs
+from line_profiler import profile
 
 
 
@@ -49,7 +50,7 @@ def main():
     
     # Validate all inputs using schema-based validator
     print(Colours.YELLOW + "Validating index.json against schema..." + Colours.RESET)
-    if validate():
+    if validate("data/index.json","data/ast.json"):
         print(Colours.GREEN + "Validation passed. Proceeding to Data Lineage Analysis." + Colours.RESET)
     
         index_path = os.path.join(input_dir, "index.json")   # Tool 1 output
@@ -85,7 +86,7 @@ def main():
         generate_mermaid(output_path, mermaid_path)
         convert_mmd_to_md(mermaid_path, markdown_path)
 
-        # ✅ Tool 4 Extension: Generate generated_index.json from lineage + Mermaid
+        # ✅ Tool 4 Extension: Generate generated_index.json from lineage + Mermaid for revalidation
         generated_index_path = os.path.join(input_dir, "generated_index.json")
         success = generate_index(output_path, mermaid_path, generated_index_path)
         if success:

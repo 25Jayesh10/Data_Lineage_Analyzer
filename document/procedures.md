@@ -1,23 +1,33 @@
 # Summary
 
+<<<<<<< HEAD
+- **Total Procedures**: 1
+- **Total Tables**: 3
+- **Most Called Procedure**: `N/A`
+=======
 - **Total Procedures**: 5
 - **Total Tables**: 5
 - **Most Called Procedure**: `log_hr_employees`
+>>>>>>> main
 
 ---
 
 # Table of Contents
 
+<<<<<<< HEAD
+- [AcmeERP.usp_ProcessFullPayrollCycle](#acmeerpusp_processfullpayrollcycle)
+=======
 - [log_hr_employees](#log_hr_employees)
 - [sp_sum_client_orders](#sp_sum_client_orders)
 - [test1](#test1)
 - [sp_update_inventory](#sp_update_inventory)
 - [sp_process_and_log](#sp_process_and_log)
+>>>>>>> main
 
 ---
 
-## Stored Procedure: log_hr_employees
-<a name="log_hr_employees"></a>
+## Stored Procedure: AcmeERP.usp_ProcessFullPayrollCycle
+<a name="acmeerpusp_processfullpayrollcycle"></a>
 
 ---
 
@@ -25,13 +35,16 @@
 
 | Name | Type |
 |------|------|
+| @PayPeriodStart | DATE |
+| @PayPeriodEnd | DATE |
 
 ---
 
 ### Tables
 
-- employees
-- employee_log
+- AcmeERP.PayrollLogs
+- AcmeERP.ExchangeRates
+- #PayrollCalc
 
 ---
 
@@ -44,7 +57,6 @@
 
 ```mermaid
 graph TD
-    log_hr_employees --> employees
     log_hr_employees --> employee_log
 ```
 
@@ -171,6 +183,7 @@ The `test1` procedure calculates the total revenue for a given client within a s
 graph TD
     sp_update_inventory --> products
     sp_update_inventory --> inventory
+    sp_update_inventory --> products
 ```
 
 ---

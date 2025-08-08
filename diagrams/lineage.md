@@ -3,7 +3,6 @@ graph BT
     %% Node styles
     classDef table fill:#f96,stroke:#333,stroke-width:2px,color:#000;
     classDef stored_proc fill:#9cf,stroke:#333,stroke-width:2px ,color:#000;
-    log_hr_employees --> employees
     log_hr_employees --> employee_log
     sp_sum_client_orders --> client_orders
     test1 --> client_orders
@@ -11,6 +10,6 @@ graph BT
     sp_update_inventory --> inventory
     log_hr_employees --> sp_process_and_log
     sp_sum_client_orders --> sp_process_and_log
-    class inventory,client_orders,products,employees,employee_log table;
-    class sp_sum_client_orders,log_hr_employees,sp_process_and_log,sp_update_inventory,test1 stored_proc;
+    class inventory,employee_log,client_orders,products,employees table;
+    class log_hr_employees,sp_process_and_log,sp_sum_client_orders,test1,sp_update_inventory stored_proc;
 ```
