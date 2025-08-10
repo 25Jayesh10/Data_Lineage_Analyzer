@@ -10,5 +10,21 @@
   "AcmeERP.usp_ConvertToBase": {
     "calls": [],
     "tables": []
+  },
+  "sp_sum_client_orders": {
+    "calls": [],
+    "tables": []
+  },
+  "log_hr_employees": {
+    "calls": [],
+    "tables": []
+  },
+  "test1": {
+    "calls": [],
+    "tables": []
+  },
+  "sp_update_inventory": {
+    "calls": [],
+    "tables": []
   }
 }
