@@ -1,59 +1,238 @@
+# import json
+# import os
+
+# def generate_mermaid_with_columns(lineage_path, output_path):
+#     """
+#     Generates a Mermaid.js diagram from a lineage JSON file,
+#     representing tables as subgraphs that contain their accessed columns.
+
+#     Args:
+#         lineage_path (str): The path to the input lineage.json file.
+#         output_path (str): The path to the output .md file for the Mermaid diagram.
+#     """
+#     # Load the lineage.json content
+#     try:
+#         with open(lineage_path, "r") as f:
+#             lineage = json.load(f)
+#     except FileNotFoundError:
+#         print(f"Error: The file '{lineage_path}' was not found.")
+#         return
+#     except json.JSONDecodeError:
+#         print(f"Error: Could not decode JSON from '{lineage_path}'.")
+#         return
+
+#     # Start building the Mermaid diagram with a Top-Down orientation
+#     lines = ["graph TD\n"]
+
+#     # Define styles for different node types for better visual distinction
+#     lines.append("    %% Node styles\n")
+#     lines.append("    classDef table fill:#f96,stroke:#333,stroke-width:2px,color:#000,font-weight:bold;\n")
+#     lines.append("    classDef stored_proc fill:#9cf,stroke:#333,stroke-width:2px,color:#000,font-weight:bold;\n")
+#     lines.append("    classDef column fill:#fff,stroke:#333,stroke-width:1px,color:#000,font-style:italic;\n\n")
+
+#     edges = []
+
+#     # First, define all nodes, subgraphs, and collect the relationships (edges)
+#     for name, meta in lineage.items():
+#         node_type = meta.get("type")
+
+#         if node_type == "procedure":
+#             # Define the stored procedure node
+#             lines.append(f'    {name}("{name}");\n')
+#             lines.append(f"    class {name} stored_proc;\n")
+
+#             # Collect edges that show this procedure accessing tables
+#             for table_accessed in meta.get("tables", []):
+#                 # Ensure the target table exists in the lineage data before creating an edge
+#                 if table_accessed in lineage:
+#                     edges.append(f"    {name} --> {table_accessed};\n")
+
+#         elif node_type == "table":
+#             # Define the table as a subgraph to contain its columns
+#             lines.append(f'\n    subgraph {name}\n')
+            
+#             columns_in_table = meta.get("columns", [])
+#             if columns_in_table:
+#                 # Create a node for each column inside the table's subgraph
+#                 for col_info in columns_in_table:
+#                     column_name = col_info.get("name")
+#                     if not column_name:
+#                         continue
+                    
+#                     # Sanitize the column name to create a valid Mermaid node ID
+#                     # (removes spaces, parentheses, etc.)
+#                     sanitized_col_name = "".join(c for c in column_name if c.isalnum() or c == '_')
+#                     node_id = f"{name}_{sanitized_col_name}"
+                    
+#                     lines.append(f'        {node_id}("{column_name}");\n')
+#                     lines.append(f"        class {node_id} column;\n")
+#             else:
+#                 # If a table is listed but has no columns specified, add a placeholder
+#                 node_id = f"{name}_placeholder"
+#                 lines.append(f'        {node_id}["(no columns specified)"];\n')
+#                 lines.append(f"        class {node_id} column;\n")
+
+#             lines.append("    end\n")
+#             # Apply the 'table' style to the subgraph
+#             lines.append(f"    class {name} table;\n")
+
+#     # Add all collected edges to the diagram at the end for clarity
+#     if edges:
+#         lines.append("\n    %% Relationships\n")
+#         for edge in sorted(list(set(edges))):  # Sort and remove duplicates
+#             lines.append(edge)
+
+#     # Ensure the output directory exists
+#     os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+#     # Write the completed Mermaid lines into the output file
+#     with open(output_path, "w") as f:
+#         f.writelines(lines)
+
+#     print(f"Mermaid diagram with column details saved to {output_path}")
+
+
+# if __name__ == "__main__":
+#     # Define paths relative to the script's location
+#     project_root = os.path.dirname(os.path.abspath(__file__))
+#     lineage_path = os.path.join(project_root, "data", "lineage.json")
+#     mermaid_output_path = os.path.join(project_root, "diagrams", "lineage_diagram.md")
+
+#     # Generate the Markdown file with the detailed Mermaid code
+#     generate_mermaid_with_columns(lineage_path, mermaid_output_path)
 import json
 import os
+import re
 
-def generate_mermaid(lineage_path, output_path):
+def sanitize_for_mermaid(node_name):
     """
-    Generates a Mermaid.js diagram file from lineage.json.
+    Sanitizes a string to be a valid Mermaid.js node ID.
+    It replaces any character that is not a letter, number, or underscore
+    with an underscore. It also handles leading special characters.
 
     Args:
-        lineage_path (str): Path to the lineage.json file.
-        output_path (str): Path to save the generated lineage.mmd file.
+        node_name (str): The input string to sanitize.
+
+    Returns:
+        str: A sanitized string suitable for use as a Mermaid node ID.
+    """
+    if not isinstance(node_name, str):
+        return ""
+    # Replace any sequence of invalid characters with a single underscore
+    return re.sub(r'[^a-zA-Z0-9_]+', '_', node_name)
+
+def generate_mermaid_with_columns(lineage_path, output_path):
+    """
+    Generates a Mermaid.js diagram from a lineage JSON file,
+    representing tables as subgraphs that contain their accessed columns.
+    This version sanitizes all node names and deduplicates columns to prevent syntax errors.
+
+    Args:
+        lineage_path (str): The path to the input lineage.json file.
+        output_path (str): The path to the output .md file for the Mermaid diagram.
     """
     # Load the lineage.json content
-    with open(lineage_path, "r") as f:
-        lineage = json.load(f)
+    try:
+        # Explicitly open with UTF-8 encoding to handle potential character issues
+        with open(lineage_path, "r", encoding="utf-8") as f:
+            lineage = json.load(f)
+    except FileNotFoundError:
+        print(f"Error: The file '{lineage_path}' was not found.")
+        return
+    except json.JSONDecodeError:
+        print(f"Error: Could not decode JSON from '{lineage_path}'. Check for syntax errors or encoding issues.")
+        return
 
-    # Start building Mermaid diagram inside a Markdown code block
-    lines = ["graph BT\n"]
+    # Start building the Mermaid diagram with a Top-Down orientation
+    lines = ["graph TD\n"]
 
+    # Define styles for different node types for better visual distinction
     lines.append("    %% Node styles\n")
-    lines.append("    classDef table fill:#f96,stroke:#333,stroke-width:2px,color:#000;\n")
-    lines.append("    classDef stored_proc fill:#9cf,stroke:#333,stroke-width:2px ,color:#000;\n")
+    lines.append("    classDef table fill:#f96,stroke:#333,stroke-width:2px,color:#000,font-weight:bold;\n")
+    lines.append("    classDef stored_proc fill:#9cf,stroke:#333,stroke-width:2px,color:#000,font-weight:bold;\n")
+    lines.append("    classDef column fill:#fff,stroke:#333,stroke-width:1px,color:#000,font-style:italic;\n\n")
 
-    all_nodes = set()
-    # edges = []
+    edges = set() # Use a set to automatically handle duplicate relationships
+    node_definitions = {} # Use a dictionary to avoid duplicate node definitions
 
-    # Iterate over each source node and its target nodes
-    for source, metadata in lineage.items():
-        # Get the list of calls from the metadata
-        targets = metadata.get("calls", [])
-        for target in targets:
-            # For each relationship, create a Mermaid edge
-            # lines.append(f"    {source} --> {target}\n")
-            lines.append(f"    {target} --> {source}\n")
+    # First, define all nodes, subgraphs, and collect the relationships (edges)
+    for name, meta in lineage.items():
+        node_type = meta.get("type")
+        sanitized_name = sanitize_for_mermaid(name)
 
-            all_nodes.add(source)
-            all_nodes.add(target)
+        if not sanitized_name:
+            continue
 
-    # Apply styles to nodes
-    tables = [node for node in all_nodes if lineage.get(node, {}).get("type") == "table"]
-    stored_procs = [node for node in all_nodes if lineage.get(node, {}).get("type") == "procedure"]
-    
-    if tables:
-        lines.append(f"    class {','.join(tables)} table;\n")
-    if stored_procs:
-        lines.append(f"    class {','.join(stored_procs)} stored_proc;\n")
-        
-    # Write the lines into the .mmd output file
-    with open(output_path, "w") as f:
+        if node_type == "procedure":
+            # Define the stored procedure node using its sanitized ID and original name as label
+            node_definitions[sanitized_name] = f'    {sanitized_name}("{name}");\n    class {sanitized_name} stored_proc;\n'
+
+            # Collect edges that show this procedure accessing tables
+            for table_accessed in meta.get("tables", []):
+                if table_accessed in lineage:
+                    sanitized_table = sanitize_for_mermaid(table_accessed)
+                    if sanitized_table:
+                        edges.add(f"    {sanitized_name} --> {sanitized_table};\n")
+
+        elif node_type == "table":
+            # Start the definition for the table subgraph, using original name as label
+            table_lines = [f'\n    subgraph {sanitized_name}["{name}"]\n']
+            
+            # --- FIX: Deduplicate columns ---
+            unique_columns = {col_info['name']: col_info for col_info in meta.get("columns", [])}.values()
+
+            if unique_columns:
+                for col_info in unique_columns:
+                    column_name = col_info.get("name")
+                    if not column_name:
+                        continue
+                    
+                    # Sanitize the column name for its node ID
+                    sanitized_col_id = sanitize_for_mermaid(f"{name}_{column_name}")
+                    
+                    table_lines.append(f'        {sanitized_col_id}("{column_name}");\n')
+                    table_lines.append(f"        class {sanitized_col_id} column;\n")
+            else:
+                # If a table is listed but has no columns specified, add a placeholder
+                placeholder_id = f"{sanitized_name}_placeholder"
+                table_lines.append(f'        {placeholder_id}["(no columns specified)"];\n')
+                table_lines.append(f"        class {placeholder_id} column;\n")
+
+            table_lines.append("    end\n")
+            # Store the complete subgraph definition
+            node_definitions[sanitized_name] = "".join(table_lines)
+
+    # Write all unique node and subgraph definitions to the main lines
+    lines.extend(sorted(node_definitions.values()))
+
+    # Add all collected edges to the diagram at the end for clarity
+    if edges:
+        lines.append("\n    %% Relationships\n")
+        lines.extend(sorted(list(edges)))
+
+    # Ensure the output directory exists
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+    # Write the completed Mermaid lines into the output file
+    with open(output_path, "w", encoding="utf-8") as f:
         f.writelines(lines)
 
-    print(f"Mermaid diagram saved to {output_path}")
+    print(f"Mermaid diagram with column details saved to {output_path}")
+
 
 if __name__ == "__main__":
-    # Define default paths assuming the tool runs from project root
-    lineage_path = os.path.join("data", "lineage.json")
-    mermaid_output_path = os.path.join("diagrams", "lineage.md")
+    # Define paths relative to the script's location
+    # For local execution, create 'data' and 'diagrams' directories
+    project_root = os.path.dirname(os.path.abspath(__file__))
+    lineage_path = os.path.join(project_root, "data", "lineage.json")
+    mermaid_output_path = os.path.join(project_root, "diagrams", "lineage_diagram.md")
 
-    # Generate the Markdown file with Mermaid code
-    generate_mermaid(lineage_path, mermaid_output_path)
+    # Create dummy directories and file if they don't exist for the example to run
+    if not os.path.exists(os.path.dirname(lineage_path)):
+        os.makedirs(os.path.dirname(lineage_path))
+    if not os.path.exists(lineage_path):
+        with open(lineage_path, "w") as f:
+            f.write("{}") # Write empty json to prevent error on first run
+
+    # Generate the Markdown file with the detailed Mermaid code
+    generate_mermaid_with_columns(lineage_path, mermaid_output_path)

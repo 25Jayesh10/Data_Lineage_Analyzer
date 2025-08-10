@@ -1,5 +1,5 @@
 from src.analyze_lineage import analyze_lineage
-from src.generate_mermaid import generate_mermaid
+from src.generate_mermaid import generate_mermaid_with_columns
 from src.convert_mmd_to_md import convert_mmd_to_md
 from src.validation_script import validate
 from lineage_to_index import generate_index
@@ -81,7 +81,7 @@ def main():
         print(json.dumps(lineage_data, indent=2))
 
         print("Generating Mermaid diagram...")
-        generate_mermaid(output_path, mermaid_path)
+        generate_mermaid_with_columns(output_path, mermaid_path)
         convert_mmd_to_md(mermaid_path, markdown_path)
 
         # ✅ Tool 4 Extension: Generate generated_index.json from lineage + Mermaid for revalidation

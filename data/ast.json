@@ -1,88 +1,338 @@
 [
   {
-    "proc_name": "log_hr_employees",
-    "params": [],
+    "proc_name": "AcmeERP.usp_CalculateFifoCost",
+    "params": [
+      {
+        "name": "@ProductID",
+        "type": "INT",
+        "mode": "IN"
+      },
+      {
+        "name": "@QuantityRequested",
+        "type": "INT",
+        "mode": "IN"
+      }
+    ],
+    "return_type": "VOID",
+    "variables": [],
+    "statements": [
+      {
+        "type": "WITH_CTE",
+        "cte_list": [
+          {
+            "name": "CTE_FIFO",
+            "query": {
+              "type": "SELECT",
+              "columns": [
+                "MovementID",
+                "ProductID",
+                "Quantity",
+                "UnitCost",
+                "SUM(Quantity) OVER (PARTITION BY ProductID ORDER BY MovementDate ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS RunningTotal"
+              ],
+              "from": "AcmeERP.StockMovements",
+              "where": {
+                "type": "RAW_EXPRESSION",
+                "expression": "ProductID = @ProductID AND Direction = 'IN'"
+              }
+            }
+          }
+        ],
+        "main_query": {
+          "type": "SELECT",
+          "columns": [
+            "AVG(UnitCost) AS FifoCostEstimate"
+          ],
+          "from": "CTE_FIFO",
+          "where": {
+            "type": "RAW_EXPRESSION",
+            "expression": "RunningTotal <= @QuantityRequested"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "proc_name": "AcmeERP.usp_ProcessFullPayrollCycle",
+    "params": [
+      { "name": "@PayPeriodStart", "type": "DATE", "mode": "IN" },
+      { "name": "@PayPeriodEnd", "type": "DATE", "mode": "IN" }
+    ],
+    "return_type": "VOID",
+    "variables": [
+      { "name": "@EmployeeID", "type": "INT" },
+      { "name": "@BaseSalary", "type": "DECIMAL" },
+      { "name": "@Bonus", "type": "DECIMAL" },
+      { "name": "@GrossSalary", "type": "DECIMAL" },
+      { "name": "@Tax", "type": "DECIMAL" },
+      { "name": "@NetSalary", "type": "DECIMAL" },
+      { "name": "@Currency", "type": "CHAR" },
+      { "name": "@ConvertedSalary", "type": "DECIMAL" },
+      { "name": "@ExchangeRate", "type": "DECIMAL" },
+      { "name": "@CurrentDate", "type": "DATE", "default": { "type": "RAW_EXPRESSION", "expression": "GETDATE()" } },
+      { "name": "@ErrorMsg", "type": "NVARCHAR" },
+      { "name": "@ErrorSeverity", "type": "INT" },
+      { "name": "@ErrorState", "type": "INT" }
+    ],
+    "statements": [
+      { "type": "SET", "name": "NOCOUNT", "value": "ON" },
+      {
+        "type": "TRY",
+        "body": [
+          { "type": "BEGIN_TRANSACTION" },
+          {
+            "type": "IF",
+            "condition": { "type": "RAW_EXPRESSION", "expression": "OBJECT_ID('tempdb..#PayrollCalc') IS NOT NULL" },
+            "then": [ { "type": "DROP_TABLE", "table": "#PayrollCalc" } ]
+          },
+          { "type": "DECLARE_TEMP_TABLE", "table": "#PayrollCalc" },
+          {
+            "type": "INSERT",
+            "table": "#PayrollCalc",
+            "columns": ["EmployeeID", "BaseSalary", "Bonus", "GrossSalary", "Tax", "NetSalary", "Currency"],
+            "select_statement": {
+              "type": "SELECT",
+              "columns": [
+                "e.EmployeeID",
+                "e.BaseSalary",
+                "Bonus",
+                "GrossSalary",
+                "Tax",
+                "NetSalary",
+                "ISNULL(e.Currency, 'USD') AS Currency"
+              ],
+              "from": "AcmeERP.Employees"
+            }
+          },
+          {
+            "type": "DECLARE_CURSOR",
+            "cursor_name": "PayrollCursor",
+            "select_statement": {
+              "type": "SELECT",
+              "columns": ["EmployeeID", "GrossSalary", "Currency"],
+              "from": "#PayrollCalc"
+            }
+          },
+          { "type": "OPEN_CURSOR", "cursor_name": "PayrollCursor" },
+          { "type": "FETCH_CURSOR", "cursor_name": "PayrollCursor", "fetch_into": ["@EmployeeID", "@GrossSalary", "@Currency"] },
+          {
+            "type": "WHILE",
+            "condition": { "type": "RAW_EXPRESSION", "expression": "@@FETCH_STATUS = 0" },
+            "body": [
+              {
+                "type": "IF",
+                "condition": { "type": "RAW_EXPRESSION", "expression": "@Currency <> 'USD'" },
+                "then": [
+                  {
+                    "type": "SELECT_INTO",
+                    "query": "SELECT TOP 1 RateToBase FROM AcmeERP.ExchangeRates WHERE CurrencyCode = @Currency AND RateDate <= @CurrentDate ORDER BY RateDate DESC",
+                    "into_vars": ["@ExchangeRate"]
+                  },
+                  {
+                    "type": "IF",
+                    "condition": { "type": "RAW_EXPRESSION", "expression": "@ExchangeRate IS NULL" },
+                    "then": [
+                      { "type": "SET", "name": "@ExchangeRate", "value": 1 }
+                    ]
+                  },
+                  { "type": "SET", "name": "@ConvertedSalary", "value": { "type": "RAW_EXPRESSION", "expression": "@GrossSalary * @ExchangeRate" } }
+                ],
+                "else": [
+                  { "type": "SET", "name": "@ConvertedSalary", "value": "@GrossSalary" }
+                ]
+              },
+              {
+                "type": "UPDATE",
+                "table": "#PayrollCalc",
+                "set": { "ConvertedSalary": "@ConvertedSalary" },
+                "where": { "type": "RAW_EXPRESSION", "expression": "EmployeeID = @EmployeeID" }
+              },
+              { "type": "FETCH_CURSOR", "cursor_name": "PayrollCursor", "fetch_into": ["@EmployeeID", "@GrossSalary", "@Currency"] }
+            ]
+          },
+          { "type": "CLOSE_CURSOR", "cursor_name": "PayrollCursor" },
+          { "type": "DEALLOCATE_CURSOR", "cursor_name": "PayrollCursor" },
+          {
+            "type": "INSERT",
+            "table": "AcmeERP.PayrollLogs",
+            "columns": ["EmployeeID", "PayPeriodStart", "PayPeriodEnd", "GrossSalary", "TaxDeducted"],
+            "select_statement": {
+              "type": "SELECT",
+              "columns": ["EmployeeID", "@PayPeriodStart", "@PayPeriodEnd", "ConvertedSalary", "Tax"],
+              "from": "#PayrollCalc"
+            }
+          },
+          { "type": "COMMIT" }
+        ],
+        "catch": [
+          {
+            "exception": "CATCH_ALL",
+            "body": [
+              {
+                "type": "IF",
+                "condition": { "type": "RAW_EXPRESSION", "expression": "@@TRANCOUNT > 0" },
+                "then": [ { "type": "ROLLBACK" } ]
+              },
+              {
+                "type": "SELECT_INTO",
+                "query": "SELECT ERROR_MESSAGE(), ERROR_SEVERITY(), ERROR_STATE()",
+                "into_vars": ["@ErrorMsg", "@ErrorSeverity", "@ErrorState"]
+              },
+              {
+                "type": "RAISE",
+                "message": { "type": "RAW_EXPRESSION", "expression": "@ErrorMsg" }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "proc_name": "AcmeERP.usp_ConvertToBase",
+    "params": [
+      {
+        "name": "@CurrencyCode",
+        "type": "CHAR",
+        "mode": "IN"
+      },
+      {
+        "name": "@Amount",
+        "type": "DECIMAL",
+        "mode": "IN"
+      },
+      {
+        "name": "@ConversionDate",
+        "type": "DATE",
+        "mode": "IN"
+      }
+    ],
     "return_type": "VOID",
     "variables": [
       {
-        "name": "@emp_id",
-        "type": "INT"
-      },
-      {
-        "name": "@emp_name",
-        "type": "VARCHAR"
+        "name": "@Rate",
+        "type": "DECIMAL"
       }
     ],
     "statements": [
       {
-        "type": "DECLARE_CURSOR",
-        "cursor_name": "emp_cursor",
-        "select_statement": {
-          "type": "SELECT",
-          "columns": [
-            "emp_id",
-            "emp_name"
-          ],
-          "from": "employees",
-          "where": {
-            "type": "RAW_EXPRESSION",
-            "expression": "department = 'HR'"
+        "type": "SELECT",
+        "columns": [
+          "RateToBase"
+        ],
+        "from": "AcmeERP.ExchangeRates",
+        "where": {
+          "op": "AND",
+          "left": {
+            "op": "=",
+            "left": "CurrencyCode",
+            "right": "@CurrencyCode"
+          },
+          "right": {
+            "op": "=",
+            "left": "RateDate",
+            "right": "@ConversionDate"
           }
         }
       },
       {
-        "type": "OPEN_CURSOR",
-        "cursor_name": "emp_cursor"
+        "type": "SET",
+        "name": "@Rate",
+        "value": "RateToBase"
       },
       {
-        "type": "FETCH_CURSOR",
-        "cursor_name": "emp_cursor",
-        "fetch_into": [
-          "@emp_id",
-          "@emp_name"
-        ]
-      },
-      {
-        "type": "WHILE",
+        "type": "IF",
         "condition": {
-          "type": "RAW_EXPRESSION",
-          "expression": "@@sqlstatus = 0"
+          "op": "IS_NULL",
+          "left": "@Rate"
         },
-        "body": [
+        "then": [
           {
-            "type": "INSERT",
-            "table": "employee_log",
+            "type": "SELECT",
             "columns": [
-              "emp_id",
-              "emp_name",
-              "log_time"
+              "TOP 1 RateToBase"
             ],
-            "values": [
-              "@emp_id",
-              "@emp_name",
-              {
-                "type": "RAW_EXPRESSION",
-                "expression": "GETDATE()"
+            "from": "AcmeERP.ExchangeRates",
+            "where": {
+              "op": "AND",
+              "left": {
+                "op": "=",
+                "left": "CurrencyCode",
+                "right": "@CurrencyCode"
+              },
+              "right": {
+                "op": "<",
+                "left": "RateDate",
+                "right": "@ConversionDate"
               }
+            },
+            "order_by": [
+              "RateDate DESC"
             ]
           },
           {
-            "type": "FETCH_CURSOR",
-            "cursor_name": "emp_cursor",
-            "fetch_into": [
-              "@emp_id",
-              "@emp_name"
-            ]
+            "type": "SET",
+            "name": "@Rate",
+            "value": "RateToBase"
           }
         ]
       },
       {
-        "type": "CLOSE_CURSOR",
-        "cursor_name": "emp_cursor"
+        "type": "IF",
+        "condition": {
+          "op": "IS_NULL",
+          "left": "@Rate"
+        },
+        "then": [
+          {
+            "type": "SELECT",
+            "columns": [
+              "AVG(RateToBase)"
+            ],
+            "from": "AcmeERP.ExchangeRates",
+            "where": {
+              "op": "BETWEEN",
+              "left": "RateDate",
+              "right": {
+                "op": "AND",
+                "left": {
+                  "type": "RAW_EXPRESSION",
+                  "expression": "DATEADD(DAY, -7, @ConversionDate)"
+                },
+                "right": "@ConversionDate"
+              }
+            }
+          },
+          {
+            "type": "SET",
+            "name": "@Rate",
+            "value": "AVG(RateToBase)"
+          }
+        ]
       },
       {
-        "type": "DEALLOCATE_CURSOR",
-        "cursor_name": "emp_cursor"
+        "type": "IF",
+        "condition": {
+          "op": "IS_NULL",
+          "left": "@Rate"
+        },
+        "then": [
+          {
+            "type": "SET",
+            "name": "@Rate",
+            "value": 1
+          }
+        ]
+      },
+      {
+        "type": "SELECT",
+        "columns": [
+          {
+            "type": "RAW_EXPRESSION",
+            "expression": "@Amount * @Rate AS ConvertedAmount"
+          }
+        ],
+        "from": ""
       }
     ]
   }

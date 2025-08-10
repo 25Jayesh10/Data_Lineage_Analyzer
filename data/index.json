@@ -1,10 +1,56 @@
 {
-  "log_hr_employees": {
-    "params": [],
+  "AcmeERP.usp_CalculateFifoCost": {
+    "params": [
+      {
+        "name": "@ProductID",
+        "type": "INTEGER"
+      },
+      {
+        "name": "@QuantityRequested",
+        "type": "INTEGER"
+      }
+    ],
     "calls": [],
     "tables": [
-      "employees",
-      "employee_log"
+      "CTE_FIFO"
+    ]
+  },
+  "AcmeERP.usp_ProcessFullPayrollCycle": {
+    "params": [
+      {
+        "name": "@PayPeriodStart",
+        "type": "DATE"
+      },
+      {
+        "name": "@PayPeriodEnd",
+        "type": "DATE"
+      }
+    ],
+    "calls": [],
+    "tables": [
+      "AcmeERP.PayrollLogs",
+      "AcmeERP.ExchangeRates",
+      "#PayrollCalc"
+    ]
+  },
+  "AcmeERP.usp_ConvertToBase": {
+    "params": [
+      {
+        "name": "@CurrencyCode",
+        "type": "CHAR"
+      },
+      {
+        "name": "@Amount",
+        "type": "NUMERIC"
+      },
+      {
+        "name": "@ConversionDate",
+        "type": "DATE"
+      }
+    ],
+    "calls": [],
+    "tables": [
+      "AcmeERP.ExchangeRates"
     ]
   }
 }

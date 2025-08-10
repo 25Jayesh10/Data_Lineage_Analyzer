@@ -65,8 +65,7 @@
           "type": "string",
           "enum": [
             "read",
-            "write",
-            "update"
+            "write"
           ]
         },
         "calling_procedure": {

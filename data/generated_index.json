@@ -1,9 +1,14 @@
 {
-  "log_hr_employees": {
+  "AcmeERP.usp_CalculateFifoCost": {
     "calls": [],
-    "tables": [
-      "employees",
-      "employee_log"
-    ]
+    "tables": []
+  },
+  "AcmeERP.usp_ProcessFullPayrollCycle": {
+    "calls": [],
+    "tables": []
+  },
+  "AcmeERP.usp_ConvertToBase": {
+    "calls": [],
+    "tables": []
   }
 }
