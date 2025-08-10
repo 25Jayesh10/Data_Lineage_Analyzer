@@ -68,6 +68,11 @@ graph TD
         class CTE_FIFO_AVG_UnitCost_AS_FifoCostEstimate column;
     end
 
+    subgraph INVENTORY["INVENTORY"]
+        INVENTORY_SUM_quantity_("SUM(quantity)");
+        class INVENTORY_SUM_quantity_ column;
+    end
+
     subgraph _PayrollCalc["#PayrollCalc"]
         _PayrollCalc_EmployeeID("EmployeeID");
         class _PayrollCalc_EmployeeID column;
@@ -90,12 +95,49 @@ graph TD
         _PayrollCalc__PayPeriodEnd("@PayPeriodEnd");
         class _PayrollCalc__PayPeriodEnd column;
     end
+
+    subgraph client_orders["client_orders"]
+        client_orders_placeholder["(no columns specified)"];
+        class client_orders_placeholder column;
+    end
+
+    subgraph employee_log["employee_log"]
+        employee_log_emp_id("emp_id");
+        class employee_log_emp_id column;
+        employee_log_emp_name("emp_name");
+        class employee_log_emp_name column;
+        employee_log_log_time("log_time");
+        class employee_log_log_time column;
+    end
+
+    subgraph employees["employees"]
+        employees_placeholder["(no columns specified)"];
+        class employees_placeholder column;
+    end
+
+    subgraph inventory["inventory"]
+        inventory_placeholder["(no columns specified)"];
+        class inventory_placeholder column;
+    end
+
+    subgraph products["products"]
+        products_restock("restock");
+        class products_restock column;
+    end
     AcmeERP_usp_CalculateFifoCost("AcmeERP.usp_CalculateFifoCost");
     class AcmeERP_usp_CalculateFifoCost stored_proc;
     AcmeERP_usp_ConvertToBase("AcmeERP.usp_ConvertToBase");
     class AcmeERP_usp_ConvertToBase stored_proc;
     AcmeERP_usp_ProcessFullPayrollCycle("AcmeERP.usp_ProcessFullPayrollCycle");
     class AcmeERP_usp_ProcessFullPayrollCycle stored_proc;
+    log_hr_employees("log_hr_employees");
+    class log_hr_employees stored_proc;
+    sp_sum_client_orders("sp_sum_client_orders");
+    class sp_sum_client_orders stored_proc;
+    sp_update_inventory("sp_update_inventory");
+    class sp_update_inventory stored_proc;
+    test1("test1");
+    class test1 stored_proc;
 
     %% Relationships
     AcmeERP_usp_CalculateFifoCost --> AcmeERP_StockMovements;
@@ -106,4 +148,11 @@ graph TD
     AcmeERP_usp_ProcessFullPayrollCycle --> AcmeERP_ExchangeRates;
     AcmeERP_usp_ProcessFullPayrollCycle --> AcmeERP_PayrollLogs;
     AcmeERP_usp_ProcessFullPayrollCycle --> _PayrollCalc;
+    log_hr_employees --> employee_log;
+    log_hr_employees --> employees;
+    sp_sum_client_orders --> client_orders;
+    sp_update_inventory --> INVENTORY;
+    sp_update_inventory --> inventory;
+    sp_update_inventory --> products;
+    test1 --> client_orders;
 ```

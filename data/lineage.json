@@ -31,6 +31,63 @@
       "AcmeERP.PayrollLogs"
     ]
   },
+  "AcmeERP.ExchangeRates": {
+    "type": "table",
+    "calls": [
+      "AcmeERP.usp_ConvertToBase",
+      "AcmeERP.usp_ProcessFullPayrollCycle"
+    ],
+    "columns": [
+      {
+        "name": "RateToBase",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ConvertToBase"
+      },
+      {
+        "name": "TOP 1 RateToBase",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ConvertToBase"
+      },
+      {
+        "name": "AVG(RateToBase)",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ConvertToBase"
+      }
+    ]
+  },
+  "AcmeERP.PayrollLogs": {
+    "type": "table",
+    "calls": [
+      "AcmeERP.usp_ProcessFullPayrollCycle"
+    ],
+    "columns": [
+      {
+        "name": "EmployeeID",
+        "usage": "write",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "PayPeriodStart",
+        "usage": "write",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "PayPeriodEnd",
+        "usage": "write",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "GrossSalary",
+        "usage": "write",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "TaxDeducted",
+        "usage": "write",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      }
+    ]
+  },
   "#PayrollCalc": {
     "type": "table",
     "calls": [
@@ -168,6 +225,95 @@
       "AcmeERP.ExchangeRates"
     ]
   },
+  "sp_sum_client_orders": {
+    "type": "procedure",
+    "calls": [],
+    "tables": [
+      "client_orders"
+    ]
+  },
+  "client_orders": {
+    "type": "table",
+    "calls": [
+      "sp_sum_client_orders",
+      "test1"
+    ],
+    "columns": []
+  },
+  "log_hr_employees": {
+    "type": "procedure",
+    "calls": [],
+    "tables": [
+      "employee_log",
+      "employees"
+    ]
+  },
+  "employee_log": {
+    "type": "table",
+    "calls": [
+      "log_hr_employees"
+    ],
+    "columns": [
+      {
+        "name": "emp_id",
+        "usage": "write",
+        "calling_procedure": "log_hr_employees"
+      },
+      {
+        "name": "emp_name",
+        "usage": "write",
+        "calling_procedure": "log_hr_employees"
+      },
+      {
+        "name": "log_time",
+        "usage": "write",
+        "calling_procedure": "log_hr_employees"
+      }
+    ]
+  },
+  "employees": {
+    "type": "table",
+    "calls": [
+      "log_hr_employees"
+    ],
+    "columns": []
+  },
+  "test1": {
+    "type": "procedure",
+    "calls": [],
+    "tables": [
+      "client_orders"
+    ]
+  },
+  "sp_update_inventory": {
+    "type": "procedure",
+    "calls": [],
+    "tables": [
+      "INVENTORY",
+      "inventory",
+      "products"
+    ]
+  },
+  "inventory": {
+    "type": "table",
+    "calls": [
+      "sp_update_inventory"
+    ],
+    "columns": []
+  },
+  "products": {
+    "type": "table",
+    "calls": [
+      "sp_update_inventory"
+    ],
+    "columns": [
+      {
+        "name": "restock",
+        "usage": "write",
+        "calling_procedure": "sp_update_inventory"
+      }
+    ]
+  },
   "AcmeERP.StockMovements": {
     "type": "table",
     "calls": [
@@ -254,6 +400,19 @@
         "name": "TOP 1 RateToBase",
         "usage": "read",
         "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      }
+    ]
+  },
+  "INVENTORY": {
+    "type": "table",
+    "calls": [
+      "sp_update_inventory"
+    ],
+    "columns": [
+      {
+        "name": "SUM(quantity)",
+        "usage": "read",
+        "calling_procedure": "sp_update_inventory"
       }
     ]
   }

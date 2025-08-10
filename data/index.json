@@ -28,9 +28,9 @@
     ],
     "calls": [],
     "tables": [
-      "#PayrollCalc",
       "AcmeERP.ExchangeRates",
-      "AcmeERP.PayrollLogs"
+      "AcmeERP.PayrollLogs",
+      "#PayrollCalc"
     ]
   },
   "AcmeERP.usp_ConvertToBase": {
@@ -51,6 +51,62 @@
     "calls": [],
     "tables": [
       "AcmeERP.ExchangeRates"
+    ]
+  },
+  "sp_sum_client_orders": {
+    "params": [
+      {
+        "name": "@client_id",
+        "type": "INTEGER"
+      },
+      {
+        "name": "@from_date",
+        "type": "DATE"
+      },
+      {
+        "name": "@to_date",
+        "type": "DATE"
+      }
+    ],
+    "calls": [],
+    "tables": [
+      "client_orders"
+    ]
+  },
+  "log_hr_employees": {
+    "params": [],
+    "calls": [],
+    "tables": [
+      "employee_log",
+      "employees"
+    ]
+  },
+  "test1": {
+    "params": [
+      {
+        "name": "@client_id",
+        "type": "INTEGER"
+      },
+      {
+        "name": "@from_date",
+        "type": "DATE"
+      },
+      {
+        "name": "@to_date",
+        "type": "DATE"
+      }
+    ],
+    "calls": [],
+    "tables": [
+      "client_orders"
+    ]
+  },
+  "sp_update_inventory": {
+    "params": [],
+    "calls": [],
+    "tables": [
+      "inventory",
+      "products"
     ]
   }
 }
