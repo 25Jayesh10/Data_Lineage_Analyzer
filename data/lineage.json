@@ -31,63 +31,6 @@
       "AcmeERP.PayrollLogs"
     ]
   },
-  "AcmeERP.PayrollLogs": {
-    "type": "table",
-    "calls": [
-      "AcmeERP.usp_ProcessFullPayrollCycle"
-    ],
-    "columns": [
-      {
-        "name": "EmployeeID",
-        "usage": "write",
-        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
-      },
-      {
-        "name": "PayPeriodStart",
-        "usage": "write",
-        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
-      },
-      {
-        "name": "PayPeriodEnd",
-        "usage": "write",
-        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
-      },
-      {
-        "name": "GrossSalary",
-        "usage": "write",
-        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
-      },
-      {
-        "name": "TaxDeducted",
-        "usage": "write",
-        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
-      }
-    ]
-  },
-  "AcmeERP.ExchangeRates": {
-    "type": "table",
-    "calls": [
-      "AcmeERP.usp_ConvertToBase",
-      "AcmeERP.usp_ProcessFullPayrollCycle"
-    ],
-    "columns": [
-      {
-        "name": "RateToBase",
-        "usage": "read",
-        "calling_procedure": "AcmeERP.usp_ConvertToBase"
-      },
-      {
-        "name": "TOP 1 RateToBase",
-        "usage": "read",
-        "calling_procedure": "AcmeERP.usp_ConvertToBase"
-      },
-      {
-        "name": "AVG(RateToBase)",
-        "usage": "read",
-        "calling_procedure": "AcmeERP.usp_ConvertToBase"
-      }
-    ]
-  },
   "#PayrollCalc": {
     "type": "table",
     "calls": [
@@ -157,6 +100,63 @@
       {
         "name": "Tax",
         "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      }
+    ]
+  },
+  "AcmeERP.ExchangeRates": {
+    "type": "table",
+    "calls": [
+      "AcmeERP.usp_ConvertToBase",
+      "AcmeERP.usp_ProcessFullPayrollCycle"
+    ],
+    "columns": [
+      {
+        "name": "RateToBase",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ConvertToBase"
+      },
+      {
+        "name": "TOP 1 RateToBase",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ConvertToBase"
+      },
+      {
+        "name": "AVG(RateToBase)",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ConvertToBase"
+      }
+    ]
+  },
+  "AcmeERP.PayrollLogs": {
+    "type": "table",
+    "calls": [
+      "AcmeERP.usp_ProcessFullPayrollCycle"
+    ],
+    "columns": [
+      {
+        "name": "EmployeeID",
+        "usage": "write",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "PayPeriodStart",
+        "usage": "write",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "PayPeriodEnd",
+        "usage": "write",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "GrossSalary",
+        "usage": "write",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "TaxDeducted",
+        "usage": "write",
         "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
       }
     ]

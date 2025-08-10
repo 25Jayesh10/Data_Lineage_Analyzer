@@ -1,7 +1,43 @@
 import json
 from collections import defaultdict
+import re
 
 def analyze_lineage(index_file :str, ast_file :str, output_file :str):
+ 
+
+    def extract_columns_bruteforce(query: str, stmt_type: str):
+        """
+        Brute force extraction of column names for UPDATE, INSERT, and DELETE statements.
+        Returns a list of column names or ['*'] if none found.
+        stmt_type should be 'UPDATE', 'INSERT', or 'DELETE'.
+        """
+        if not query or not stmt_type:
+            return ["*"]
+
+        query_upper = query.upper()
+
+        if stmt_type == "UPDATE":
+            # UPDATE <table> SET col1 = ..., col2 = ...
+            match = re.search(r"\bSET\b(.+?)(\bWHERE\b|$)", query, re.IGNORECASE | re.DOTALL)
+            if match:
+                set_clause = match.group(1)
+                columns = [c.split('=')[0].strip() for c in set_clause.split(',') if '=' in c]
+                return columns or ["*"]
+
+        elif stmt_type == "INSERT":
+            # INSERT INTO <table> (col1, col2, ...)
+            match = re.search(r"\bINSERT\s+INTO\s+\S+\s*\((.*?)\)", query, re.IGNORECASE | re.DOTALL)
+            if match:
+                cols_str = match.group(1)
+                columns = [c.strip() for c in cols_str.split(',') if c.strip()]
+                return columns or ["*"]
+
+        elif stmt_type == "DELETE":
+            # DELETE has no explicit column list — return all
+            return ["*"]
+
+        return ["*"]
+
     def extract_table_from_query(query):
         # crude extraction: look for FROM <table>
         if not query:
@@ -34,6 +70,24 @@ def analyze_lineage(index_file :str, ast_file :str, output_file :str):
             return [c.strip() for c in cols_str.split(',')]
         except Exception:
             return ["*"]
+    def process_expression_condition(proc, expr, table_usage, lineage):
+        if not expr:
+            return
+        if isinstance(expr, dict):
+            expr_type = expr.get("type", "").upper()
+            if expr_type == "RAW_EXPRESSION":
+                sql = expr.get("expression", "")
+                if re.search(r"\bselect\b", sql, re.IGNORECASE):
+                    table = extract_table_from_query(sql)
+                    if table:
+                        columns = extract_columns_from_select_query(sql)
+                        lineage[table]["type"] = "table"
+                        lineage[table]["calls"].add(proc)
+                        table_usage[table][proc].append({"op": "read", "cols": columns})
+            elif "op" in expr:
+                process_expression_condition(proc, expr.get("left"), table_usage, lineage)
+                process_expression_condition(proc, expr.get("right"), table_usage, lineage)
+
 
     def process_statements(proc: str, stmts: list, table_usage: defaultdict, lineage: defaultdict):
         """Recursively processes AST statements to find table and column usage."""
@@ -46,6 +100,9 @@ def analyze_lineage(index_file :str, ast_file :str, output_file :str):
             # Handle structured DML statements
             if stmt_type == "SELECT":
                 table = stmt.get("from")
+                #when statements like 'SELECT 'Hi User' as StatusMessage' are used with no from table name mentioned and ast picks it up as a SELECT statement
+                if table == "DUMMY_TABLE" or table=="NO_TABLE":
+                    continue
                 if table:
                     columns = stmt.get("columns", ["*"])
                     lineage[table]["type"] = "table"
@@ -87,6 +144,67 @@ def analyze_lineage(index_file :str, ast_file :str, output_file :str):
                     lineage[table]["type"] = "table"
                     lineage[table]["calls"].add(proc)
                     table_usage[table][proc].append({"op": "write", "cols": ["*"]})
+            #if we encounter the RAW_EXPRESSION type of statement
+            #Note - Assuming that RAW_EXPRESSION WILL NEVER CONATIN AN INSERT as it shouldnt contain one.
+            #This is to be tested. It should mostly conatin a select query
+            elif stmt_type == "RAW_EXPRESSION":
+                expression=stmt.get("expression","")
+                #only if select exists in the query this will work
+                if not re.search(r"\bselect\b", expression, re.IGNORECASE):
+                    continue
+                table=extract_table_from_query(query=expression)
+                if table :
+                    columns= extract_columns_from_select_query(query=expression)
+                    lineage[table]["type"]="table"
+                    lineage[table]["calls"].add(proc)
+                    table_usage[table][proc].append({"op": "read", "cols": columns})           
+            elif stmt_type == "RAW_SQL":
+                sql = stmt.get("sql", "") or stmt.get("query", "") or stmt.get("expression", "")
+                if not sql:
+                    continue
+
+                # SELECT
+                if re.search(r"\\bselect\\b", sql, re.IGNORECASE):
+                    table = extract_table_from_query(sql)
+                    columns = extract_columns_from_select_query(sql)
+                    if table:
+                        lineage[table]["type"] = "table"
+                        lineage[table]["calls"].add(proc)
+                        table_usage[table][proc].append({"op": "read", "cols": columns})
+
+                # UPDATE
+                elif re.search(r"\\bupdate\\b", sql, re.IGNORECASE):
+                    table = extract_table_from_query(sql)
+                    columns = extract_columns_bruteforce(sql, "UPDATE")
+                    if table:
+                        lineage[table]["type"] = "table"
+                        lineage[table]["calls"].add(proc)
+                        table_usage[table][proc].append({"op": "write", "cols": columns})
+
+                # INSERT
+                elif re.search(r"\\binsert\\b", sql, re.IGNORECASE):
+                    table = extract_table_from_query(sql)
+                    columns = extract_columns_bruteforce(sql, "INSERT")
+                    if table:
+                        lineage[table]["type"] = "table"
+                        lineage[table]["calls"].add(proc)
+                        table_usage[table][proc].append({"op": "write", "cols": columns})
+
+                # DELETE
+                elif re.search(r"\\bdelete\\b", sql, re.IGNORECASE):
+                    table = extract_table_from_query(sql)
+                    columns = extract_columns_bruteforce(sql, "DELETE")
+                    if table:
+                        lineage[table]["type"] = "table"
+                        lineage[table]["calls"].add(proc)
+                        table_usage[table][proc].append({"op": "write", "cols": columns})
+
+
+
+                    # In process_statements:
+            if "condition" in stmt:
+                process_expression_condition(proc, stmt["condition"], table_usage, lineage)
+
 
             # Recursively process all possible nested statement blocks
             for key in ["then", "else", "body"]:

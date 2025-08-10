@@ -50,7 +50,7 @@ graph TD
 
 ### Business Logic
 
-The AcmeERP.usp_CalculateFifoCost stored procedure determines the cost of goods sold (COGS) for a given product using the First-In, First-Out (FIFO) inventory costing method.  It takes the product ID (@@ProductID) and the quantity requested (@@QuantityRequested) as input, and uses a common table expression (CTE) named CTE_FIFO presumably containing inventory data with cost information to calculate the total cost of the requested quantity based on the FIFO principle.  The procedure implicitly returns the calculated cost; the exact mechanism for returning this value (e.g., output parameter, `SELECT` statement) is not specified in the provided code.
+The AcmeERP.usp_CalculateFifoCost stored procedure calculates the cost of goods sold (COGS) for a given product using the First-In, First-Out (FIFO) inventory costing method.  It takes the product ID (@@ProductID) and the quantity requested (@@QuantityRequested) as input and uses a common table expression (CTE) named CTE_FIFO, presumably containing inventory data with cost information, to determine the cost of the requested quantity based on the FIFO principle.  The procedure implicitly returns the total cost of the @@QuantityRequested units of @@ProductID, reflecting the cost of the oldest inventory items first.
 
 ---
 
@@ -71,9 +71,9 @@ The AcmeERP.usp_CalculateFifoCost stored procedure determines the cost of goods 
 
 ### Tables
 
-- AcmeERP.PayrollLogs
-- AcmeERP.ExchangeRates
 - #PayrollCalc
+- AcmeERP.ExchangeRates
+- AcmeERP.PayrollLogs
 
 ---
 
@@ -86,16 +86,16 @@ The AcmeERP.usp_CalculateFifoCost stored procedure determines the cost of goods 
 
 ```mermaid
 graph TD
-    AcmeERP.usp_ProcessFullPayrollCycle --> AcmeERP.PayrollLogs
-    AcmeERP.usp_ProcessFullPayrollCycle --> AcmeERP.ExchangeRates
     AcmeERP.usp_ProcessFullPayrollCycle --> #PayrollCalc
+    AcmeERP.usp_ProcessFullPayrollCycle --> AcmeERP.ExchangeRates
+    AcmeERP.usp_ProcessFullPayrollCycle --> AcmeERP.PayrollLogs
 ```
 
 ---
 
 ### Business Logic
 
-The `AcmeERP.usp_ProcessFullPayrollCycle` stored procedure calculates and logs the complete payroll for a specified pay period, defined by the `@@PayPeriodStart` and `@@PayPeriodEnd` parameters.  It uses data from the `AcmeERP.PayrollLogs` table (presumably containing employee payroll history) and `AcmeERP.ExchangeRates` (for currency conversions if applicable) to perform the calculations.  Results are temporarily stored in the `#PayrollCalc` temporary table before final processing and logging, implying a multi-step calculation process that likely includes deductions, tax calculations, and currency conversions.  The procedure ultimately updates or inserts payroll data, completing the full payroll cycle for the given period.
+The `AcmeERP.usp_ProcessFullPayrollCycle` stored procedure automates the complete payroll processing for a given pay period, defined by the `@@PayPeriodStart` and `@@PayPeriodEnd` parameters.  It calculates employee compensation, likely utilizing a temporary table `#PayrollCalc`, and incorporates relevant exchange rates from the `AcmeERP.ExchangeRates` table for international payments.  Finally, it logs all payroll activities and results within the `AcmeERP.PayrollLogs` table, providing an audit trail of the entire process.
 
 ---
 
@@ -137,7 +137,7 @@ graph TD
 
 ### Business Logic
 
-The `AcmeERP.usp_ConvertToBase` stored procedure converts a given monetary amount from a specified currency into the base currency of the Acme ERP system.  It uses the `AcmeERP.ExchangeRates` table to retrieve the appropriate exchange rate based on the provided currency code and conversion date.  The procedure returns the equivalent amount in the base currency, facilitating accurate financial reporting and calculations across different currencies within the Acme ERP system.
+The `AcmeERP.usp_ConvertToBase` stored procedure converts a given monetary amount from a specified currency into the base currency of the Acme ERP system.  It uses the `AcmeERP.ExchangeRates` table to retrieve the appropriate exchange rate based on the provided currency code and conversion date.  The procedure returns the equivalent amount in the base currency, facilitating accurate financial reporting and calculations across different currencies.  The absence of provided SQL source code prevents further detail on error handling or specific conversion methodologies.
 
 ---
 

@@ -497,4 +497,96 @@ def test_RAW_SQL_and_complex_queries(tmp_path):
     assert result["AcmeERP.Employees"]["calls"]==["AcmeERP.usp_ProcessFullPayrollCycle"]
     assert result["AcmeERP.Employees"]["usage"]["AcmeERP.usp_ProcessFullPayrollCycle"]==["read"]
 
+import json
+import re
+from your_module import analyze_lineage  # replace with actual import
+
+def test_nested_ifs(tmp_path):
+    # AST input
+    ast = [
+        {
+            "proc_name": "Finance.usp_CheckAccountStatus",
+            "params": [
+                {"name": "@AccountID", "type": "INT", "mode": "IN"},
+                {"name": "@MinBalance", "type": "DECIMAL", "mode": "IN"}
+            ],
+            "return_type": "VOID",
+            "variables": [],
+            "statements": [
+                {
+                    "type": "IF",
+                    "condition": {
+                        "type": "RAW_EXPRESSION",
+                        "expression": "EXISTS (SELECT 1 FROM Finance.Accounts WHERE AccountID = @AccountID)"
+                    },
+                    "then": [
+                        {
+                            "type": "IF",
+                            "condition": {
+                                "op": ">=",
+                                "left": {
+                                    "type": "RAW_EXPRESSION",
+                                    "expression": "(SELECT Balance FROM Finance.Accounts WHERE AccountID = @AccountID)"
+                                },
+                                "right": "@MinBalance"
+                            },
+                            "then": [
+                                {
+                                    "type": "SELECT",
+                                    "columns": [
+                                        "'Account is active and meets minimum balance' AS StatusMessage"
+                                    ],
+                                    "from": "DUMMY_TABLE"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+
+    # Index input
+    index = {
+        "Finance.usp_CheckAccountStatus": {
+            "params": [
+                {"name": "@AccountID", "type": "INTEGER"},
+                {"name": "@MinBalance", "type": "NUMERIC"}
+            ],
+            "calls": [],
+            "tables": []
+        }
+    }
+
+    # Write temp files
+    index_file = tmp_path / "index.json"
+    ast_file = tmp_path / "ast.json"
+    output_file = tmp_path / "output.json"
+    index_file.write_text(json.dumps(index))
+    ast_file.write_text(json.dumps(ast))
+
+    # Run lineage analyzer
+    analyze_lineage(str(index_file), str(ast_file), str(output_file))
+
+    # Load results
+    with output_file.open() as f:
+        result = json.load(f)
+
+    # ✅ Check procedure exists
+    assert "Finance.usp_CheckAccountStatus" in result
+    assert result["Finance.usp_CheckAccountStatus"]["type"] == "procedure"
+
+    # ✅ Ensure FINANCE.ACCOUNTS is linked to the procedure
+    assert "FINANCE.ACCOUNTS" in result["Finance.usp_CheckAccountStatus"]["tables"]
+
+    # ✅ Ensure FINANCE.ACCOUNTS has the correct type and column names
+    assert result["FINANCE.ACCOUNTS"]["type"] == "table"
+    col_names = {col["name"] for col in result["FINANCE.ACCOUNTS"]["columns"]}
+    assert "1" in col_names
+    assert "Balance" in col_names
+
+    # ✅ Ensure no dummy/no table entries are present
+    forbidden_tables = {"DUMMY_TABLE", "NO_TABLE"}
+    for table_name in result.keys():
+        assert table_name not in forbidden_tables
     
