@@ -54,7 +54,7 @@ graph TD
 
 ### Business Logic
 
-The `AcmeERP.usp_CalculateFifoCost` stored procedure calculates the cost of goods sold (COGS) for a given product using the First-In, First-Out (FIFO) inventory costing method.  It accepts the product ID (`@@ProductID`) and the quantity requested (`@@QuantityRequested`) as input.  The procedure leverages a Common Table Expression (CTE) named `CTE_FIFO`, presumably containing inventory transaction data, to determine the cost of the requested quantity based on the FIFO principle:  the oldest inventory items are assumed to be sold first.  The procedure implicitly returns the calculated FIFO cost, though the exact return mechanism (e.g., output parameter, return value, modification of a table) is not specified in the provided code snippet.
+The `AcmeERP.usp_CalculateFifoCost` stored procedure calculates the cost of goods sold (COGS) for a given product using the First-In, First-Out (FIFO) inventory valuation method.  It takes the product ID (`@@ProductID`) and the quantity requested (`@@QuantityRequested`) as input.  The procedure likely iterates through a common table expression (CTE) named `CTE_FIFO`, which presumably contains inventory transaction details (date, quantity, cost), to determine the cost of the requested quantity based on the FIFO principle – assigning costs from the oldest inventory items first.  The procedure's output (not shown in the provided code) is expected to be the total cost of the `@@QuantityRequested` units of the specified `@@ProductID`, calculated according to the FIFO method.
 
 ---
 
@@ -76,8 +76,8 @@ The `AcmeERP.usp_CalculateFifoCost` stored procedure calculates the cost of good
 ### Tables
 
 - AcmeERP.ExchangeRates
-- AcmeERP.PayrollLogs
 - #PayrollCalc
+- AcmeERP.PayrollLogs
 
 ---
 
@@ -91,15 +91,15 @@ The `AcmeERP.usp_CalculateFifoCost` stored procedure calculates the cost of good
 ```mermaid
 graph TD
     AcmeERP.usp_ProcessFullPayrollCycle --> AcmeERP.ExchangeRates
-    AcmeERP.usp_ProcessFullPayrollCycle --> AcmeERP.PayrollLogs
     AcmeERP.usp_ProcessFullPayrollCycle --> #PayrollCalc
+    AcmeERP.usp_ProcessFullPayrollCycle --> AcmeERP.PayrollLogs
 ```
 
 ---
 
 ### Business Logic
 
-The AcmeERP.usp_ProcessFullPayrollCycle stored procedure calculates and processes the complete payroll for a given pay period, defined by the `@@PayPeriodStart` and `@@PayPeriodEnd` parameters.  It uses exchange rate data from the `AcmeERP.ExchangeRates` table to ensure accurate calculations for employees with international compensation.  The procedure logs all payroll processing activities in the `AcmeERP.PayrollLogs` table and utilizes a temporary table, `#PayrollCalc`, for intermediate calculations during the payroll processing. The final output isn't explicitly defined but is implied to update payroll-related tables (not explicitly listed) reflecting the calculated compensation for the specified period.
+The `AcmeERP.usp_ProcessFullPayrollCycle` stored procedure automates the complete payroll processing for a given pay period, defined by the `@@PayPeriodStart` and `@@PayPeriodEnd` parameters.  It utilizes exchange rate data from `AcmeERP.ExchangeRates` to calculate payroll amounts, likely for employees with international compensation.  Intermediate calculations are stored in the temporary table `#PayrollCalc`, and a comprehensive audit trail of the payroll cycle is logged in `AcmeERP.PayrollLogs`.  The procedure's purpose is to accurately and efficiently generate payroll for a specified period, ensuring compliance with currency exchange requirements and providing a detailed record of the process for auditing and reporting.
 
 ---
 
@@ -141,7 +141,7 @@ graph TD
 
 ### Business Logic
 
-The `AcmeERP.usp_ConvertToBase` stored procedure converts a given monetary amount from a specified currency into the base currency of the Acme ERP system.  It uses the `AcmeERP.ExchangeRates` table to retrieve the appropriate exchange rate for the provided currency code and conversion date.  The procedure then performs the currency conversion calculation and returns the equivalent amount in the base currency.  The absence of provided SQL code prevents further detail on error handling or specific conversion algorithms.
+The AcmeERP.usp_ConvertToBase stored procedure converts a monetary amount from a specified currency into the base currency of the Acme ERP system.  It uses the `AcmeERP.ExchangeRates` table to retrieve the appropriate exchange rate based on the provided `@@CurrencyCode` and `@@ConversionDate`. The procedure takes the original amount (`@@Amount`) and applies the retrieved exchange rate to calculate and return the equivalent value in the base currency.  This functionality is crucial for accurate financial reporting and analysis across different currencies within the Acme ERP system.
 
 ---
 
@@ -183,7 +183,7 @@ graph TD
 
 ### Business Logic
 
-The stored procedure `sp_sum_client_orders` calculates the total sum of client orders for a specified client within a given date range, applying a 5% discount to orders exceeding $750.  It iterates through each order for the designated client, placed between the `@from_date` and `@to_date` parameters, accumulating the total.  Orders over $750 are discounted before being added to the grand total, effectively reflecting a bulk order discount program for high-value client purchases.  The procedure returns the final discounted sum of all qualifying orders.
+Procedure `sp_sum_client_orders` calculates the total value of orders for a specified client within a given date range, applying a 5% discount to orders exceeding $750.  It iterates through each order for the client within the specified timeframe; if an order's total price surpasses $750, its discounted value (95% of the total) is added to the running total.  The final result represents the total revenue accrued from the client's orders during the period, adjusted for applicable discounts.
 
 ---
 
@@ -202,8 +202,8 @@ The stored procedure `sp_sum_client_orders` calculates the total sum of client o
 
 ### Tables
 
-- employee_log
 - employees
+- employee_log
 
 ---
 
@@ -216,15 +216,15 @@ The stored procedure `sp_sum_client_orders` calculates the total sum of client o
 
 ```mermaid
 graph TD
-    log_hr_employees --> employee_log
     log_hr_employees --> employees
+    log_hr_employees --> employee_log
 ```
 
 ---
 
 ### Business Logic
 
-The stored procedure `log_hr_employees` automatically records all HR employees' IDs and names into the `employee_log` table, timestamping each entry with the current date and time.  This procedure iterates through the `employees` table, selecting only those employees belonging to the 'HR' department, and appends their data to the log, providing an audit trail of HR personnel.  The absence of input parameters implies that this is a scheduled or automatically triggered process designed to maintain a continuously updated record of active HR employees.
+The stored procedure `log_hr_employees` automatically logs all employees from the Human Resources (HR) department into the `employee_log` table.  For each HR employee, it records their ID and name along with the current timestamp. This process facilitates auditing and tracking of HR personnel, potentially for security, reporting, or other internal management purposes.  The procedure iterates through all HR employees in the `employees` table, ensuring a complete log of all current HR staff members.
 
 ---
 
@@ -266,7 +266,7 @@ graph TD
 
 ### Business Logic
 
-Procedure `test1` calculates the total revenue for a given client (`@@client_id`) within a specified date range (`@@from_date`, `@@to_date`).  It iterates through each order in the `client_orders` table matching these criteria.  For orders exceeding 750 currency units, a 5% discount is applied before accumulating the order total into the `@grand_total`.  The final `@grand_total` represents the client's total revenue after applying any applicable discounts.
+The `test1` stored procedure calculates the total revenue for a specified client (`@@client_id`) within a given date range (`@@from_date` to `@@to_date`).  It iterates through each order in the `client_orders` table matching these criteria.  For orders exceeding 750 currency units, a 5% discount is applied before accumulating the total revenue (`@grand_total`).  The final output, `@grand_total`, represents the client's total revenue after applying potential discounts.
 
 ---
 
@@ -285,8 +285,8 @@ Procedure `test1` calculates the total revenue for a given client (`@@client_id`
 
 ### Tables
 
-- inventory
 - products
+- inventory
 
 ---
 
@@ -299,15 +299,15 @@ Procedure `test1` calculates the total revenue for a given client (`@@client_id`
 
 ```mermaid
 graph TD
-    sp_update_inventory --> inventory
     sp_update_inventory --> products
+    sp_update_inventory --> inventory
 ```
 
 ---
 
 ### Business Logic
 
-The stored procedure `sp_update_inventory` automatically flags products requiring restocking.  It iterates through each active product (discontinued = 0) in the `products` table, summing its current inventory quantity from the `inventory` table. If the total quantity for a product falls below 10 units, the procedure sets the `restock` flag to 1 in the `products` table, indicating a need for replenishment.  This facilitates proactive inventory management by automatically identifying low-stock items.
+The stored procedure `sp_update_inventory` automatically flags products requiring restocking.  It iterates through each active product (discontinued = 0) in the `products` table, summing its current inventory quantity from the `inventory` table. If the total quantity for a product falls below 10 units, the procedure updates the `products` table, setting the `restock` flag to 1 for that product, signaling the need for replenishment.
 
 ---
 
