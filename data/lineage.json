@@ -92,39 +92,6 @@
       }
     ]
   },
-  "AcmeERP.PayrollLogs": {
-    "type": "table",
-    "calls": [
-      "AcmeERP.usp_ProcessFullPayrollCycle"
-    ],
-    "columns": [
-      {
-        "name": "EmployeeID",
-        "usage": "write",
-        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
-      },
-      {
-        "name": "PayPeriodStart",
-        "usage": "write",
-        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
-      },
-      {
-        "name": "PayPeriodEnd",
-        "usage": "write",
-        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
-      },
-      {
-        "name": "GrossSalary",
-        "usage": "write",
-        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
-      },
-      {
-        "name": "TaxDeducted",
-        "usage": "write",
-        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
-      }
-    ]
-  },
   "#PayrollCalc": {
     "type": "table",
     "calls": [
@@ -296,6 +263,39 @@
         "name": "restock",
         "usage": "write",
         "calling_procedure": "sp_update_inventory"
+      }
+    ]
+  },
+  "AcmeERP.StockMovements": {
+    "type": "table",
+    "calls": [
+      "AcmeERP.usp_CalculateFifoCost"
+    ],
+    "columns": [
+      {
+        "name": "MovementID",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_CalculateFifoCost"
+      },
+      {
+        "name": "ProductID",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_CalculateFifoCost"
+      },
+      {
+        "name": "Quantity",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_CalculateFifoCost"
+      },
+      {
+        "name": "UnitCost",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_CalculateFifoCost"
+      },
+      {
+        "name": "SUM(Quantity) OVER (PARTITION BY ProductID ORDER BY MovementDate ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS RunningTotal",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_CalculateFifoCost"
       }
     ]
   },
