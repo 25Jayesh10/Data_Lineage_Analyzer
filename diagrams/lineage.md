@@ -6,11 +6,6 @@ graph TD
     classDef column fill:#fff,stroke:#333,stroke-width:1px,color:#000,font-style:italic;
 
 
-    subgraph ACMEERP_EXCHANGERATES["ACMEERP.EXCHANGERATES"]
-        ACMEERP_EXCHANGERATES_TOP_1_RateToBase("TOP 1 RateToBase");
-        class ACMEERP_EXCHANGERATES_TOP_1_RateToBase column;
-    end
-
     subgraph AcmeERP_Employees["AcmeERP.Employees"]
         AcmeERP_Employees_e_EmployeeID("e.EmployeeID");
         class AcmeERP_Employees_e_EmployeeID column;
@@ -29,10 +24,10 @@ graph TD
     end
 
     subgraph AcmeERP_ExchangeRates["AcmeERP.ExchangeRates"]
-        AcmeERP_ExchangeRates_RateToBase("RateToBase");
-        class AcmeERP_ExchangeRates_RateToBase column;
         AcmeERP_ExchangeRates_TOP_1_RateToBase("TOP 1 RateToBase");
         class AcmeERP_ExchangeRates_TOP_1_RateToBase column;
+        AcmeERP_ExchangeRates_RateToBase("RateToBase");
+        class AcmeERP_ExchangeRates_RateToBase column;
         AcmeERP_ExchangeRates_AVG_RateToBase_("AVG(RateToBase)");
         class AcmeERP_ExchangeRates_AVG_RateToBase_ column;
     end
@@ -66,11 +61,6 @@ graph TD
     subgraph CTE_FIFO["CTE_FIFO"]
         CTE_FIFO_AVG_UnitCost_AS_FifoCostEstimate("AVG(UnitCost) AS FifoCostEstimate");
         class CTE_FIFO_AVG_UnitCost_AS_FifoCostEstimate column;
-    end
-
-    subgraph INVENTORY["INVENTORY"]
-        INVENTORY_SUM_quantity_("SUM(quantity)");
-        class INVENTORY_SUM_quantity_ column;
     end
 
     subgraph _PayrollCalc["#PayrollCalc"]
@@ -116,8 +106,8 @@ graph TD
     end
 
     subgraph inventory["inventory"]
-        inventory_placeholder["(no columns specified)"];
-        class inventory_placeholder column;
+        inventory_SUM_quantity_("SUM(quantity)");
+        class inventory_SUM_quantity_ column;
     end
 
     subgraph products["products"]
@@ -143,7 +133,6 @@ graph TD
     AcmeERP_usp_CalculateFifoCost --> AcmeERP_StockMovements;
     AcmeERP_usp_CalculateFifoCost --> CTE_FIFO;
     AcmeERP_usp_ConvertToBase --> AcmeERP_ExchangeRates;
-    AcmeERP_usp_ProcessFullPayrollCycle --> ACMEERP_EXCHANGERATES;
     AcmeERP_usp_ProcessFullPayrollCycle --> AcmeERP_Employees;
     AcmeERP_usp_ProcessFullPayrollCycle --> AcmeERP_ExchangeRates;
     AcmeERP_usp_ProcessFullPayrollCycle --> AcmeERP_PayrollLogs;
@@ -151,7 +140,6 @@ graph TD
     log_hr_employees --> employee_log;
     log_hr_employees --> employees;
     sp_sum_client_orders --> client_orders;
-    sp_update_inventory --> INVENTORY;
     sp_update_inventory --> inventory;
     sp_update_inventory --> products;
     test1 --> client_orders;

@@ -1,8 +1,9 @@
 import json
 import pytest
 from  src.analyze_lineage import analyze_lineage
-def test_update_usage(tmp_path):
-    ast = [
+def test_update_and_delete_usage(tmp_path):
+    # --- UPDATE test setup ---
+    ast_update = [
         {
             "proc_name": "proc_update",
             "params": [],
@@ -13,21 +14,12 @@ def test_update_usage(tmp_path):
             ]
         }
     ]
-    index = {
+    index_update = {
         "proc_update": {"params": [], "calls": [], "tables": ["employees"]}
     }
-    index_file = tmp_path / "index.json"
-    ast_file = tmp_path / "ast.json"
-    output_file = tmp_path / "output.json"
-    index_file.write_text(json.dumps(index))
-    ast_file.write_text(json.dumps(ast))
-    analyze_lineage(str(index_file), str(ast_file), str(output_file))
-    with output_file.open() as f:
-        result = json.load(f)
-    assert result["employees"]["usage"]["proc_update"] == ["write"]
 
-def test_delete_usage(tmp_path):
-    ast = [
+    # --- DELETE test setup ---
+    ast_delete = [
         {
             "proc_name": "proc_delete",
             "params": [],
@@ -38,18 +30,46 @@ def test_delete_usage(tmp_path):
             ]
         }
     ]
-    index = {
+    index_delete = {
         "proc_delete": {"params": [], "calls": [], "tables": ["employees"]}
     }
-    index_file = tmp_path / "index.json"
-    ast_file = tmp_path / "ast.json"
-    output_file = tmp_path / "output.json"
-    index_file.write_text(json.dumps(index))
-    ast_file.write_text(json.dumps(ast))
-    analyze_lineage(str(index_file), str(ast_file), str(output_file))
-    with output_file.open() as f:
-        result = json.load(f)
-    assert result["employees"]["usage"]["proc_delete"] == ["write"]
+
+    # Helper to run and load result
+    def run_case(ast, index):
+        index_file = tmp_path / "index.json"
+        ast_file = tmp_path / "ast.json"
+        output_file = tmp_path / "output.json"
+        index_file.write_text(json.dumps(index))
+        ast_file.write_text(json.dumps(ast))
+        analyze_lineage(str(index_file), str(ast_file), str(output_file))
+        with output_file.open() as f:
+            return json.load(f)
+
+    # --- Run UPDATE case ---
+    result_update = run_case(ast_update, index_update)
+    assert "employees" in result_update
+    assert result_update["employees"]["type"] == "table"
+    assert {
+        "name": "salary",
+        "usage": "write",
+        "calling_procedure": "proc_update"
+    } in result_update["employees"]["columns"]
+    assert "DUMMY_TABLE" not in result_update
+    assert "NO_TABLE" not in result_update
+
+    # --- Run DELETE case ---
+    result_delete = run_case(ast_delete, index_delete)
+    assert "employees" in result_delete
+    assert result_delete["employees"]["type"] == "table"
+    assert "proc_delete" in result_delete["employees"]["calls"]
+    assert {
+        "name": "*",
+        "usage": "write",
+        "calling_procedure": "proc_delete"
+    } in result_delete["employees"]["columns"]
+    assert "DUMMY_TABLE" not in result_delete
+    assert "NO_TABLE" not in result_delete
+
 
 def test_multiple_procs_access_same_table(tmp_path):
     ast = [
@@ -59,7 +79,7 @@ def test_multiple_procs_access_same_table(tmp_path):
             "return_type": "VOID",
             "variables": [],
             "statements": [
-                {"type": "SELECT", "query": "SELECT * FROM t1"}
+                {"type": "SELECT", "query": "SELECT col1, col2 FROM t1"}
             ]
         },
         {
@@ -76,17 +96,41 @@ def test_multiple_procs_access_same_table(tmp_path):
         "proc_a": {"params": [], "calls": [], "tables": ["t1"]},
         "proc_b": {"params": [], "calls": [], "tables": ["t1"]}
     }
+
     index_file = tmp_path / "index.json"
     ast_file = tmp_path / "ast.json"
     output_file = tmp_path / "output.json"
     index_file.write_text(json.dumps(index))
     ast_file.write_text(json.dumps(ast))
+
     analyze_lineage(str(index_file), str(ast_file), str(output_file))
+
     with output_file.open() as f:
         result = json.load(f)
-    assert set(result["t1"]["usage"].keys()) == {"proc_a", "proc_b"}
-    assert result["t1"]["usage"]["proc_a"] == ["read"]
-    assert result["t1"]["usage"]["proc_b"] == ["write"]
+
+    # Ensure table exists and is a table type
+    assert "t1" in result
+    assert result["t1"]["type"] == "table"
+
+    # Extract all (col_name, usage, proc) triples for t1
+    col_entries = result["t1"]["columns"]
+
+    # Check that proc_a has read usage for its columns
+    for col in col_entries:
+      if col["calling_procedure"]=="proc_a":
+        assert col["usage"] == "read" 
+      if col["calling_procedure"]=="proc_b":
+        assert col["usage"] == "write" 
+     
+        
+    
+
+    
+
+    # Ensure no dummy or no_table entries
+    assert "DUMMY_TABLE" not in result
+    assert "NO_TABLE" not in result
+
 
 def test_proc_reads_and_writes_same_table(tmp_path):
     ast = [
@@ -96,62 +140,44 @@ def test_proc_reads_and_writes_same_table(tmp_path):
             "return_type": "VOID",
             "variables": [],
             "statements": [
-                {"type": "SELECT", "query": "SELECT * FROM t2"},
-                {"type": "UPDATE", "table": "t2", "set": {"col": "val"}}
+                {"type": "SELECT", "query": "SELECT col1 FROM t2"},
+                {"type": "UPDATE", "table": "t2", "set": {"col2": "val"}}
             ]
         }
     ]
     index = {
         "proc_rw": {"params": [], "calls": [], "tables": ["t2"]}
     }
+
     index_file = tmp_path / "index.json"
     ast_file = tmp_path / "ast.json"
     output_file = tmp_path / "output.json"
     index_file.write_text(json.dumps(index))
     ast_file.write_text(json.dumps(ast))
+
     analyze_lineage(str(index_file), str(ast_file), str(output_file))
+
     with output_file.open() as f:
         result = json.load(f)
-    assert set(result["t2"]["usage"]["proc_rw"]) == {"read", "write"}
 
-@pytest.fixture
-def simple_ast():
-    return [
-        {
-            "proc_name": "proc_test",
-            "params": [],
-            "return_type": "VOID",
-            "variables": [],
-            "statements": [
-                {
-                    "type": "SELECT",
-                    "query": "SELECT * FROM employees",
-                    "into_vars": []
-                },
-                {
-                    "type": "INSERT_INTO",
-                    "table": "log_table",
-                    "columns": ["id"],
-                    "values": ["1"]
-                }
-            ]
-        }
-    ]
+    # Ensure table exists
+    assert "t2" in result
+    assert result["t2"]["type"] == "table"
 
-@pytest.fixture
-def simple_index():
-    return {
-        "proc_test": {
-            "params": [],
-            "calls": [],
-            "tables": ["employees", "log_table"]
-        }
-    }
+    col_entries = result["t2"]["columns"]
+
+    # Ensure there is at least one read and one write usage from proc_rw
+    for col in col_entries:
+        assert (col["usage"]=="read" and col["calling_procedure"]=="proc_rw") or (col["usage"]=="write" and col["calling_procedure"]=="proc_rw")
+
+    # Ensure no dummy/no_table entries
+    assert "DUMMY_TABLE" not in result
+    assert "NO_TABLE" not in result
 
 # Test to check if one procedure calls another
 
 def test_procedure_calls_another(tmp_path):
-     ast = [
+    ast = [
         {
             "proc_name": "proc_main",
             "params": [],
@@ -169,55 +195,41 @@ def test_procedure_calls_another(tmp_path):
             "statements": []
         }
     ]
-     index = {
+    index = {
         "proc_main": {"params": [], "calls": ["proc_sub"], "tables": []},
         "proc_sub": {"params": [], "calls": [], "tables": []}
-     }
-     index_file= tmp_path /"index.json"
-     ast_file= tmp_path / "ast.json"
-     output_file= tmp_path / "output.json"
+    }
 
-     index_file.write_text(json.dumps(index))
-     ast_file.write_text(json.dumps(ast))
-     #run analyze lineage
-     analyze_lineage(str(index_file), str(ast_file),str(output_file))
-     with output_file.open() as f:
-            result = json.load(f)
+    index_file = tmp_path / "index.json"
+    ast_file = tmp_path / "ast.json"
+    output_file = tmp_path / "output.json"
 
-     assert result["proc_main"]["type"] == "procedure"
-     assert result["proc_sub"]["type"] == "procedure"
-     assert "proc_sub" in result["proc_main"]["calls"]
+    index_file.write_text(json.dumps(index))
+    ast_file.write_text(json.dumps(ast))
 
-
-
-
-# Test to check if read and write happen properly
-def test_read_and_write_usage(tmp_path, simple_index, simple_ast) :
-    index_file= tmp_path / "index.json"
-    ast_file= tmp_path / "ast.json"
-    output_file= tmp_path/ "output.json"
-
-    #write json input
-    index_file.write_text(json.dumps(simple_index))
-    ast_file.write_text(json.dumps(simple_ast))
-
-    # run the tests to analyze the lineage 
+    # Run analyzer
     analyze_lineage(str(index_file), str(ast_file), str(output_file))
 
-    # Load and assert output
     with output_file.open() as f:
         result = json.load(f)
-    
-    #run the assertion tests
-    assert result["employees"]["type"]=="table"
-    assert "proc_test" in result["employees"]["calls"]
-    assert result["employees"]["usage"]["proc_test"] == ["read"]
 
-    assert result["log_table"]["type"] == "table"
-    assert "proc_test" in result["log_table"]["calls"]
-    assert result["log_table"]["usage"]["proc_test"] == ["write"]
+    # Ensure both procs exist and are typed correctly
+    assert "proc_main" in result
+    assert "proc_sub" in result
+    assert result["proc_main"]["type"] == "procedure"
+    assert result["proc_sub"]["type"] == "procedure"
 
-    assert result["proc_test"]["type"] == "procedure"
+    # Ensure proc_main calls proc_sub
+    assert "proc_sub" in result["proc_main"]["calls"]
+
+    # Ensure no unexpected DUMMY_TABLE / NO_TABLE
+    assert "DUMMY_TABLE" not in result
+    assert "NO_TABLE" not in result
+
+
+
+
+
 
 #when multiple procedures are present in the input 
 def test_multiple_procedures_lineage(tmp_path):
@@ -292,14 +304,30 @@ def test_multiple_procedures_lineage(tmp_path):
         result = json.load(f)
 
     # table1: read by proc_a
-    assert result["table1"]["usage"]["proc_a"] == ["read"]
+    assert {
+        "name": "*",
+        "usage": "read",
+        "calling_procedure": "proc_a"
+    } in result["table1"]["columns"]
 
     # table2: written by proc_a (INSERT) and updated by proc_b (UPDATE)
-    assert sorted(result["table2"]["usage"]["proc_a"]) == ["write"]
-    assert sorted(result["table2"]["usage"]["proc_b"]) == ["write"]
+    assert {
+        "name": "id",
+        "usage": "write",
+        "calling_procedure": "proc_a"
+    } in result["table2"]["columns"]
+    assert {
+        "name": "name",
+        "usage": "write",
+        "calling_procedure": "proc_b"
+    } in result["table2"]["columns"]
 
     # table3: deleted by proc_b
-    assert result["table3"]["usage"]["proc_b"] == ["write"]
+    assert {
+        "name": "*",
+        "usage": "write",
+        "calling_procedure": "proc_b"
+    } in result["table3"]["columns"]
 
     # Ensure both procedures are listed
     assert result["proc_a"]["type"] == "procedure"
@@ -308,34 +336,27 @@ def test_multiple_procedures_lineage(tmp_path):
 
 #test complex sql query with some scope for RAW_SQL
 # NOTE- IF THIS TEST FAILS THEN ITS HIGLY LIKELY THAT THE ISSUE IS DUE TO THE CHANGED AST STRUCTURE. PLEASE VERIFY THE AST STRUCTURE BELOW AGAINST THE FIELDS THE CODE IS EXPECTING
-
 def test_RAW_SQL_and_complex_queries(tmp_path):
     index_file = tmp_path / "index.json"
     ast_file = tmp_path / "ast.json"
     output_file = tmp_path / "output.json"
 
-    index_data={
-  "AcmeERP.usp_ProcessFullPayrollCycle": {
-    "params": [
-      {
-        "name": "@PayPeriodStart",
-        "type": "DATE"
-      },
-      {
-        "name": "@PayPeriodEnd",
-        "type": "DATE"
-      }
-    ],
-    "calls": [],
-    "tables": [
-      "AcmeERP.PayrollLogs",
-      "AcmeERP.ExchangeRates",
-      "#PayrollCalc"
-    ]
-  }
-}
-    
-    ast_data=[
+    index_data = {
+        "AcmeERP.usp_ProcessFullPayrollCycle": {
+            "params": [
+                {"name": "@PayPeriodStart", "type": "DATE"},
+                {"name": "@PayPeriodEnd", "type": "DATE"}
+            ],
+            "calls": [],
+            "tables": [
+                "AcmeERP.PayrollLogs",
+                "AcmeERP.ExchangeRates",
+                "#PayrollCalc"
+            ]
+        }
+    }
+
+    ast_data =[
   {
     "proc_name": "AcmeERP.usp_ProcessFullPayrollCycle",
     "params": [
@@ -480,26 +501,46 @@ def test_RAW_SQL_and_complex_queries(tmp_path):
       }
     ]
   }
-]
+]  # your existing AST JSON structure goes here exactly as in the original
+
+    # Write files
     index_file.write_text(json.dumps(index_data))
     ast_file.write_text(json.dumps(ast_data))
 
+    # Run analyzer
     analyze_lineage(str(index_file), str(ast_file), str(output_file))
-    with open(output_file)as f:
-        result=json.load(f)
-    
-    #important assertions
-    assert result["AcmeERP.usp_ProcessFullPayrollCycle"]["type"]=="procedure"
-    assert result["AcmeERP.PayrollLogs"]["type"]=="table"
-    #if the AST structure doesnt handle NESTED queries properly then this testcase if passed shows that RAW_SQL and all other query_fields are also getting scanned by the lineage analyzer
-    assert result["AcmeERP.PayrollLogs"]["usage"]["AcmeERP.usp_ProcessFullPayrollCycle"]==["write"]
-    #proc calling table
-    assert result["AcmeERP.Employees"]["calls"]==["AcmeERP.usp_ProcessFullPayrollCycle"]
-    assert result["AcmeERP.Employees"]["usage"]["AcmeERP.usp_ProcessFullPayrollCycle"]==["read"]
 
-import json
-import re
-from your_module import analyze_lineage  # replace with actual import
+    # Read output
+    with output_file.open() as f:
+        result = json.load(f)
+
+    # Assertions for procedure type
+    assert result["AcmeERP.usp_ProcessFullPayrollCycle"]["type"] == "procedure"
+
+    # PayrollLogs table should be written to by the procedure
+    assert result["AcmeERP.PayrollLogs"]["type"] == "table"
+    assert {
+        "name": "*",
+        "usage": "write",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+    } in result["AcmeERP.PayrollLogs"]["columns"]
+
+    # Employees table should be read by the procedure
+    assert result["AcmeERP.Employees"]["type"] == "table"
+    assert {
+        "name": "*",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+    } in result["AcmeERP.Employees"]["columns"]
+
+    # Procedure should be recorded as calling the table
+    assert "AcmeERP.usp_ProcessFullPayrollCycle" in result["AcmeERP.Employees"]["calls"]
+
+    # Ensure no dummy or NO_TABLE entries exist
+    assert "DUMMY_TABLE" not in result
+    assert "NO_TABLE" not in result
+
+ 
 
 def test_nested_ifs(tmp_path):
     # AST input

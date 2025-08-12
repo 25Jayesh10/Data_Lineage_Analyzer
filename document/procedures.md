@@ -1,7 +1,7 @@
 # Summary
 
 - **Total Procedures**: 7
-- **Total Tables**: 9
+- **Total Tables**: 10
 - **Most Called Procedure**: `N/A`
 
 ---
@@ -34,6 +34,7 @@
 
 ### Tables
 
+- AcmeERP.StockMovements
 - CTE_FIFO
 
 ---
@@ -47,6 +48,7 @@
 
 ```mermaid
 graph TD
+    AcmeERP.usp_CalculateFifoCost --> AcmeERP.StockMovements
     AcmeERP.usp_CalculateFifoCost --> CTE_FIFO
 ```
 
@@ -54,7 +56,7 @@ graph TD
 
 ### Business Logic
 
-The `AcmeERP.usp_CalculateFifoCost` stored procedure calculates the cost of goods sold (COGS) for a given product using the First-In, First-Out (FIFO) inventory costing method.  It accepts the product ID (`@@ProductID`) and the quantity requested (`@@QuantityRequested`) as input.  The procedure leverages a Common Table Expression (CTE) named `CTE_FIFO`, presumably containing inventory transaction data, to determine the cost of the requested quantity based on the FIFO principle:  the oldest inventory items are assumed to be sold first.  The procedure implicitly returns the calculated FIFO cost, though the exact return mechanism (e.g., output parameter, return value, modification of a table) is not specified in the provided code snippet.
+The AcmeERP.usp_CalculateFifoCost stored procedure determines the cost of goods sold for a given product using the First-In, First-Out (FIFO) inventory costing method.  It takes the product ID (`@@ProductID`) and the quantity requested (`@@QuantityRequested`) as input, then calculates the total cost by referencing inventory movements in the `AcmeERP.StockMovements` table and utilizing a common table expression (`CTE_FIFO`) to process inventory based on FIFO principles.  The procedure implicitly returns the total cost associated with fulfilling the order, critical for accurate financial reporting and inventory management.
 
 ---
 
@@ -99,7 +101,7 @@ graph TD
 
 ### Business Logic
 
-The AcmeERP.usp_ProcessFullPayrollCycle stored procedure calculates and processes the complete payroll for a given pay period, defined by the `@@PayPeriodStart` and `@@PayPeriodEnd` parameters.  It uses exchange rate data from the `AcmeERP.ExchangeRates` table to ensure accurate calculations for employees with international compensation.  The procedure logs all payroll processing activities in the `AcmeERP.PayrollLogs` table and utilizes a temporary table, `#PayrollCalc`, for intermediate calculations during the payroll processing. The final output isn't explicitly defined but is implied to update payroll-related tables (not explicitly listed) reflecting the calculated compensation for the specified period.
+The `AcmeERP.usp_ProcessFullPayrollCycle` stored procedure calculates and processes the complete payroll for a given pay period, defined by the `@@PayPeriodStart` and `@@PayPeriodEnd` parameters.  It uses exchange rate data from `AcmeERP.ExchangeRates` to handle any international payroll elements, logs processing details in `AcmeERP.PayrollLogs`, and utilizes a temporary table, `#PayrollCalc`, for intermediate calculations during the payroll processing. The procedure's purpose is to automate the entire payroll cycle, ensuring accurate and timely compensation for all employees within the specified pay period.
 
 ---
 
@@ -141,7 +143,7 @@ graph TD
 
 ### Business Logic
 
-The `AcmeERP.usp_ConvertToBase` stored procedure converts a given monetary amount from a specified currency into the base currency of the Acme ERP system.  It uses the `AcmeERP.ExchangeRates` table to retrieve the appropriate exchange rate for the provided currency code and conversion date.  The procedure then performs the currency conversion calculation and returns the equivalent amount in the base currency.  The absence of provided SQL code prevents further detail on error handling or specific conversion algorithms.
+The `AcmeERP.usp_ConvertToBase` stored procedure converts a given monetary amount from a specified currency into the base currency of the Acme ERP system.  It uses the exchange rate recorded in the `AcmeERP.ExchangeRates` table on a specified date (`@@ConversionDate`) to perform the conversion. The procedure takes the currency code (`@@CurrencyCode`) and the amount (`@@Amount`) to be converted as input parameters, returning the equivalent value in the base currency.  Error handling (not shown in the provided code) is assumed to manage scenarios like missing exchange rates for the specified date or invalid currency codes.
 
 ---
 
@@ -183,7 +185,7 @@ graph TD
 
 ### Business Logic
 
-The stored procedure `sp_sum_client_orders` calculates the total sum of client orders for a specified client within a given date range, applying a 5% discount to orders exceeding $750.  It iterates through each order for the designated client, placed between the `@from_date` and `@to_date` parameters, accumulating the total.  Orders over $750 are discounted before being added to the grand total, effectively reflecting a bulk order discount program for high-value client purchases.  The procedure returns the final discounted sum of all qualifying orders.
+The stored procedure `sp_sum_client_orders` calculates the total value of orders for a given client within a specified date range, applying a 5% discount to orders exceeding $750.  It iterates through the `client_orders` table, summing the `total_price` of each qualifying order.  Orders below $750 are included at their full price, while those above $750 contribute 95% of their value to the final total. The procedure returns the discounted grand total.  Note that the provided code snippet is incomplete; it does not explicitly return the calculated `@grand_total`.
 
 ---
 
@@ -202,8 +204,8 @@ The stored procedure `sp_sum_client_orders` calculates the total sum of client o
 
 ### Tables
 
-- employee_log
 - employees
+- employee_log
 
 ---
 
@@ -216,15 +218,15 @@ The stored procedure `sp_sum_client_orders` calculates the total sum of client o
 
 ```mermaid
 graph TD
-    log_hr_employees --> employee_log
     log_hr_employees --> employees
+    log_hr_employees --> employee_log
 ```
 
 ---
 
 ### Business Logic
 
-The stored procedure `log_hr_employees` automatically records all HR employees' IDs and names into the `employee_log` table, timestamping each entry with the current date and time.  This procedure iterates through the `employees` table, selecting only those employees belonging to the 'HR' department, and appends their data to the log, providing an audit trail of HR personnel.  The absence of input parameters implies that this is a scheduled or automatically triggered process designed to maintain a continuously updated record of active HR employees.
+The stored procedure `log_hr_employees` automatically logs all HR department employees into the `employee_log` table.  It iterates through each employee in the `employees` table whose department is designated as 'HR', recording their employee ID and name along with the current timestamp. This provides an audit trail of all HR employees, potentially useful for security, reporting, or other HR-related processes requiring a record of active personnel.
 
 ---
 
@@ -266,7 +268,7 @@ graph TD
 
 ### Business Logic
 
-Procedure `test1` calculates the total revenue for a given client (`@@client_id`) within a specified date range (`@@from_date`, `@@to_date`).  It iterates through each order in the `client_orders` table matching these criteria.  For orders exceeding 750 currency units, a 5% discount is applied before accumulating the order total into the `@grand_total`.  The final `@grand_total` represents the client's total revenue after applying any applicable discounts.
+Procedure `test1` calculates the total revenue for a given client (`@@client_id`) within a specified date range (`@@from_date` to `@@to_date`).  It iterates through the client's orders in the `client_orders` table.  For orders exceeding 750 currency units, a 5% discount is applied before accumulating the total revenue (`@grand_total`).  Orders less than or equal to 750 are added to the total without discount.  The procedure ultimately returns the total revenue after applying any applicable discounts.
 
 ---
 
@@ -307,7 +309,7 @@ graph TD
 
 ### Business Logic
 
-The stored procedure `sp_update_inventory` automatically flags products requiring restocking.  It iterates through each active product (discontinued = 0) in the `products` table, summing its current inventory quantity from the `inventory` table. If the total quantity for a product falls below 10 units, the procedure sets the `restock` flag to 1 in the `products` table, indicating a need for replenishment.  This facilitates proactive inventory management by automatically identifying low-stock items.
+The stored procedure `sp_update_inventory` automatically flags products requiring restocking.  It iterates through each active product (discontinued = 0) in the `products` table, summing its current inventory quantity from the `inventory` table. If the total quantity for a product falls below 10 units, the procedure updates the `products` table, setting the `restock` flag to 1 for that product, thereby signaling the need for replenishment to the inventory management system.
 
 ---
 
