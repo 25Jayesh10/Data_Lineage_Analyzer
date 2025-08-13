@@ -42,9 +42,9 @@ def analyze_lineage(index_file :str, ast_file :str, output_file :str):
         # crude extraction: look for FROM <table>
         if not query:
             return None
-        tokens = query.replace(",", " ").upper().split()
+        tokens = query.replace(",", " ").split()
         for i, token in enumerate(tokens):
-            if token == "FROM" and i + 1 < len(tokens):
+            if (token == "FROM" or token == "from") and i + 1 < len(tokens):
                 table = tokens[i + 1].strip(';')
                 if not table.startswith("@"):
                     return table
@@ -135,7 +135,7 @@ def analyze_lineage(index_file :str, ast_file :str, output_file :str):
                     lineage[table]["calls"].add(proc)
                     table_usage[table][proc].append({"op": "write", "cols": columns})
                 # Handle the read part of an INSERT...SELECT statement
-                if "select_statement" in stmt:
+            if "select_statement" in stmt:
                     process_statements(proc, [stmt["select_statement"]], table_usage, lineage)
 
             elif stmt_type == "DELETE":

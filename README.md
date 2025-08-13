@@ -254,21 +254,9 @@ The tool generates the following output files:
   | Styling ignored	        | Applied class only after defining node labels         |
   | Node type identification|	Used naming conventions like table_ and proc_         |
   | Readability of nodes	  | Stripped prefixes in label rendering                  |
-
+  | Unsupported datatype    | Stripped the data length to be able to map it         |
+  | Reudundancy in mermaid and lineage | Stopped conversion of name to lower case   | 
 ---
-
-## ✅ Summary
-
-Tool 4 takes structured metadata from previous tools and produces an easy-to-understand, exportable view of how data flows through a Sybase-based system. It also automates the generation of visual lineage diagrams using Mermaid.js from structured lineage data. It's an essential component in large-scale enterprise database modernization and auditing. It's a critical aid in understanding, debugging, and documenting stored procedure dependencies in complex Sybase-based systems.
-
----
-
-> For contributions, enhancements, or bug fixes, please refer to the `README.md` or contact the internal tool engineering team(interns).
-
-
-used pytest for testing
-added type_mapping for tool 1
-added conditionfor type mapping if type is not available in type mapping then the code wont proced further and ill print the error
 
 
 ## ERRORS FACING WITH FINAL TEST CASES: 
@@ -279,10 +267,8 @@ ERROR: root:Unsupported type 'VARCHAR(3) found in
 procedure acmeerp. usp converttobase' for parameter '@CurrencyCode'
 C: run_t0014.py
 ERROR: root:Unsupported type 'DECIMAL (18, 2) • found
-in procedure • acmeerp. usp converttobase' for parameter '@Amount'
-
+in procedure • acmeerp. usp converttobase' for parameter '@Amount'. 
 TYPE MAPPING IS NOT ACCEPTING CHAR(3) BUT ACCEPTING CHAR SO THE (3) IS CREATING NEW DATA TYPE SO GIVING RROR MENTIONED ABOVE
-
 SOLUTION:- WE STRIP (3) SINCE IT IS NOT REQUIRED TO TOOL 4
 
 2) use brute force method as a fallback to travesre through queris for assigning user information(use REGEX). usefull if there are nested queries. and check access in case of nested queries.
@@ -300,8 +286,10 @@ SOLUTIONS:- ERROR FIXED WE ARE NO LONGER CONVERTING IT AND CAME UP WITH A PERMAN
  - pytest --cov=source ---cov-report==html
 
 
+## ✅ Summary
 
-we made index generator to generate index.json using a fixed index schema, for our tool 4 testing since it acts as input
-we made ast generator to generate ast.json using a fixed ast schema, for our tool 4 testing since it acts as input
-worked tool 3 and add new features, used llm to generate a brief description based on the query being processed
-implemetned the backtracing index generator from lineage to test if the output is correct.
+Tool 4 takes structured metadata from previous tools and produces an easy-to-understand, exportable view of how data flows through a Sybase-based system. It also automates the generation of visual lineage diagrams using Mermaid.js from structured lineage data. It's an essential component in large-scale enterprise database modernization and auditing. It's a critical aid in understanding, debugging, and documenting stored procedure dependencies in complex Sybase-based systems.
+
+---
+
+> For contributions, enhancements, or bug fixes, please refer to the `README.md` or contact the internal tool engineering team(interns).

@@ -12,6 +12,7 @@ from tool1.TSqlLexer import TSqlLexer
 from tool1.TSqlParser import TSqlParser
 
 from tool3.doc_generator import generate_docs
+from tool3.doc_generator import prompt_for_llm_provider
 
 
 
@@ -61,7 +62,8 @@ def main():
         try:
             print(Colours.YELLOW + "Generating Markdown documentation..." + Colours.RESET)
             index_path = os.path.join(input_dir, "index.json")
-            generate_docs(index_path, output_dir=document_dir, output_file="procedures.md")
+            llm_choice = prompt_for_llm_provider()
+            generate_docs(index_path, output_dir=document_dir, output_file="procedures.md", llm_provider= llm_choice)
             print(Colours.GREEN + "Documentation generated in 'document/procedures.md'" + Colours.RESET)
         except Exception as e:
             print(Colours.RED + f"Error generating documentation: {e}" + Colours.RESET)

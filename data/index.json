@@ -28,9 +28,9 @@
     ],
     "calls": [],
     "tables": [
+      "AcmeERP.PayrollLogs",
       "AcmeERP.ExchangeRates",
-      "#PayrollCalc",
-      "AcmeERP.PayrollLogs"
+      "#PayrollCalc"
     ]
   },
   "AcmeERP.usp_ConvertToBase": {
@@ -77,8 +77,8 @@
     "params": [],
     "calls": [],
     "tables": [
-      "employees",
-      "employee_log"
+      "employee_log",
+      "employees"
     ]
   },
   "test1": {

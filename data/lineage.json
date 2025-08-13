@@ -25,10 +25,42 @@
     "calls": [],
     "tables": [
       "#PayrollCalc",
-      "ACMEERP.EXCHANGERATES",
       "AcmeERP.Employees",
       "AcmeERP.ExchangeRates",
       "AcmeERP.PayrollLogs"
+    ]
+  },
+  "AcmeERP.PayrollLogs": {
+    "type": "table",
+    "calls": [
+      "AcmeERP.usp_ProcessFullPayrollCycle"
+    ],
+    "columns": [
+      {
+        "name": "EmployeeID",
+        "usage": "write",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "PayPeriodStart",
+        "usage": "write",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "PayPeriodEnd",
+        "usage": "write",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "GrossSalary",
+        "usage": "write",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "TaxDeducted",
+        "usage": "write",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      }
     ]
   },
   "AcmeERP.ExchangeRates": {
@@ -38,6 +70,11 @@
       "AcmeERP.usp_ProcessFullPayrollCycle"
     ],
     "columns": [
+      {
+        "name": "TOP 1 RateToBase",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
       {
         "name": "RateToBase",
         "usage": "read",
@@ -97,13 +134,23 @@
         "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
       },
       {
-        "name": "ConvertedSalary",
-        "usage": "write",
+        "name": "EmployeeID",
+        "usage": "read",
         "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
       },
       {
-        "name": "EmployeeID",
+        "name": "GrossSalary",
         "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "Currency",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "ConvertedSalary",
+        "usage": "write",
         "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
       },
       {
@@ -128,39 +175,6 @@
       }
     ]
   },
-  "AcmeERP.PayrollLogs": {
-    "type": "table",
-    "calls": [
-      "AcmeERP.usp_ProcessFullPayrollCycle"
-    ],
-    "columns": [
-      {
-        "name": "EmployeeID",
-        "usage": "write",
-        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
-      },
-      {
-        "name": "PayPeriodStart",
-        "usage": "write",
-        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
-      },
-      {
-        "name": "PayPeriodEnd",
-        "usage": "write",
-        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
-      },
-      {
-        "name": "GrossSalary",
-        "usage": "write",
-        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
-      },
-      {
-        "name": "TaxDeducted",
-        "usage": "write",
-        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
-      }
-    ]
-  },
   "AcmeERP.usp_ConvertToBase": {
     "type": "procedure",
     "calls": [],
@@ -181,7 +195,18 @@
       "sp_sum_client_orders",
       "test1"
     ],
-    "columns": []
+    "columns": [
+      {
+        "name": "total_price",
+        "usage": "read",
+        "calling_procedure": "sp_sum_client_orders"
+      },
+      {
+        "name": "total_price",
+        "usage": "read",
+        "calling_procedure": "test1"
+      }
+    ]
   },
   "log_hr_employees": {
     "type": "procedure",
@@ -190,13 +215,6 @@
       "employee_log",
       "employees"
     ]
-  },
-  "employees": {
-    "type": "table",
-    "calls": [
-      "log_hr_employees"
-    ],
-    "columns": []
   },
   "employee_log": {
     "type": "table",
@@ -221,6 +239,24 @@
       }
     ]
   },
+  "employees": {
+    "type": "table",
+    "calls": [
+      "log_hr_employees"
+    ],
+    "columns": [
+      {
+        "name": "emp_id",
+        "usage": "read",
+        "calling_procedure": "log_hr_employees"
+      },
+      {
+        "name": "emp_name",
+        "usage": "read",
+        "calling_procedure": "log_hr_employees"
+      }
+    ]
+  },
   "test1": {
     "type": "procedure",
     "calls": [],
@@ -232,7 +268,6 @@
     "type": "procedure",
     "calls": [],
     "tables": [
-      "INVENTORY",
       "inventory",
       "products"
     ]
@@ -243,6 +278,11 @@
       "sp_update_inventory"
     ],
     "columns": [
+      {
+        "name": "product_id",
+        "usage": "read",
+        "calling_procedure": "sp_update_inventory"
+      },
       {
         "name": "restock",
         "usage": "write",
@@ -255,7 +295,13 @@
     "calls": [
       "sp_update_inventory"
     ],
-    "columns": []
+    "columns": [
+      {
+        "name": "SUM(quantity)",
+        "usage": "read",
+        "calling_procedure": "sp_update_inventory"
+      }
+    ]
   },
   "AcmeERP.StockMovements": {
     "type": "table",
@@ -330,32 +376,6 @@
         "name": "ISNULL(e.Currency, 'USD') AS Currency",
         "usage": "read",
         "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
-      }
-    ]
-  },
-  "ACMEERP.EXCHANGERATES": {
-    "type": "table",
-    "calls": [
-      "AcmeERP.usp_ProcessFullPayrollCycle"
-    ],
-    "columns": [
-      {
-        "name": "TOP 1 RateToBase",
-        "usage": "read",
-        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
-      }
-    ]
-  },
-  "INVENTORY": {
-    "type": "table",
-    "calls": [
-      "sp_update_inventory"
-    ],
-    "columns": [
-      {
-        "name": "SUM(quantity)",
-        "usage": "read",
-        "calling_procedure": "sp_update_inventory"
       }
     ]
   }

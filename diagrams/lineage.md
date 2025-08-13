@@ -3,126 +3,136 @@ graph TD
     %% Node styles
     classDef table fill:#f96,stroke:#333,stroke-width:2px,color:#000,font-weight:bold;
     classDef stored_proc fill:#9cf,stroke:#333,stroke-width:2px,color:#000,font-weight:bold;
-    classDef column fill:#fff,stroke:#333,stroke-width:1px,color:#000,font-style:italic;
+    classDef read_col fill:#d3f8d3,stroke:#2b802b,stroke-width:1px,color:#000;
+    classDef write_col fill:#f8d3d3,stroke:#c23b22,stroke-width:1px,color:#000;
+    classDef default_col fill:#fff,stroke:#333,stroke-width:1px,color:#000,font-style:italic;
 
-
-    subgraph ACMEERP_EXCHANGERATES["ACMEERP.EXCHANGERATES"]
-        ACMEERP_EXCHANGERATES_TOP_1_RateToBase("TOP 1 RateToBase");
-        class ACMEERP_EXCHANGERATES_TOP_1_RateToBase column;
-    end
 
     subgraph AcmeERP_Employees["AcmeERP.Employees"]
-        AcmeERP_Employees_e_EmployeeID("e.EmployeeID");
-        class AcmeERP_Employees_e_EmployeeID column;
-        AcmeERP_Employees_e_BaseSalary("e.BaseSalary");
-        class AcmeERP_Employees_e_BaseSalary column;
-        AcmeERP_Employees_Bonus("Bonus");
-        class AcmeERP_Employees_Bonus column;
-        AcmeERP_Employees_GrossSalary("GrossSalary");
-        class AcmeERP_Employees_GrossSalary column;
-        AcmeERP_Employees_Tax("Tax");
-        class AcmeERP_Employees_Tax column;
-        AcmeERP_Employees_NetSalary("NetSalary");
-        class AcmeERP_Employees_NetSalary column;
-        AcmeERP_Employees_ISNULL_e_Currency_USD_AS_Currency("ISNULL(e.Currency, 'USD') AS Currency");
-        class AcmeERP_Employees_ISNULL_e_Currency_USD_AS_Currency column;
+        AcmeERP_Employees_e_EmployeeID_read("e.EmployeeID [READ]");
+        class AcmeERP_Employees_e_EmployeeID_read read_col;
+        AcmeERP_Employees_e_BaseSalary_read("e.BaseSalary [READ]");
+        class AcmeERP_Employees_e_BaseSalary_read read_col;
+        AcmeERP_Employees_Bonus_read("Bonus [READ]");
+        class AcmeERP_Employees_Bonus_read read_col;
+        AcmeERP_Employees_GrossSalary_read("GrossSalary [READ]");
+        class AcmeERP_Employees_GrossSalary_read read_col;
+        AcmeERP_Employees_Tax_read("Tax [READ]");
+        class AcmeERP_Employees_Tax_read read_col;
+        AcmeERP_Employees_NetSalary_read("NetSalary [READ]");
+        class AcmeERP_Employees_NetSalary_read read_col;
+        AcmeERP_Employees_ISNULL_e_Currency_USD_AS_Currency_read("ISNULL(e.Currency, 'USD') AS Currency [READ]");
+        class AcmeERP_Employees_ISNULL_e_Currency_USD_AS_Currency_read read_col;
     end
 
     subgraph AcmeERP_ExchangeRates["AcmeERP.ExchangeRates"]
-        AcmeERP_ExchangeRates_RateToBase("RateToBase");
-        class AcmeERP_ExchangeRates_RateToBase column;
-        AcmeERP_ExchangeRates_TOP_1_RateToBase("TOP 1 RateToBase");
-        class AcmeERP_ExchangeRates_TOP_1_RateToBase column;
-        AcmeERP_ExchangeRates_AVG_RateToBase_("AVG(RateToBase)");
-        class AcmeERP_ExchangeRates_AVG_RateToBase_ column;
+        AcmeERP_ExchangeRates_TOP_1_RateToBase_read("TOP 1 RateToBase [READ]");
+        class AcmeERP_ExchangeRates_TOP_1_RateToBase_read read_col;
+        AcmeERP_ExchangeRates_RateToBase_read("RateToBase [READ]");
+        class AcmeERP_ExchangeRates_RateToBase_read read_col;
+        AcmeERP_ExchangeRates_TOP_1_RateToBase_read("TOP 1 RateToBase [READ]");
+        class AcmeERP_ExchangeRates_TOP_1_RateToBase_read read_col;
+        AcmeERP_ExchangeRates_AVG_RateToBase__read("AVG(RateToBase) [READ]");
+        class AcmeERP_ExchangeRates_AVG_RateToBase__read read_col;
     end
 
     subgraph AcmeERP_PayrollLogs["AcmeERP.PayrollLogs"]
-        AcmeERP_PayrollLogs_EmployeeID("EmployeeID");
-        class AcmeERP_PayrollLogs_EmployeeID column;
-        AcmeERP_PayrollLogs_PayPeriodStart("PayPeriodStart");
-        class AcmeERP_PayrollLogs_PayPeriodStart column;
-        AcmeERP_PayrollLogs_PayPeriodEnd("PayPeriodEnd");
-        class AcmeERP_PayrollLogs_PayPeriodEnd column;
-        AcmeERP_PayrollLogs_GrossSalary("GrossSalary");
-        class AcmeERP_PayrollLogs_GrossSalary column;
-        AcmeERP_PayrollLogs_TaxDeducted("TaxDeducted");
-        class AcmeERP_PayrollLogs_TaxDeducted column;
+        AcmeERP_PayrollLogs_EmployeeID_write("EmployeeID [WRITE]");
+        class AcmeERP_PayrollLogs_EmployeeID_write write_col;
+        AcmeERP_PayrollLogs_PayPeriodStart_write("PayPeriodStart [WRITE]");
+        class AcmeERP_PayrollLogs_PayPeriodStart_write write_col;
+        AcmeERP_PayrollLogs_PayPeriodEnd_write("PayPeriodEnd [WRITE]");
+        class AcmeERP_PayrollLogs_PayPeriodEnd_write write_col;
+        AcmeERP_PayrollLogs_GrossSalary_write("GrossSalary [WRITE]");
+        class AcmeERP_PayrollLogs_GrossSalary_write write_col;
+        AcmeERP_PayrollLogs_TaxDeducted_write("TaxDeducted [WRITE]");
+        class AcmeERP_PayrollLogs_TaxDeducted_write write_col;
     end
 
     subgraph AcmeERP_StockMovements["AcmeERP.StockMovements"]
-        AcmeERP_StockMovements_MovementID("MovementID");
-        class AcmeERP_StockMovements_MovementID column;
-        AcmeERP_StockMovements_ProductID("ProductID");
-        class AcmeERP_StockMovements_ProductID column;
-        AcmeERP_StockMovements_Quantity("Quantity");
-        class AcmeERP_StockMovements_Quantity column;
-        AcmeERP_StockMovements_UnitCost("UnitCost");
-        class AcmeERP_StockMovements_UnitCost column;
-        AcmeERP_StockMovements_SUM_Quantity_OVER_PARTITION_BY_ProductID_ORDER_BY_MovementDate_ROWS_BETWEEN_UNBOUNDED_PRECEDING_AND_CURRENT_ROW_AS_RunningTotal("SUM(Quantity) OVER (PARTITION BY ProductID ORDER BY MovementDate ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS RunningTotal");
-        class AcmeERP_StockMovements_SUM_Quantity_OVER_PARTITION_BY_ProductID_ORDER_BY_MovementDate_ROWS_BETWEEN_UNBOUNDED_PRECEDING_AND_CURRENT_ROW_AS_RunningTotal column;
+        AcmeERP_StockMovements_MovementID_read("MovementID [READ]");
+        class AcmeERP_StockMovements_MovementID_read read_col;
+        AcmeERP_StockMovements_ProductID_read("ProductID [READ]");
+        class AcmeERP_StockMovements_ProductID_read read_col;
+        AcmeERP_StockMovements_Quantity_read("Quantity [READ]");
+        class AcmeERP_StockMovements_Quantity_read read_col;
+        AcmeERP_StockMovements_UnitCost_read("UnitCost [READ]");
+        class AcmeERP_StockMovements_UnitCost_read read_col;
+        AcmeERP_StockMovements_SUM_Quantity_OVER_PARTITION_BY_ProductID_ORDER_BY_MovementDate_ROWS_BETWEEN_UNBOUNDED_PRECEDING_AND_CURRENT_ROW_AS_RunningTotal_read("SUM(Quantity) OVER (PARTITION BY ProductID ORDER BY MovementDate ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS RunningTotal [READ]");
+        class AcmeERP_StockMovements_SUM_Quantity_OVER_PARTITION_BY_ProductID_ORDER_BY_MovementDate_ROWS_BETWEEN_UNBOUNDED_PRECEDING_AND_CURRENT_ROW_AS_RunningTotal_read read_col;
     end
 
     subgraph CTE_FIFO["CTE_FIFO"]
-        CTE_FIFO_AVG_UnitCost_AS_FifoCostEstimate("AVG(UnitCost) AS FifoCostEstimate");
-        class CTE_FIFO_AVG_UnitCost_AS_FifoCostEstimate column;
-    end
-
-    subgraph INVENTORY["INVENTORY"]
-        INVENTORY_SUM_quantity_("SUM(quantity)");
-        class INVENTORY_SUM_quantity_ column;
+        CTE_FIFO_AVG_UnitCost_AS_FifoCostEstimate_read("AVG(UnitCost) AS FifoCostEstimate [READ]");
+        class CTE_FIFO_AVG_UnitCost_AS_FifoCostEstimate_read read_col;
     end
 
     subgraph _PayrollCalc["#PayrollCalc"]
-        _PayrollCalc_EmployeeID("EmployeeID");
-        class _PayrollCalc_EmployeeID column;
-        _PayrollCalc_BaseSalary("BaseSalary");
-        class _PayrollCalc_BaseSalary column;
-        _PayrollCalc_Bonus("Bonus");
-        class _PayrollCalc_Bonus column;
-        _PayrollCalc_GrossSalary("GrossSalary");
-        class _PayrollCalc_GrossSalary column;
-        _PayrollCalc_Tax("Tax");
-        class _PayrollCalc_Tax column;
-        _PayrollCalc_NetSalary("NetSalary");
-        class _PayrollCalc_NetSalary column;
-        _PayrollCalc_Currency("Currency");
-        class _PayrollCalc_Currency column;
-        _PayrollCalc_ConvertedSalary("ConvertedSalary");
-        class _PayrollCalc_ConvertedSalary column;
-        _PayrollCalc__PayPeriodStart("@PayPeriodStart");
-        class _PayrollCalc__PayPeriodStart column;
-        _PayrollCalc__PayPeriodEnd("@PayPeriodEnd");
-        class _PayrollCalc__PayPeriodEnd column;
+        _PayrollCalc_EmployeeID_write("EmployeeID [WRITE]");
+        class _PayrollCalc_EmployeeID_write write_col;
+        _PayrollCalc_BaseSalary_write("BaseSalary [WRITE]");
+        class _PayrollCalc_BaseSalary_write write_col;
+        _PayrollCalc_Bonus_write("Bonus [WRITE]");
+        class _PayrollCalc_Bonus_write write_col;
+        _PayrollCalc_GrossSalary_write("GrossSalary [WRITE]");
+        class _PayrollCalc_GrossSalary_write write_col;
+        _PayrollCalc_Tax_write("Tax [WRITE]");
+        class _PayrollCalc_Tax_write write_col;
+        _PayrollCalc_NetSalary_write("NetSalary [WRITE]");
+        class _PayrollCalc_NetSalary_write write_col;
+        _PayrollCalc_Currency_write("Currency [WRITE]");
+        class _PayrollCalc_Currency_write write_col;
+        _PayrollCalc_EmployeeID_read("EmployeeID [READ]");
+        class _PayrollCalc_EmployeeID_read read_col;
+        _PayrollCalc_GrossSalary_read("GrossSalary [READ]");
+        class _PayrollCalc_GrossSalary_read read_col;
+        _PayrollCalc_Currency_read("Currency [READ]");
+        class _PayrollCalc_Currency_read read_col;
+        _PayrollCalc_ConvertedSalary_write("ConvertedSalary [WRITE]");
+        class _PayrollCalc_ConvertedSalary_write write_col;
+        _PayrollCalc__PayPeriodStart_read("@PayPeriodStart [READ]");
+        class _PayrollCalc__PayPeriodStart_read read_col;
+        _PayrollCalc__PayPeriodEnd_read("@PayPeriodEnd [READ]");
+        class _PayrollCalc__PayPeriodEnd_read read_col;
+        _PayrollCalc_ConvertedSalary_read("ConvertedSalary [READ]");
+        class _PayrollCalc_ConvertedSalary_read read_col;
+        _PayrollCalc_Tax_read("Tax [READ]");
+        class _PayrollCalc_Tax_read read_col;
     end
 
     subgraph client_orders["client_orders"]
-        client_orders_placeholder["(no columns specified)"];
-        class client_orders_placeholder column;
+        client_orders_total_price_read("total_price [READ]");
+        class client_orders_total_price_read read_col;
+        client_orders_total_price_read("total_price [READ]");
+        class client_orders_total_price_read read_col;
     end
 
     subgraph employee_log["employee_log"]
-        employee_log_emp_id("emp_id");
-        class employee_log_emp_id column;
-        employee_log_emp_name("emp_name");
-        class employee_log_emp_name column;
-        employee_log_log_time("log_time");
-        class employee_log_log_time column;
+        employee_log_emp_id_write("emp_id [WRITE]");
+        class employee_log_emp_id_write write_col;
+        employee_log_emp_name_write("emp_name [WRITE]");
+        class employee_log_emp_name_write write_col;
+        employee_log_log_time_write("log_time [WRITE]");
+        class employee_log_log_time_write write_col;
     end
 
     subgraph employees["employees"]
-        employees_placeholder["(no columns specified)"];
-        class employees_placeholder column;
+        employees_emp_id_read("emp_id [READ]");
+        class employees_emp_id_read read_col;
+        employees_emp_name_read("emp_name [READ]");
+        class employees_emp_name_read read_col;
     end
 
     subgraph inventory["inventory"]
-        inventory_placeholder["(no columns specified)"];
-        class inventory_placeholder column;
+        inventory_SUM_quantity__read("SUM(quantity) [READ]");
+        class inventory_SUM_quantity__read read_col;
     end
 
     subgraph products["products"]
-        products_restock("restock");
-        class products_restock column;
+        products_product_id_read("product_id [READ]");
+        class products_product_id_read read_col;
+        products_restock_write("restock [WRITE]");
+        class products_restock_write write_col;
     end
     AcmeERP_usp_CalculateFifoCost("AcmeERP.usp_CalculateFifoCost");
     class AcmeERP_usp_CalculateFifoCost stored_proc;
@@ -143,7 +153,6 @@ graph TD
     AcmeERP_usp_CalculateFifoCost --> AcmeERP_StockMovements;
     AcmeERP_usp_CalculateFifoCost --> CTE_FIFO;
     AcmeERP_usp_ConvertToBase --> AcmeERP_ExchangeRates;
-    AcmeERP_usp_ProcessFullPayrollCycle --> ACMEERP_EXCHANGERATES;
     AcmeERP_usp_ProcessFullPayrollCycle --> AcmeERP_Employees;
     AcmeERP_usp_ProcessFullPayrollCycle --> AcmeERP_ExchangeRates;
     AcmeERP_usp_ProcessFullPayrollCycle --> AcmeERP_PayrollLogs;
@@ -151,7 +160,6 @@ graph TD
     log_hr_employees --> employee_log;
     log_hr_employees --> employees;
     sp_sum_client_orders --> client_orders;
-    sp_update_inventory --> INVENTORY;
     sp_update_inventory --> inventory;
     sp_update_inventory --> products;
     test1 --> client_orders;

@@ -1,0 +1,132 @@
+# import os
+# import google.generativeai as genai
+# from dotenv import load_dotenv
+
+# # Load API key from a .env file in your project's root directory
+# load_dotenv()
+# genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+# model = genai.GenerativeModel('gemini-1.5-flash')
+
+# def generate_business_logic(proc_name, params, tables, sql_code):
+#     """Crafts a prompt and gets a business logic description from the LLM."""
+
+#     prompt = f"""
+#     You are an expert SQL technical writer. Your task is to analyze the provided SQL procedure and write a concise business logic description.
+
+#     **CONTEXT:**
+#     - **Procedure Name:** {proc_name}
+#     - **Parameters:** {params}
+#     - **Tables Involved:** {tables}
+#     - **SQL Source Code:**
+#     ```sql
+#     {sql_code}
+#     ```
+
+#     **INSTRUCTION:**
+#     Based on all the context, write a clear, one-paragraph business logic description. Explain the procedure's purpose from a business perspective.
+#     """
+    
+#     try:
+#         response = model.generate_content(prompt)
+#         return response.text.strip()
+#     except Exception as e:
+#         print(f"Error generating description for {proc_name}: {e}")
+#         return "Description could not be generated due to an error."
+
+# import os
+# import google.generativeai as genai
+# import openai
+# import anthropic
+# from dotenv import load_dotenv
+
+# # --- Configuration ---
+# # Load all environment variables from .env
+# load_dotenv()
+# LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini").lower()
+
+# # --- Provider-Specific Clients ---
+
+# # 1. Google Gemini
+# if LLM_PROVIDER == "gemini":
+#     genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+#     gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+
+# # 2. Azure OpenAI
+# elif LLM_PROVIDER == "azure":
+#     azure_client = openai.AzureOpenAI(
+#         api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+#         api_version="2024-02-01",
+#         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT")
+#     )
+#     AZURE_DEPLOYMENT_NAME = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
+
+# # 3. Anthropic (Claude)
+# elif LLM_PROVIDER == "anthropic":
+#     anthropic_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+
+
+# def _generate_with_gemini(prompt: str) -> str:
+#     """Generates content using Google Gemini."""
+#     try:
+#         response = gemini_model.generate_content(prompt)
+#         return response.text.strip()
+#     except Exception as e:
+#         print(f"Error with Gemini API: {e}")
+#         return "Description could not be generated due to a Gemini API error."
+
+# def _generate_with_azure(prompt: str) -> str:
+#     """Generates content using Azure OpenAI."""
+#     try:
+#         response = azure_client.chat.completions.create(
+#             model=AZURE_DEPLOYMENT_NAME,
+#             messages=[{"role": "user", "content": prompt}],
+#             temperature=0.7,
+#         )
+#         return response.choices[0].message.content.strip()
+#     except Exception as e:
+#         print(f"Error with Azure OpenAI API: {e}")
+#         return "Description could not be generated due to an Azure API error."
+
+# def _generate_with_anthropic(prompt: str) -> str:
+#     """Generates content using Anthropic Claude."""
+#     try:
+#         response = anthropic_client.messages.create(
+#             model="claude-3-sonnet-20240229", # Or another model like claude-3-opus...
+#             max_tokens=1024,
+#             messages=[{"role": "user", "content": prompt}]
+#         )
+#         return response.content[0].text.strip()
+#     except Exception as e:
+#         print(f"Error with Anthropic API: {e}")
+#         return "Description could not be generated due to an Anthropic API error."
+
+# def generate_business_logic(proc_name: str, params: list, tables: list, sql_code: str) -> str:
+#     """
+#     Crafts a prompt and gets a business logic description from the selected LLM provider.
+#     This function acts as a dispatcher.
+#     """
+#     prompt = f"""
+#     You are an expert SQL technical writer. Your task is to analyze the provided SQL procedure and write a concise business logic description.
+
+#     **CONTEXT:**
+#     - **Procedure Name:** {proc_name}
+#     - **Parameters:** {params}
+#     - **Tables Involved:** {tables}
+#     - **SQL Source Code:**
+#     ```sql
+#     {sql_code}
+#     ```
+
+#     **INSTRUCTION:**
+#     Based on all the context, write a clear, one-paragraph business logic description. Explain the procedure's purpose from a business perspective.
+#     """
+    
+#     if LLM_PROVIDER == "azure":
+#         return _generate_with_azure(prompt)
+#     elif LLM_PROVIDER == "anthropic":
+#         return _generate_with_anthropic(prompt)
+#     elif LLM_PROVIDER == "gemini":
+#         return _generate_with_gemini(prompt)
+#     else:
+#         # Default fallback or error
+#         return "Error: Unknown LLM_PROVIDER specified in .env file."

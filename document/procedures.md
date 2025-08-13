@@ -54,7 +54,8 @@ graph TD
 
 ### Business Logic
 
-The `AcmeERP.usp_CalculateFifoCost` stored procedure calculates the cost of goods sold (COGS) for a given product using the First-In, First-Out (FIFO) inventory valuation method.  It takes the product ID (`@@ProductID`) and the quantity requested (`@@QuantityRequested`) as input.  The procedure likely iterates through a common table expression (CTE) named `CTE_FIFO`, which presumably contains inventory transaction details (date, quantity, cost), to determine the cost of the requested quantity based on the FIFO principle – assigning costs from the oldest inventory items first.  The procedure's output (not shown in the provided code) is expected to be the total cost of the `@@QuantityRequested` units of the specified `@@ProductID`, calculated according to the FIFO method.
+Description could not be generated due to an error.
+
 
 ---
 
@@ -75,9 +76,9 @@ The `AcmeERP.usp_CalculateFifoCost` stored procedure calculates the cost of good
 
 ### Tables
 
+- AcmeERP.PayrollLogs
 - AcmeERP.ExchangeRates
 - #PayrollCalc
-- AcmeERP.PayrollLogs
 
 ---
 
@@ -90,16 +91,17 @@ The `AcmeERP.usp_CalculateFifoCost` stored procedure calculates the cost of good
 
 ```mermaid
 graph TD
+    AcmeERP.usp_ProcessFullPayrollCycle --> AcmeERP.PayrollLogs
     AcmeERP.usp_ProcessFullPayrollCycle --> AcmeERP.ExchangeRates
     AcmeERP.usp_ProcessFullPayrollCycle --> #PayrollCalc
-    AcmeERP.usp_ProcessFullPayrollCycle --> AcmeERP.PayrollLogs
 ```
 
 ---
 
 ### Business Logic
 
-The `AcmeERP.usp_ProcessFullPayrollCycle` stored procedure automates the complete payroll processing for a given pay period, defined by the `@@PayPeriodStart` and `@@PayPeriodEnd` parameters.  It utilizes exchange rate data from `AcmeERP.ExchangeRates` to calculate payroll amounts, likely for employees with international compensation.  Intermediate calculations are stored in the temporary table `#PayrollCalc`, and a comprehensive audit trail of the payroll cycle is logged in `AcmeERP.PayrollLogs`.  The procedure's purpose is to accurately and efficiently generate payroll for a specified period, ensuring compliance with currency exchange requirements and providing a detailed record of the process for auditing and reporting.
+Description could not be generated due to an error.
+
 
 ---
 
@@ -141,7 +143,8 @@ graph TD
 
 ### Business Logic
 
-The AcmeERP.usp_ConvertToBase stored procedure converts a monetary amount from a specified currency into the base currency of the Acme ERP system.  It uses the `AcmeERP.ExchangeRates` table to retrieve the appropriate exchange rate based on the provided `@@CurrencyCode` and `@@ConversionDate`. The procedure takes the original amount (`@@Amount`) and applies the retrieved exchange rate to calculate and return the equivalent value in the base currency.  This functionality is crucial for accurate financial reporting and analysis across different currencies within the Acme ERP system.
+Description could not be generated due to an error.
+
 
 ---
 
@@ -183,7 +186,8 @@ graph TD
 
 ### Business Logic
 
-Procedure `sp_sum_client_orders` calculates the total value of orders for a specified client within a given date range, applying a 5% discount to orders exceeding $750.  It iterates through each order for the client within the specified timeframe; if an order's total price surpasses $750, its discounted value (95% of the total) is added to the running total.  The final result represents the total revenue accrued from the client's orders during the period, adjusted for applicable discounts.
+Description could not be generated due to an error.
+
 
 ---
 
@@ -202,8 +206,8 @@ Procedure `sp_sum_client_orders` calculates the total value of orders for a spec
 
 ### Tables
 
-- employees
 - employee_log
+- employees
 
 ---
 
@@ -216,15 +220,16 @@ Procedure `sp_sum_client_orders` calculates the total value of orders for a spec
 
 ```mermaid
 graph TD
-    log_hr_employees --> employees
     log_hr_employees --> employee_log
+    log_hr_employees --> employees
 ```
 
 ---
 
 ### Business Logic
 
-The stored procedure `log_hr_employees` automatically logs all employees from the Human Resources (HR) department into the `employee_log` table.  For each HR employee, it records their ID and name along with the current timestamp. This process facilitates auditing and tracking of HR personnel, potentially for security, reporting, or other internal management purposes.  The procedure iterates through all HR employees in the `employees` table, ensuring a complete log of all current HR staff members.
+Description could not be generated due to an error.
+
 
 ---
 
@@ -266,7 +271,8 @@ graph TD
 
 ### Business Logic
 
-The `test1` stored procedure calculates the total revenue for a specified client (`@@client_id`) within a given date range (`@@from_date` to `@@to_date`).  It iterates through each order in the `client_orders` table matching these criteria.  For orders exceeding 750 currency units, a 5% discount is applied before accumulating the total revenue (`@grand_total`).  The final output, `@grand_total`, represents the client's total revenue after applying potential discounts.
+Description could not be generated due to an error.
+
 
 ---
 
@@ -307,7 +313,8 @@ graph TD
 
 ### Business Logic
 
-The stored procedure `sp_update_inventory` automatically flags products requiring restocking.  It iterates through each active product (discontinued = 0) in the `products` table, summing its current inventory quantity from the `inventory` table. If the total quantity for a product falls below 10 units, the procedure updates the `products` table, setting the `restock` flag to 1 for that product, signaling the need for replenishment.
+Description could not be generated due to an error.
+
 
 ---
 
