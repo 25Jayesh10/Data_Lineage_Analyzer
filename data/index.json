@@ -12,6 +12,7 @@
     ],
     "calls": [],
     "tables": [
+      "AcmeERP.StockMovements",
       "CTE_FIFO"
     ]
   },

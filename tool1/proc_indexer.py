@@ -87,16 +87,57 @@ class ProcedureIndexer(TSqlParserListener):
             table = ctx.delete_statement_from().ddl_object().getText()
             self.index[self.current_proc]["tables"].append(table)
 
+    def _extract_tables_from_select(self, select_ctx):
+        """
+        Recursively extract all table names from a select_statement context,
+        including inside CTEs, subqueries, and derived tables.
+        """
+        if not select_ctx:
+            return
+
+        try:
+            qe = select_ctx.query_expression()
+            if qe:
+                # Simple query spec (FROM ...)
+                if qe.query_specification():
+                    ts_ctx = qe.query_specification().table_sources()
+                    if ts_ctx:
+                        for ts in ts_ctx.table_source():
+                            # Base table
+                            tsi = ts.table_source_item()
+                            if tsi and tsi.full_table_name():
+                                table = tsi.full_table_name().getText()
+                                self.index[self.current_proc]["tables"].append(table)
+
+                            # Subquery in FROM
+                            if tsi and tsi.derived_table():
+                                sub_sel = tsi.derived_table().subquery().select_statement()
+                                self._extract_tables_from_select(sub_sel)
+
+                # UNION / compound queries
+                if qe.query_expression():
+                    self._extract_tables_from_select(qe.query_expression())
+
+        except Exception as e:
+            logging.warning(f"Failed recursive table extraction: {e}")
+
     def enterSelect_statement_standalone(self, ctx):
         if self.current_proc:
+            self._extract_tables_from_select(ctx.select_statement())
+
+    def enterCommon_table_expression(self, ctx):
+        if self.current_proc:
             try:
-                from_clause = ctx.select_statement().query_expression().query_specification().table_sources()
-                if from_clause:
-                    for ts in from_clause.table_source():
-                        table = ts.table_source_item().full_table_name().getText() #use .lower() to convert to lowercase if needed
-                        self.index[self.current_proc]["tables"].append(table)
-            except:
-                pass  # Some selects may not have full context
+                # Name of CTE itself
+                cte_name = ctx.id_().getText()
+                self.index[self.current_proc]["tables"].append(cte_name)
+
+                # Extract tables from CTE's SELECT
+                sel = ctx.select_statement()
+                self._extract_tables_from_select(sel)
+            except Exception as e:
+                logging.warning(f"Failed to process CTE: {e}")
+
 
     def get_index(self):
     # Remove duplicates
