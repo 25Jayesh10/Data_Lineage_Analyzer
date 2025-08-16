@@ -128,16 +128,15 @@ def extract_sql_blocks(sql_text):
     return proc_blocks
 
 
-
 def prompt_for_llm_provider():
     """Interactively prompts the user to select an LLM provider."""
-    providers = {"1": "gemini", "2": "azure", "3": "anthropic"}
+    providers = {"1": "gemini", "2": "azure", "3": "anthropic", "4": "openrouter"}
     print("\nPlease select an LLM provider to generate descriptions:")
     for key, value in providers.items():
         print(f"  {key}: {value.capitalize()}")
     
     while True:
-        choice = input("Enter the number for your choice (1/2/3): ")
+        choice = input("Enter the number for your choice (1/2/3/4): ")
         if choice in providers:
             return providers[choice]
         else:
@@ -178,19 +177,19 @@ def generate_docs(json_path,  llm_provider, output_dir="docs", output_file="proc
     print(f"Generated: {output_path}")
 
 
-def prompt_for_llm_provider():
-    """Interactively prompts the user to select an LLM provider."""
-    providers = {"1": "gemini", "2": "azure", "3": "anthropic"}
-    print("\nPlease select an LLM provider to generate descriptions:")
-    for key, value in providers.items():
-        print(f"  {key}: {value.capitalize()}")
+# def prompt_for_llm_provider():
+#     """Interactively prompts the user to select an LLM provider."""
+#     providers = {"1": "gemini", "2": "azure", "3": "anthropic", "4": "openrouter"}
+#     print("\nPlease select an LLM provider to generate descriptions:")
+#     for key, value in providers.items():
+#         print(f"  {key}: {value.capitalize()}")
     
-    while True:
-        choice = input("Enter the number for your choice (1/2/3): ")
-        if choice in providers:
-            return providers[choice]
-        else:
-            print("❌ Invalid selection. Please enter 1, 2, or 3.")
+#     while True:
+#         choice = input("Enter the number for your choice (1/2/3/4): ")
+#         if choice in providers:
+#             return providers[choice]
+#         else:
+#             print("❌ Invalid selection. Please enter 1, 2, or 3.")
 
 # import json
 # import os
