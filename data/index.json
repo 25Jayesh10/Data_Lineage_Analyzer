@@ -12,8 +12,8 @@
     ],
     "calls": [],
     "tables": [
-      "AcmeERP.StockMovements",
-      "CTE_FIFO"
+      "CTE_FIFO",
+      "AcmeERP.StockMovements"
     ]
   },
   "AcmeERP.usp_ProcessFullPayrollCycle": {
@@ -30,8 +30,8 @@
     "calls": [],
     "tables": [
       "#PayrollCalc",
-      "AcmeERP.PayrollLogs",
-      "AcmeERP.ExchangeRates"
+      "AcmeERP.ExchangeRates",
+      "AcmeERP.PayrollLogs"
     ]
   },
   "AcmeERP.usp_ConvertToBase": {

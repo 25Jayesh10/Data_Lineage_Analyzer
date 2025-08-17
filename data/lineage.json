@@ -7,6 +7,19 @@
       "CTE_FIFO"
     ]
   },
+  "CTE_FIFO": {
+    "type": "table",
+    "calls": [
+      "AcmeERP.usp_CalculateFifoCost"
+    ],
+    "columns": [
+      {
+        "name": "AVG(UnitCost) AS FifoCostEstimate",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_CalculateFifoCost"
+      }
+    ]
+  },
   "AcmeERP.StockMovements": {
     "type": "table",
     "calls": [
@@ -40,19 +53,6 @@
       }
     ]
   },
-  "CTE_FIFO": {
-    "type": "table",
-    "calls": [
-      "AcmeERP.usp_CalculateFifoCost"
-    ],
-    "columns": [
-      {
-        "name": "AVG(UnitCost) AS FifoCostEstimate",
-        "usage": "read",
-        "calling_procedure": "AcmeERP.usp_CalculateFifoCost"
-      }
-    ]
-  },
   "AcmeERP.usp_ProcessFullPayrollCycle": {
     "type": "procedure",
     "calls": [],
@@ -61,35 +61,6 @@
       "AcmeERP.Employees",
       "AcmeERP.ExchangeRates",
       "AcmeERP.PayrollLogs"
-    ]
-  },
-  "AcmeERP.ExchangeRates": {
-    "type": "table",
-    "calls": [
-      "AcmeERP.usp_ConvertToBase",
-      "AcmeERP.usp_ProcessFullPayrollCycle"
-    ],
-    "columns": [
-      {
-        "name": "TOP 1 RateToBase",
-        "usage": "read",
-        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
-      },
-      {
-        "name": "RateToBase",
-        "usage": "read",
-        "calling_procedure": "AcmeERP.usp_ConvertToBase"
-      },
-      {
-        "name": "TOP 1 RateToBase",
-        "usage": "read",
-        "calling_procedure": "AcmeERP.usp_ConvertToBase"
-      },
-      {
-        "name": "AVG(RateToBase)",
-        "usage": "read",
-        "calling_procedure": "AcmeERP.usp_ConvertToBase"
-      }
     ]
   },
   "#PayrollCalc": {
@@ -171,6 +142,68 @@
       {
         "name": "Tax",
         "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      }
+    ]
+  },
+  "AcmeERP.ExchangeRates": {
+    "type": "table",
+    "calls": [
+      "AcmeERP.usp_ConvertToBase",
+      "AcmeERP.usp_ProcessFullPayrollCycle"
+    ],
+    "columns": [
+      {
+        "name": "TOP 1 RateToBase",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "RateToBase",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ConvertToBase"
+      },
+      {
+        "name": "TOP 1 RateToBase",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ConvertToBase"
+      },
+      {
+        "name": "AVG(RateToBase)",
+        "usage": "read",
+        "calling_procedure": "AcmeERP.usp_ConvertToBase"
+      }
+    ]
+  },
+  "AcmeERP.PayrollLogs": {
+    "type": "table",
+    "calls": [
+      "AcmeERP.usp_ProcessFullPayrollCycle"
+    ],
+    "columns": [
+      {
+        "name": "EmployeeID",
+        "usage": "write",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "PayPeriodStart",
+        "usage": "write",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "PayPeriodEnd",
+        "usage": "write",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "GrossSalary",
+        "usage": "write",
+        "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
+      },
+      {
+        "name": "TaxDeducted",
+        "usage": "write",
         "calling_procedure": "AcmeERP.usp_ProcessFullPayrollCycle"
       }
     ]
@@ -272,19 +305,6 @@
       "products"
     ]
   },
-  "inventory": {
-    "type": "table",
-    "calls": [
-      "sp_update_inventory"
-    ],
-    "columns": [
-      {
-        "name": "SUM(quantity)",
-        "usage": "read",
-        "calling_procedure": "sp_update_inventory"
-      }
-    ]
-  },
   "products": {
     "type": "table",
     "calls": [
@@ -299,6 +319,19 @@
       {
         "name": "restock",
         "usage": "write",
+        "calling_procedure": "sp_update_inventory"
+      }
+    ]
+  },
+  "inventory": {
+    "type": "table",
+    "calls": [
+      "sp_update_inventory"
+    ],
+    "columns": [
+      {
+        "name": "SUM(quantity)",
+        "usage": "read",
         "calling_procedure": "sp_update_inventory"
       }
     ]
